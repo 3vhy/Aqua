@@ -58,7 +58,9 @@ public final class HudManager {
         if (mc.options.hudHidden) {
             return;
         }
-        if (hideInDebug.on() && mc.getDebugHud().shouldShowDebugHud()) {
+        // Only the F3 text screen counts. shouldShowDebugHud() is also true while any single debug
+        // option is on (hitboxes with F3+B, chunk borders, ...), which must not hide the HUD.
+        if (hideInDebug.on() && mc.debugHudEntryList.isF3Enabled()) {
             return;
         }
         if (mc.currentScreen instanceof dev.aqua.client.hud.editor.HudEditorScreen) {

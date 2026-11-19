@@ -96,6 +96,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
                 for (String section : only.split(",")) {
                     switch (section.trim()) {
                         case "hud_fallback" -> hudFallback(context);
+                        case "debug_overlay" -> debugOverlay(context);
                         case "identity" -> identity(context, sp);
                         default -> throw new IllegalArgumentException("unknown section " + section);
                     }
@@ -191,6 +192,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             skinsAndKnives(context, sp);
             identity(context, sp);
             hudFallback(context);
+            debugOverlay(context);
             profilesAndLayouts(context);
             resizeAndScale(context);
             reloadResources(context);
@@ -909,6 +911,38 @@ public final class AquaClientGameTest implements FabricClientGameTest {
                 + (dev.aqua.client.hud.HudFallback.layerRuns() - r1) + "|" + (dev.aqua.client.hud.HudFallback.fallbackFrames() - b1));
         check(normal.startsWith("false|") && !normal.split("\\|")[1].equals("0") && normal.endsWith("|0"),
                 "HUD goes back to the normal Fabric layer when it runs again (fallback active | layer runs | fallback frames: " + normal + ")");
+    }
+
+    /**
+     * In 1.21.11 single debug options (hitboxes via F3+B, chunk borders, ...) can stay on without the
+     * F3 screen. The HUD must stay visible then, and hide only while the F3 screen itself is open.
+     */
+    private void debugOverlay(ClientGameTestContext context) {
+        context.getInput().holdKey(GLFW.GLFW_KEY_F3);
+        context.getInput().pressKey(GLFW.GLFW_KEY_B);
+        context.getInput().releaseKey(GLFW.GLFW_KEY_F3);
+        context.waitTicks(5);
+        long f0 = context.computeOnClient(mc -> Aqua.hud().frames());
+        context.waitTicks(10);
+        String hitboxes = context.computeOnClient(mc -> !mc.debugHudEntryList.getVisibleEntries().isEmpty() + "|"
+                + mc.debugHudEntryList.isF3Enabled() + "|" + (Aqua.hud().frames() - f0));
+        context.takeScreenshot("51_hud_with_hitboxes_on");
+        check(hitboxes.startsWith("true|false|") && !hitboxes.endsWith("|0"),
+                "HUD stays visible while a debug option (hitboxes, F3+B) is on (debug option on | F3 screen | HUD frames: " + hitboxes + ")");
+        context.getInput().pressKey(GLFW.GLFW_KEY_F3);
+        context.waitTicks(5);
+        long f1 = context.computeOnClient(mc -> Aqua.hud().frames());
+        context.waitTicks(10);
+        String f3 = context.computeOnClient(mc -> mc.debugHudEntryList.isF3Enabled() + "|" + (Aqua.hud().frames() - f1));
+        context.takeScreenshot("52_hud_hidden_with_f3_screen");
+        check(f3.equals("true|0"), "HUD hides while the F3 screen is open (F3 screen | HUD frames: " + f3 + ")");
+        context.getInput().pressKey(GLFW.GLFW_KEY_F3);
+        context.getInput().holdKey(GLFW.GLFW_KEY_F3);
+        context.getInput().pressKey(GLFW.GLFW_KEY_B);
+        context.getInput().releaseKey(GLFW.GLFW_KEY_F3);
+        context.waitTicks(5);
+        boolean clean = context.computeOnClient(mc -> !mc.debugHudEntryList.isF3Enabled());
+        check(clean, "F3 screen closed again after the debug overlay check");
     }
 
     private static void setWardrobeTab(AquaMenuScreen menu, String tab) {
