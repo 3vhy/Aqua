@@ -74,6 +74,7 @@ final class Modules {
         m.add(new EmotesModule());
         // Quality of life
         m.add(new Zoom());
+        m.add(new dev.aqua.client.module.qol.Freelook());
         m.add(new ToggleSprint());
         m.add(new MusicModule());
         m.add(new ScreenshotHelper());

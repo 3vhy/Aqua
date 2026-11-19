@@ -23,6 +23,24 @@ public final class MusicModule extends Module {
         }
     }
 
+    public enum Apps implements EnumSetting.Displayable {
+        SPOTIFY("Spotify only"), ANY("Any music app");
+        final String l;
+
+        Apps(String l) {
+            this.l = l;
+        }
+
+        public String displayName() {
+            return l;
+        }
+    }
+
+    private final BoolSetting external = add(new BoolSetting("external", "Show music from Spotify", true)
+            .describe("Shows what Spotify (or another app) is playing on the music card, island and sky lyrics, read from your "
+                    + "computer's media controls. No Spotify login; nothing is sent to Spotify."));
+    private final EnumSetting<Apps> apps = add(new EnumSetting<>("external_apps", "Apps", Apps.SPOTIFY)
+            .describe("Any music app also picks up browsers and other players").visibleWhen(external::on));
     private final NumberSetting volume = add(new NumberSetting("volume", "Volume", 0.8, 0.0, 1.0, 0.05)
             .describe("Multiplied by Minecraft's Jukebox/Note Blocks volume").onChange(v -> MusicPlayer.get().applyVolume()));
     private final BoolSetting shuffle = add(new BoolSetting("shuffle", "Shuffle", false));
@@ -34,7 +52,7 @@ public final class MusicModule extends Module {
             .visibleWhen(lyrics::on));
 
     public MusicModule() {
-        super("music", "Music Player", "Plays your own .ogg files from config/aqua/music, with synced lyrics.", Category.QOL, true,
+        super("music", "Music Player", "Plays your own .ogg files and shows what Spotify is playing, with synced lyrics.", Category.QOL, true,
                 "music", "songs", "lyrics", "spotify", "audio", "player");
         add(new ActionSetting("play_pause", "Playback", "Play / Pause", () -> MusicPlayer.get().togglePause()));
         add(new ActionSetting("next", "Next track", "Next", () -> MusicPlayer.get().next()));
@@ -96,6 +114,18 @@ public final class MusicModule extends Module {
 
     public boolean fetchOnline() {
         return lyrics.on() && fetchOnline.on();
+    }
+
+    public boolean externalEnabled() {
+        return external.on();
+    }
+
+    public boolean spotifyOnly() {
+        return apps.is(Apps.SPOTIFY);
+    }
+
+    public BoolSetting externalSetting() {
+        return external;
     }
 
     public boolean autoAdvance() {

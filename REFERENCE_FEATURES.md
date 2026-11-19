@@ -69,7 +69,7 @@ Status column:
 | R2 | 0:03 | Scoreboard "CatPvP" | Vanilla sidebar | Include (baseline) | Restyles the server's existing sidebar data | `hud/widgets/ScoreboardWidget` (vanilla sidebar replaced via HudElementRegistry in `Hooks`) | Done |
 | R4 | 0:55 | HUD tab: HUD scale slider, "Element backgrounds" toggle, Reset Layout, Edit Layout, grid of widget toggles with icons | Include | Same controls in Aqua's HUD page | HUD page of `gui/AquaMenuScreen` (`hudGlobalBar`) + `hud/editor/HudEditorScreen` | Done |
 | R4 | 0:55 | Widgets listed: Watermark, Module List, FPS, CPS, Coordinates, Keystrokes, Armor Status, Potion Effects, Inventory, Server Info, Direction, Clock, Ping, Speed, TPS | Include | All legitimate local information | `hud/widgets/*` | Done |
-| R4 | 0:55 | "Spotify" widget | Music service integration | Adapt | No streaming integration is invented; the Music widget plays local files | `MusicWidget` | Done |
+| R4 | 0:55 | "Spotify" widget | Music service integration | Include (added on request) | Reads what the Spotify app is playing from the operating system's media controls (no Spotify account or Web API); shown on the music card, island and sky lyrics, with LRCLIB lyrics and play/pause/skip/seek | `music/external/*`, `MusicPlayer`, `MusicWidget` | Done |
 | R4 | 0:55 | Radar / Region Map / Staff Panel / Media Base Finder widgets | — | Exclude | Radar shows other entities; Region Map is a DonutSMP shard tool; Staff Panel is for evading moderators; Media Base Finder locates other players' bases | — | n/a |
 | R2 | 0:01 | Staff List panel | Eye icon, list of online staff | Exclude | Moderator-evasion tool | — | n/a |
 | R2 | 0:03 | Opponent tags with armour enchant levels ("P4", "U3 L3 S5") and health ring | Exclude | Reveals opponent data the vanilla client does not show | — | n/a |
@@ -145,7 +145,7 @@ Status column:
 |---|---|---|---|---|---|---|
 | R1 | list | Sprint | Adapt | **Toggle Sprint** that behaves like vanilla's accessibility toggle (no omni-sprint) | `module/qol/ToggleSprint` | Done |
 | R4 | 0:44 | Zoom (array list) | Include | Smooth configurable zoom | `module/qol/Zoom` | Done |
-| R4 | 0:44 | Freelook (array list), R3 0:02 Freelook notice | Exclude | Decouples camera from movement; banned on many servers as an advantage | — | n/a |
+| R4 | 0:44 | Freelook (array list), R3 0:02 Freelook notice | Include (added on request) | First excluded as an advantage some servers forbid. Added after the user asked for it: camera-only (the player's real direction is unchanged), the camera still collides with walls, and the README warns that servers such as Hypixel do not allow it | `module/qol/Freelook`, `mixin/CameraMixin`, `mixin/EntityLookMixin` | Done |
 | R4 | 0:44 | Fullbright | Exclude | Reveals things hidden by darkness | — | n/a |
 
 ## 5. Excluded cheats and services (complete list)
@@ -165,12 +165,13 @@ All of the following appeared in R1–R4 or S1 and are **not** implemented in an
   Target ESP, Chams, Nametags (through walls / with opponent gear), tracers (R1, R4 1:45),
   Sus Chunk Finder (v1/v2), Tunnel Base Finder, Media Base Finder, Cave Analyzer,
   Spawner Nametags, SpawnerBeam, Block Entity ESP, Radar with entities, FreeCam
-  (R1 0:12, R3 0:06), Camera Clip, Freelook, Fullbright, No Water Fog, Anti Vanish,
+  (R1 0:12, R3 0:06), Camera Clip, Fullbright, No Water Fog, Anti Vanish,
   Staff List / Staff Panel, Target HUD with opponent health.
 * **Server / anticheat tooling:** Anticheat Alerts (R4 0:46, 1:20), Goliath RTP, Region
   Map, Home Reset, Tp Directions, Schematic Builder (auto-build), Fake Player.
 * **External services:** Discord Presence, 67 Chat, community config server,
-  "Claim your username" website, Spotify. (The only online lookups Aqua makes are ones you ask
+  "Claim your username" website. (Spotify is now shown by reading the local app, not through an
+  online Spotify service; see section 8.) (The only online lookups Aqua makes are ones you ask
   for: Skin Protect fetches the skin of the name you type from Mojang, and the music player looks
   up synced lyrics on LRCLIB by title, artist and length. The lyrics lookup can be switched off.)
 * **Third-party IP:** 3D character skins of SpongeBob, Charizard, Batman, Bonnie (FNAF),
@@ -228,3 +229,5 @@ These were asked for after the first delivery. They are listed here so the audit
 | Music player without lyrics ("standalone") | A **Lyrics** switch hides lyrics everywhere (card, island, sky text); the card has a compact style; a new **Music** page in the menu is a full player (seek bar, library, shuffle, repeat, volume) | `music/MusicModule`, `gui/pages/MusicPage`, `hud/widgets/MusicWidget` | Done |
 | Kill effects | Lightning, Soul, Burst, Blood, Hearts and Firework, played where something you hit within the last 6 s dies; optional sound only you hear; players-only option | `module/cosmetic/KillEffects` | Done |
 | Automatically fetch lyrics | When a song has no `.lrc` file, synced lyrics are looked up on LRCLIB (title, artist and length only) and cached in `config/aqua/lyrics/` | `music/LyricsFetcher` | Done |
+| Show the music playing in Spotify | Read from the OS media controls (Windows media session, macOS AppleScript, Linux MPRIS); card, island, sky lyrics, Music page; LRCLIB lyrics; cover art; play/pause, next, previous, seek. Windows falls back to Spotify's window title where PowerShell is blocked | `music/external/*` | Done |
+| Freelook | Hold (or toggle) Left Alt to orbit the camera in third person; the player keeps facing and walking the same way | `module/qol/Freelook` | Done |

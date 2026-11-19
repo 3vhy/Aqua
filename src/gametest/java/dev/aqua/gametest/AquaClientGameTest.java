@@ -97,6 +97,8 @@ public final class AquaClientGameTest implements FabricClientGameTest {
                     switch (section.trim()) {
                         case "hud_fallback" -> hudFallback(context);
                         case "debug_overlay" -> debugOverlay(context);
+                        case "external_media" -> externalMedia(context);
+                        case "freelook" -> freelook(context);
                         case "identity" -> identity(context, sp);
                         default -> throw new IllegalArgumentException("unknown section " + section);
                     }
@@ -144,7 +146,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
 
         // Static scan: no cheat modules exist anywhere.
         String[] banned = {"kill aura", "killaura", "aura", "triggerbot", "trigger bot", "aim assist", "aimassist", "aimbot", "reach",
-                "backtrack", "esp", "tracers", "tracer", "xray", "x ray", "freecam", "free cam", "freelook", "fullbright", "scaffold",
+                "backtrack", "esp", "tracers", "tracer", "xray", "x ray", "freecam", "free cam", "fullbright", "scaffold",
                 "autoclicker", "auto clicker", "auto totem", "autototem", "inv totem", "velocity", "no fall", "nofall", "fly", "flight",
                 "speed", "blink", "fake lag", "nametags", "radar", "staff list", "staff panel", "hitbox", "criticals", "chams", "auto tool",
                 "auto riptide", "pearl catch", "pearl throw", "anchor", "crystal aura", "auto crystal", "shield breaker", "sprint reset",
@@ -193,6 +195,8 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             identity(context, sp);
             hudFallback(context);
             debugOverlay(context);
+            externalMedia(context);
+            freelook(context);
             profilesAndLayouts(context);
             resizeAndScale(context);
             reloadResources(context);
@@ -943,6 +947,146 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         context.waitTicks(5);
         boolean clean = context.computeOnClient(mc -> !mc.debugHudEntryList.isF3Enabled());
         check(clean, "F3 screen closed again after the debug overlay check");
+    }
+
+    /**
+     * Music playing in another app: a stand-in for Spotify (tools/mock_mpris_player.py) publishes a
+     * track on a private D-Bus session, the way Spotify does on Linux. Aqua must show it on the card
+     * and island, keep time, find synced lyrics, load the cover and send play/pause and next to it.
+     */
+    private void externalMedia(ClientGameTestContext context) {
+        String py = System.getenv("AQUA_TEST_PYTHON");
+        String mock = System.getenv("AQUA_TEST_MOCK_MPRIS");
+        boolean linux = System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("linux");
+        if (!linux || py == null || mock == null || System.getenv("DBUS_SESSION_BUS_ADDRESS") == null) {
+            skip("Music from another app: needs Linux, D-Bus and PyGObject for the stand-in player (not available here)");
+            return;
+        }
+        Path log = resultFile.resolveSibling("mock-mpris.log");
+        Process player;
+        try {
+            Files.deleteIfExists(log);
+            player = new ProcessBuilder(py, mock, "--art", String.valueOf(System.getenv("AQUA_TEST_MOCK_ART")), "--log", log.toString())
+                    .redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            context.runOnClient(mc -> {
+                dev.aqua.client.music.MusicPlayer.get().stop();
+                Aqua.modules().byId("music_card").setEnabled(true, false);
+                Aqua.modules().byId("island").setEnabled(true, false);
+                Aqua.modules().get(dev.aqua.client.music.MusicModule.class).setLyrics(true);
+            });
+            context.waitFor(mc -> "Spotify".equals(dev.aqua.client.music.MusicPlayer.get().sourceApp()), 400);
+            String found = context.computeOnClient(mc -> {
+                var p = dev.aqua.client.music.MusicPlayer.get();
+                return p.current().title() + "|" + p.current().artist() + "|" + p.isPlaying() + "|" + p.current().durationMs();
+            });
+            check(found.equals("Amazing Grace|Traditional|true|240000"),
+                    "Music playing in Spotify is picked up from the system media controls (" + found + ")");
+            // Test ticks run faster than real time, so compare against the wall clock.
+            long w0 = System.currentTimeMillis();
+            long p0 = context.computeOnClient(mc -> dev.aqua.client.music.MusicPlayer.get().positionMs());
+            context.waitFor(mc -> System.currentTimeMillis() - w0 > 3000, 2000);
+            long p1 = context.computeOnClient(mc -> dev.aqua.client.music.MusicPlayer.get().positionMs());
+            long wall = System.currentTimeMillis() - w0;
+            check(Math.abs((p1 - p0) - wall) < 700, "Spotify track time keeps running in step with real time ("
+                    + p0 + " ms -> " + p1 + " ms over " + wall + " ms)");
+            context.waitFor(mc -> !dev.aqua.client.music.MusicPlayer.get().lyricStatus().startsWith("Searching"), 1200);
+            String lyrics = context.computeOnClient(mc -> {
+                var p = dev.aqua.client.music.MusicPlayer.get();
+                return p.lyricStatus() + "|" + p.lyricsFor(p.current()).size();
+            });
+            check(lyrics.startsWith("Lyrics from LRCLIB|") && !lyrics.endsWith("|0"),
+                    "Synced lyrics are found automatically for the Spotify track (" + lyrics + " lines)");
+            context.waitFor(mc -> dev.aqua.client.music.MusicPlayer.get().cover() != null, 200);
+            pass("Spotify cover art loaded on the music card");
+            context.runOnClient(mc -> Aqua.modules().byId("sky_lyrics").setEnabled(true, false));
+            context.waitTicks(30);
+            context.takeScreenshot("53_spotify_track_on_card_and_island");
+            context.runOnClient(mc -> Aqua.modules().byId("sky_lyrics").setEnabled(false, false));
+
+            context.runOnClient(mc -> dev.aqua.client.music.MusicPlayer.get().togglePause());
+            context.waitFor(mc -> !dev.aqua.client.music.MusicPlayer.get().isPlaying(), 200);
+            long paused = context.computeOnClient(mc -> dev.aqua.client.music.MusicPlayer.get().positionMs());
+            long w1 = System.currentTimeMillis();
+            context.waitFor(mc -> System.currentTimeMillis() - w1 > 1500, 2000);
+            long stillPaused = context.computeOnClient(mc -> dev.aqua.client.music.MusicPlayer.get().positionMs());
+            check(Math.abs(stillPaused - paused) < 200, "Pause from Aqua pauses Spotify and the clock stops (" + paused + " / " + stillPaused + " ms)");
+            context.runOnClient(mc -> dev.aqua.client.music.MusicPlayer.get().togglePause());
+            context.waitFor(mc -> dev.aqua.client.music.MusicPlayer.get().isPlaying(), 200);
+            context.runOnClient(mc -> dev.aqua.client.music.MusicPlayer.get().next());
+            context.waitFor(mc -> dev.aqua.client.music.MusicPlayer.get().current() != null
+                    && dev.aqua.client.music.MusicPlayer.get().current().title().startsWith("'Tis"), 200);
+            String next = context.computeOnClient(mc -> dev.aqua.client.music.MusicPlayer.get().current().title() + "|"
+                    + dev.aqua.client.music.MusicPlayer.get().current().artist());
+            String calls = Files.exists(log) ? Files.readString(log) : "";
+            check(next.equals("'Tis the Gift to Be Simple|Joseph Brackett") && calls.contains("call PlayPause") && calls.contains("call Next"),
+                    "Play/pause and next from Aqua reach Spotify (" + next + ")");
+            context.setScreen(() -> new AquaMenuScreen(null));
+            context.runOnClient(mc -> setNav((AquaMenuScreen) mc.currentScreen, "MUSIC"));
+            context.waitTicks(20);
+            context.takeScreenshot("54_music_page_spotify");
+            context.setScreen(() -> null);
+
+            context.runOnClient(mc -> Aqua.modules().get(dev.aqua.client.music.MusicModule.class).externalSetting().set(false));
+            context.waitTicks(5);
+            boolean off = context.computeOnClient(mc -> !dev.aqua.client.music.MusicPlayer.get().isExternal());
+            check(off, "Turning off \"Show music from Spotify\" hides the Spotify track");
+            context.runOnClient(mc -> Aqua.modules().get(dev.aqua.client.music.MusicModule.class).externalSetting().set(true));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            player.destroy();
+        }
+        context.waitFor(mc -> !dev.aqua.client.music.MusicPlayer.get().isExternal(), 200);
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("music_card").setEnabled(false, false);
+        });
+        pass("Spotify stand-in closed; the music card no longer shows it");
+    }
+
+    /** Freelook: holding the key turns only the camera; the player keeps facing and walking the same way. */
+    private void freelook(ClientGameTestContext context) {
+        context.runOnClient(mc -> {
+            mc.player.setYaw(0f);
+            mc.player.setPitch(10f);
+            mc.options.setPerspective(Perspective.FIRST_PERSON);
+        });
+        context.waitTicks(3);
+        boolean locked = context.computeOnClient(mc -> mc.mouse.isCursorLocked());
+        context.getInput().holdKey(GLFW.GLFW_KEY_LEFT_ALT);
+        context.waitTicks(3);
+        for (int i = 0; i < 8; i++) {
+            context.getInput().moveCursor(80, 10);
+            context.waitTicks(1);
+        }
+        if (!locked) {
+            // Without a captured cursor the virtual display sends no mouse movement; turn the camera directly.
+            context.runOnClient(mc -> dev.aqua.client.module.qol.Freelook.get().turn(400, 40));
+        }
+        context.waitTicks(2);
+        String on = context.computeOnClient(mc -> dev.aqua.client.module.qol.Freelook.on() + "|" + mc.options.getPerspective()
+                + "|" + String.format(Locale.ROOT, "%.1f|%.1f", mc.player.getYaw(), mc.gameRenderer.getCamera().getYaw()));
+        String[] f = on.split("\\|");
+        check(f[0].equals("true") && f[1].equals("THIRD_PERSON_BACK") && Math.abs(Float.parseFloat(f[2])) < 0.01f
+                        && Math.abs(Float.parseFloat(f[3])) > 20f,
+                "Freelook turns the camera around the player while the player keeps facing the same way (on | view | player yaw | camera yaw: "
+                        + on + ")");
+        double[] before = context.computeOnClient(mc -> new double[]{mc.player.getX(), mc.player.getZ()});
+        context.getInput().holdKeyFor(o -> o.forwardKey, 12);
+        double[] after = context.computeOnClient(mc -> new double[]{mc.player.getX(), mc.player.getZ()});
+        context.takeScreenshot("55_freelook_camera_turned");
+        double dx = after[0] - before[0];
+        double dz = after[1] - before[1];
+        check(dz > 0.5 && Math.abs(dx) < 0.2, String.format(Locale.ROOT,
+                "While freelooking, W still walks the way the player faces (moved x %.2f, z %.2f)", dx, dz));
+        context.getInput().releaseKey(GLFW.GLFW_KEY_LEFT_ALT);
+        context.waitTicks(3);
+        String off = context.computeOnClient(mc -> dev.aqua.client.module.qol.Freelook.on() + "|" + mc.options.getPerspective()
+                + "|" + String.format(Locale.ROOT, "%.1f", Math.abs(mc.player.getYaw() - mc.gameRenderer.getCamera().getYaw())));
+        check(off.equals("false|FIRST_PERSON|0.0"), "Releasing the freelook key returns the camera to first person (" + off + ")");
     }
 
     private static void setWardrobeTab(AquaMenuScreen menu, String tab) {

@@ -6,7 +6,8 @@ Aqua is a regular Fabric mod `.jar`: it goes in your `mods` folder and runs insi
 installation. **It is not a standalone launcher.**
 
 Aqua contains **no cheats or gameplay automation**: no combat or movement modules, no ESP, x-ray,
-tracers, freecam, fullbright or reach. `REFERENCE_FEATURES.md` lists every feature from the reference
+tracers, freecam, fullbright or reach. (Freelook was added on request; it is a camera-only feature
+that some servers still forbid, see *Quality of life*.) `REFERENCE_FEATURES.md` lists every feature from the reference
 videos, including everything that was excluded and why. Server rules still apply. Check the rules of
 each server before you play, because no client mod is approved everywhere.
 
@@ -56,6 +57,7 @@ sha256sum aqua-client-1.0.0+mc1.21.11.jar
 |---|---|---|
 | Open / close the Aqua menu | Right Shift | Aqua > Keybinds, or Options > Controls |
 | Zoom (hold, scroll to adjust) | C | same |
+| Freelook (hold) | Left Alt | same |
 | Emote wheel | B | same |
 | Inspect held item | Y | same |
 | HUD editor | unbound | same |
@@ -144,10 +146,15 @@ Effect, Hit Particles, Crystal Pulse (depth tested), World Join Effect (typewrit
 (wheel plus wardrobe preview).
 
 ### Quality of life
-Smooth Zoom, Toggle Sprint (holds the vanilla sprint key, so there is no omni-sprint), Music Player,
+Smooth Zoom, Freelook, Toggle Sprint (holds the vanilla sprint key, so there is no omni-sprint), Music Player (with Spotify),
 Screenshot notifications with a thumbnail, Chat Style (background and timestamps), Death Waypoints
 (your own deaths only), Streamer Mode (hides coordinates and the server address on your own screen).
 
+* **Freelook**: hold **Left Alt** to look around your player in third person while you keep
+  moving and facing the same way. Only the camera turns; your player's real direction, which the
+  server and other players see, does not change. The camera still stops at walls. It can be set to
+  toggle instead of hold, start from the front, or invert up and down. **Some servers, such as
+  Hypixel, do not allow freelook mods**, so check the rules before using it.
 * **Name Protect** replaces your username with an alias of your choice in everything the game draws:
   chat, tab list, nametags, scoreboard and the HUD.
 * **Skin Protect** shows another skin as yours, on your screen only. Type a player's name and
@@ -181,6 +188,22 @@ turn the Aqua title screen off in Settings.
    seek bar, previous/play/next, shuffle, repeat, volume, a lyrics preview and your library. You can
    also use Quality of Life > Music Player and the play/pause and next keys.
 
+**Spotify.** Play music in the Spotify app and Aqua shows it on the music card, the island and the
+sky lyrics, with cover art, the song's progress and synced lyrics. Play/pause, next, previous and
+the seek bar on the Music page control Spotify. Aqua reads this from your computer's media controls,
+so there is no Spotify login and nothing is sent to Spotify:
+
+* **Windows 10/11**: the system media session (what Windows shows next to the volume flyout), read
+  by a small PowerShell script that ships inside the jar. If PowerShell is blocked on your PC, Aqua
+  falls back to Spotify's window title, which gives the song but no progress or controls.
+* **macOS**: AppleScript, only while Spotify is open. macOS asks once whether Minecraft may control
+  Spotify.
+* **Linux**: MPRIS over D-Bus, using the `gdbus` command.
+
+Turn it off with the **Spotify** switch on the Music page or *Show music from Spotify* in the Music
+Player settings. Set *Apps* to *Any music app* to also show browsers and other players. While a
+song plays in Aqua's own player, that song is shown instead.
+
 **Automatic lyrics.** When a song has no `.lrc` file, Aqua looks up synced lyrics on
 [LRCLIB](https://lrclib.net), a free public lyrics database, and saves them in
 `config/aqua/lyrics/` so each song is looked up once. Only the song's **title, artist and length**
@@ -207,6 +230,7 @@ Everything is stored under `config/aqua/`:
 | `import/` | drop exported files here and press **Import** (processed files move to `import/done`) |
 | `music/` | your music, lyrics and cover art |
 | `lyrics/` | lyrics found online, cached per song |
+| `cache/media/` | cover art of songs playing in Spotify, and the Windows media reader script |
 
 Saves happen one second after a change and when the game closes. Each save goes to a temporary file
 first and is then moved into place. A damaged file is renamed to `*.corrupt-<time>`, defaults are
@@ -283,7 +307,8 @@ Aqua makes no network requests unless you use one of these features:
 
 | Feature | Sends | To |
 |---|---|---|
-| Automatic lyrics | song title, artist and length | `lrclib.net` |
+| Automatic lyrics | song title, artist and length (for your songs and Spotify's) | `lrclib.net` |
+| Spotify cover art (macOS, Linux) | nothing (downloads the cover image Spotify links to) | Spotify's image server (`i.scdn.co`) |
 | Skin Protect (player name) | the player name you typed | Mojang (`api.mojang.com`, `sessionserver.mojang.com`, `textures.minecraft.net`) |
 | Aqua Badge hello | the Aqua version | only the server you are connected to |
 

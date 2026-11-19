@@ -2,6 +2,7 @@ package dev.aqua.client.music;
 
 import dev.aqua.client.Aqua;
 import dev.aqua.client.AquaClient;
+import dev.aqua.client.music.external.ExternalMedia;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
@@ -173,17 +174,55 @@ public final class MusicPlayer {
     }
 
     @Nullable
-    public Track current() {
+    private Track localCurrent() {
         List<Track> lib = library;
         return index >= 0 && index < lib.size() && state != State.EMPTY ? lib.get(index) : null;
     }
 
+    /**
+     * The other app's track when it should be shown instead of Aqua's own player: Aqua's own song
+     * while it plays, otherwise a song playing in Spotify, otherwise Aqua's paused song, otherwise a
+     * paused song in Spotify.
+     */
+    @Nullable
+    private Track externalShown() {
+        ExternalMedia em = ExternalMedia.get();
+        Track et = em.track();
+        if (et == null || state == State.PLAYING) {
+            return null;
+        }
+        if (em.playing()) {
+            return et;
+        }
+        return state == State.PAUSED ? null : et;
+    }
+
+    /** True while the shown song is playing in another app (Spotify, ...) rather than in Aqua. */
+    public boolean isExternal() {
+        return externalShown() != null;
+    }
+
+    /** "Spotify" etc. while showing another app's song, otherwise null. */
+    @Nullable
+    public String sourceApp() {
+        return isExternal() ? ExternalMedia.get().appName() : null;
+    }
+
+    @Nullable
+    public Track current() {
+        Track ext = externalShown();
+        return ext != null ? ext : localCurrent();
+    }
+
     public State state() {
+        if (externalShown() != null) {
+            return ExternalMedia.get().playing() ? State.PLAYING : State.PAUSED;
+        }
         return state;
     }
 
     public boolean isPlaying() {
-        return state == State.PLAYING;
+        return state() == State.PLAYING;
     }
 
     public void play(int i) {
@@ -270,7 +309,11 @@ public final class MusicPlayer {
 
     /** Restarts the current track from a position (used by the seek bar). */
     public void seek(long ms) {
-        Track t = current();
+        if (isExternal()) {
+            ExternalMedia.get().seek(ms);
+            return;
+        }
+        Track t = localCurrent();
         if (t == null) {
             return;
         }
@@ -288,6 +331,10 @@ public final class MusicPlayer {
     }
 
     public void togglePause() {
+        if (isExternal()) {
+            ExternalMedia.get().togglePause();
+            return;
+        }
         if (state == State.PLAYING) {
             pause();
         } else if (state == State.PAUSED) {
@@ -317,6 +364,10 @@ public final class MusicPlayer {
     }
 
     public void next() {
+        if (isExternal()) {
+            ExternalMedia.get().next();
+            return;
+        }
         List<Track> lib = library;
         if (lib.isEmpty()) {
             return;
@@ -327,6 +378,10 @@ public final class MusicPlayer {
     }
 
     public void previous() {
+        if (isExternal()) {
+            ExternalMedia.get().previous();
+            return;
+        }
         List<Track> lib = library;
         if (lib.isEmpty()) {
             return;
@@ -351,12 +406,15 @@ public final class MusicPlayer {
     }
 
     public long positionMs() {
+        if (isExternal()) {
+            return ExternalMedia.get().positionMs();
+        }
         if (state == State.EMPTY || state == State.STOPPED) {
             return 0;
         }
         long now = state == State.PAUSED ? pausedAt : System.currentTimeMillis();
         long p = now - startedAt - pausedTotal;
-        Track t = current();
+        Track t = localCurrent();
         if (t != null && t.durationMs() > 0) {
             p = Math.min(p, t.durationMs());
         }
@@ -382,8 +440,33 @@ public final class MusicPlayer {
         return idx;
     }
 
+    @Nullable
+    private Path externalLyricsFor;
+    @Nullable
+    private Path externalCoverFor;
+
     public void tick() {
         MinecraftClient mc = MinecraftClient.getInstance();
+        ExternalMedia.get().tick();
+        Track ext = externalShown();
+        if (ext != null) {
+            if (!ext.file().equals(externalLyricsFor)) {
+                externalLyricsFor = ext.file();
+                requestLyrics(ext);
+            }
+            if (ext.cover() != null && !ext.cover().equals(externalCoverFor)) {
+                externalCoverFor = ext.cover();
+                requestCover(ext);
+            }
+        } else if (externalLyricsFor != null) {
+            externalLyricsFor = null;
+            externalCoverFor = null;
+            Track local = localCurrent();
+            if (local != null && state != State.STOPPED && state != State.EMPTY) {
+                requestCover(local);
+                requestLyrics(local);
+            }
+        }
         if (pendingCover != null) {
             NativeImage img = pendingCover;
             pendingCover = null;
@@ -403,7 +486,7 @@ public final class MusicPlayer {
                 if (playing) {
                     sawPlaying = true;
                 } else if (sawPlaying || ++startWaitTicks > 100) {
-                    Track t = current();
+                    Track t = localCurrent();
                     boolean finished = t != null && (t.durationMs() <= 0 || positionMs() > t.durationMs() - 1500);
                     sound = null;
                     if (finished || !sawPlaying) {
@@ -448,15 +531,45 @@ public final class MusicPlayer {
         coverFor = t.cover();
         Path p = t.cover();
         IO.execute(() -> {
-            try (InputStream in = Files.newInputStream(p)) {
+            try {
                 if (Files.size(p) > 8L * 1024 * 1024) {
                     return;
                 }
-                pendingCover = NativeImage.read(in);
+                pendingCover = decodeCover(p);
             } catch (Exception e) {
                 AquaClient.LOGGER.warn("Could not load cover art {}", p);
             }
         });
+    }
+
+    /**
+     * Minecraft's image loader only accepts PNG, and cover art is usually JPEG (Spotify's always is),
+     * so covers are decoded with Java's image reader and scaled down to at most 256 pixels.
+     */
+    private static NativeImage decodeCover(Path p) throws java.io.IOException {
+        java.awt.image.BufferedImage src;
+        try (InputStream in = Files.newInputStream(p)) {
+            src = javax.imageio.ImageIO.read(in);
+        }
+        if (src == null) {
+            throw new java.io.IOException("unsupported image format");
+        }
+        int max = 256;
+        float k = Math.min(1f, max / (float) Math.max(src.getWidth(), src.getHeight()));
+        int w = Math.max(1, Math.round(src.getWidth() * k));
+        int h = Math.max(1, Math.round(src.getHeight() * k));
+        java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        java.awt.Graphics2D g = img.createGraphics();
+        g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.drawImage(src, 0, 0, w, h, null);
+        g.dispose();
+        NativeImage out = new NativeImage(w, h, false);
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                out.setColorArgb(x, y, img.getRGB(x, y));
+            }
+        }
+        return out;
     }
 
     @Nullable

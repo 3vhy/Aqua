@@ -83,6 +83,7 @@ public final class AquaClient implements ClientModInitializer {
         });
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
             MusicPlayer.get().stop();
+            dev.aqua.client.music.external.ExternalMedia.get().stop();
             Aqua.config.save();
         });
         Hooks.registerWorldRendering();

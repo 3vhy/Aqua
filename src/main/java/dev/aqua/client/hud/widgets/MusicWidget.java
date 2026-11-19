@@ -131,10 +131,13 @@ public final class MusicWidget extends HudWidget {
         String artist;
         if (t == null) {
             title = preview ? "Sample Track" : "Nothing playing";
-            artist = preview ? "Sample Artist" : (mp.library().isEmpty() ? "Add .ogg files to config/aqua/music" : "Press play in Aqua > Music");
+            artist = preview ? "Sample Artist" : "Play something in Spotify or Aqua > Music";
         } else {
             title = t.title();
             artist = t.artist().isEmpty() ? "Unknown artist" : t.artist();
+            if (mp.sourceApp() != null) {
+                artist += "  \u00b7  " + mp.sourceApp();
+            }
         }
         R2D.text(ctx, AquaFont.ellipsize(title, W - 52, 6.2f, AquaFont.Weight.SEMIBOLD), 33, 8, 6.2f, AquaFont.Weight.SEMIBOLD,
                 Colors.fade(th.text(), alpha));

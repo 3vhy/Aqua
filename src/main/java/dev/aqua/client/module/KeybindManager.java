@@ -28,6 +28,8 @@ public final class KeybindManager {
             new KeyBinding("key.aqua.emote_wheel", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_B, CATEGORY));
     public final KeyBinding inspect = KeyBindingHelper.registerKeyBinding(
             new KeyBinding("key.aqua.inspect", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_Y, CATEGORY));
+    public final KeyBinding freelook = KeyBindingHelper.registerKeyBinding(
+            new KeyBinding("key.aqua.freelook", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, CATEGORY));
     public final KeyBinding hudEditor = KeyBindingHelper.registerKeyBinding(
             new KeyBinding("key.aqua.hud_editor", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
     public final KeyBinding musicToggle = KeyBindingHelper.registerKeyBinding(
@@ -36,7 +38,7 @@ public final class KeybindManager {
             new KeyBinding("key.aqua.music_next", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY));
 
     public List<KeyBinding> aquaVanillaBinds() {
-        return List.of(menu, zoom, emoteWheel, inspect, hudEditor, musicToggle, musicNext);
+        return List.of(menu, zoom, freelook, emoteWheel, inspect, hudEditor, musicToggle, musicNext);
     }
 
     /** Called from the keyboard/mouse mixins. Returns true when an Aqua module consumed the input. */

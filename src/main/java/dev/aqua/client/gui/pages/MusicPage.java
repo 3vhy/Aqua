@@ -50,15 +50,29 @@ public final class MusicPage implements Page {
         }
         float tx = x + 9 + cs + 10;
         float tw = w - (tx - x) - 9;
+        String app = mp.sourceApp();
         String title = tr != null ? tr.title() : (mp.library().isEmpty() ? "No music yet" : "Pick a song below");
-        String artist = tr != null ? (tr.artist().isEmpty() ? "Unknown artist" : tr.artist())
-                : (mp.library().isEmpty() ? "Add .ogg files to config/aqua/music" : mp.library().size() + " songs in your library");
-        R2D.text(ctx, AquaFont.ellipsize(title, tw, 8f, AquaFont.Weight.SEMIBOLD), tx, y + 9, 8f, AquaFont.Weight.SEMIBOLD, Colors.fade(t.text(), a));
+        String artist = tr != null ? (tr.artist().isEmpty() ? "Unknown artist" : tr.artist()) + (app != null ? "  \u00b7  " + app : "")
+                : (mp.library().isEmpty() ? "Play something in Spotify, or add .ogg files to config/aqua/music"
+                : mp.library().size() + " songs in your library");
+        // Spotify switch, top right of the card
+        float swx = x + w - 9 - 17;
+        R2D.textRight(ctx, "Spotify", swx - 4, y + 13.5f, 5f, AquaFont.Weight.MEDIUM, Colors.fade(t.muted(), a));
+        boolean ext = ui.toggle("mp_external", swx, y + 9, mod.externalSetting().on());
+        if (ext != mod.externalSetting().on()) {
+            mod.externalSetting().set(ext);
+        }
+        float titleW = Math.min(tw, swx - 32 - tx);
+        R2D.text(ctx, AquaFont.ellipsize(title, titleW, 8f, AquaFont.Weight.SEMIBOLD), tx, y + 9, 8f, AquaFont.Weight.SEMIBOLD, Colors.fade(t.text(), a));
         R2D.text(ctx, AquaFont.ellipsize(artist, tw, 5.4f, AquaFont.Weight.MEDIUM), tx, y + 20, 5.4f, AquaFont.Weight.MEDIUM, Colors.fade(t.muted(), a));
         String status = mp.lyricStatus();
+        if (tr == null && mod.externalEnabled()) {
+            status = dev.aqua.client.music.external.ExternalMedia.get().status();
+        }
         if (!status.isEmpty()) {
             R2D.icon(ctx, Icon.NOTE, tx, y + 29.5f, 5, Colors.fade(t.accent(), a));
-            R2D.text(ctx, status, tx + 7, y + 29.5f, 4.6f, AquaFont.Weight.MEDIUM, Colors.fade(t.muted(), a));
+            R2D.text(ctx, AquaFont.ellipsize(status, tw - 7, 4.6f, AquaFont.Weight.MEDIUM), tx + 7, y + 29.5f, 4.6f, AquaFont.Weight.MEDIUM,
+                    Colors.fade(t.muted(), a));
         }
         // seek bar
         long pos = mp.positionMs();
@@ -155,7 +169,7 @@ public final class MusicPage implements Page {
         }
         for (int i = 0; i < lib.size(); i++) {
             Track tk = lib.get(i);
-            boolean cur = i == mp.index() && tr != null;
+            boolean cur = !mp.isExternal() && i == mp.index() && tr != null;
             boolean hov = ui.hover(x + 4, ry, w - 8, rowH - 1);
             if (cur || hov) {
                 R2D.round(ctx, x + 4, ry, w - 8, rowH - 1, 4, Colors.fade(cur ? Colors.withAlpha(t.accent(), 0.18f) : Colors.withAlpha(t.elevated(), 0.9f), a));

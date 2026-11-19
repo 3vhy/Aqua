@@ -286,7 +286,7 @@ public final class AquaMenuScreen extends Screen {
             };
             subtitle = switch (nav) {
                 case WARDROBE -> "3D skins, knives and wearables, previewed live";
-                case MUSIC -> "Your own music with synced lyrics";
+                case MUSIC -> "Your music and Spotify, with synced lyrics";
                 case THEMES -> "Colours used across Aqua";
                 case PROFILES -> "Separate setups with their own HUD layout";
                 case KEYBINDS -> "Every Aqua binding in one place";
