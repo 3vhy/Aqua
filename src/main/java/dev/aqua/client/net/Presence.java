@@ -92,23 +92,27 @@ public final class Presence {
             ServerPlayerEntity player = context.player();
             MinecraftServer server = context.server();
             SERVER_USERS.computeIfAbsent(server, s -> ConcurrentHashMap.newKeySet()).add(player.getUuid());
-            broadcast(server);
+            broadcast(server, null);
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             Set<UUID> set = SERVER_USERS.get(server);
             if (set != null && set.remove(handler.player.getUuid())) {
-                broadcast(server);
+                // The leaving player is still in the player list here; never send to their closing connection.
+                broadcast(server, handler.player.getUuid());
             }
         });
     }
 
-    private static void broadcast(MinecraftServer server) {
+    private static void broadcast(MinecraftServer server, @org.jetbrains.annotations.Nullable UUID leaving) {
         Set<UUID> set = SERVER_USERS.get(server);
-        if (set == null) {
+        if (set == null || !server.isRunning()) {
             return;
         }
         Users payload = new Users(new ArrayList<>(set));
         for (ServerPlayerEntity p : server.getPlayerManager().getPlayerList()) {
+            if (p.getUuid().equals(leaving) || p.networkHandler == null || !p.networkHandler.isConnectionOpen()) {
+                continue;
+            }
             if (ServerPlayNetworking.canSend(p, Users.ID)) {
                 ServerPlayNetworking.send(p, payload);
             }
