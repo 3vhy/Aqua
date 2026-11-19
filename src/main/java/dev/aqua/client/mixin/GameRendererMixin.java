@@ -43,4 +43,10 @@ public abstract class GameRendererMixin {
         original.call(hud, ctx, tickCounter);
         HudFallback.afterVanillaHud(ctx);
     }
+
+    @Inject(method = "render(Lnet/minecraft/client/render/RenderTickCounter;Z)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderDeferredSubtitles()V", shift = At.Shift.AFTER))
+    private void aqua$hudFallbackEnd(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
+        HudFallback.endOfHud();
+    }
 }

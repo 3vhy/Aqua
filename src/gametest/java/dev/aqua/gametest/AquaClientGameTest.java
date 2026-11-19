@@ -86,6 +86,23 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             Showcase.run(context, this::pass);
             return;
         }
+        String only = System.getenv("AQUA_TEST_ONLY");
+        if (only != null) {
+            // Developer shortcut: run selected sections in a fresh world (not part of the full suite).
+            resultFile = stateDir.resolve("aqua-test-only.txt");
+            try (TestSingleplayerContext sp = createWorld(context)) {
+                sp.getClientWorld().waitForChunksRender();
+                context.waitTicks(20);
+                for (String section : only.split(",")) {
+                    switch (section.trim()) {
+                        case "hud_fallback" -> hudFallback(context);
+                        case "identity" -> identity(context, sp);
+                        default -> throw new IllegalArgumentException("unknown section " + section);
+                    }
+                }
+            }
+            return;
+        }
         boolean phase2 = Files.exists(marker);
         resultFile = stateDir.resolve(phase2 ? "aqua-test-results-phase2.txt" : "aqua-test-results-phase1.txt");
         if (phase2) {
@@ -876,15 +893,22 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         });
         context.waitTicks(5);
         long f0 = context.computeOnClient(mc -> Aqua.hud().frames());
+        long r0 = context.computeOnClient(mc -> dev.aqua.client.hud.HudFallback.layerRuns());
         context.waitTicks(15);
-        String blocked = context.computeOnClient(mc -> dev.aqua.client.hud.HudFallback.active() + "|" + (Aqua.hud().frames() - f0));
+        String blocked = context.computeOnClient(mc -> dev.aqua.client.hud.HudFallback.active() + "|" + (Aqua.hud().frames() - f0)
+                + "|" + (dev.aqua.client.hud.HudFallback.layerRuns() - r0));
         context.takeScreenshot("50_hud_drawn_by_fallback");
-        check(blocked.startsWith("true|") && !blocked.endsWith("|0"),
-                "HUD still draws when another mod stops Fabric's HUD layers (fallback active, frames drawn: " + blocked + ")");
+        check(blocked.startsWith("true|") && !blocked.split("\\|")[1].equals("0") && blocked.endsWith("|0"),
+                "HUD still draws when another mod stops Fabric's HUD layers (fallback active | HUD frames | layer runs: " + blocked + ")");
         context.runOnClient(mc -> blockAquaLayer = false);
         context.waitTicks(10);
-        boolean normal = context.computeOnClient(mc -> !dev.aqua.client.hud.HudFallback.active());
-        check(normal, "HUD goes back to the normal Fabric layer when it runs again");
+        long r1 = context.computeOnClient(mc -> dev.aqua.client.hud.HudFallback.layerRuns());
+        long b1 = context.computeOnClient(mc -> dev.aqua.client.hud.HudFallback.fallbackFrames());
+        context.waitTicks(10);
+        String normal = context.computeOnClient(mc -> dev.aqua.client.hud.HudFallback.active() + "|"
+                + (dev.aqua.client.hud.HudFallback.layerRuns() - r1) + "|" + (dev.aqua.client.hud.HudFallback.fallbackFrames() - b1));
+        check(normal.startsWith("false|") && !normal.split("\\|")[1].equals("0") && normal.endsWith("|0"),
+                "HUD goes back to the normal Fabric layer when it runs again (fallback active | layer runs | fallback frames: " + normal + ")");
     }
 
     private static void setWardrobeTab(AquaMenuScreen menu, String tab) {

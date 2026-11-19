@@ -9,7 +9,6 @@ import dev.aqua.client.setting.EnumSetting;
 import dev.aqua.client.setting.StringSetting;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.yggdrasil.ProfileResult;
-import com.mojang.authlib.yggdrasil.response.NameAndId;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.entity.player.SkinTextures;
@@ -146,25 +145,64 @@ public final class SkinProtect extends Module {
      * profile requests, so a failed fetch is retried twice with a short pause (uncached path).
      */
     private static Optional<GameProfile> resolve(MinecraftClient mc, String name) {
-        Optional<NameAndId> id = mc.getApiServices().profileRepository().findProfileByName(name);
-        if (id.isEmpty()) {
-            throw new NoSuchPlayer();
-        }
+        java.util.UUID id = lookupId(name);
         for (int attempt = 0; attempt < 3; attempt++) {
             if (attempt > 0) {
-                try {
-                    Thread.sleep(attempt * 4000L);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
+                pause(attempt * 4000L);
             }
-            ProfileResult r = mc.getApiServices().sessionService().fetchProfile(id.get().id(), true);
+            ProfileResult r = mc.getApiServices().sessionService().fetchProfile(id, true);
             if (r != null && r.profile() != null && r.profile().properties().containsKey("textures")) {
                 return Optional.of(r.profile());
             }
         }
         throw new Busy();
+    }
+
+    private static final java.net.http.HttpClient HTTP = java.net.http.HttpClient.newBuilder()
+            .connectTimeout(java.time.Duration.ofSeconds(8)).build();
+
+    /**
+     * Name to UUID with Mojang's public profile API. Minecraft's own lookup reports a rate-limited
+     * request as "no such player", so the status code is read here: 404 means the name does not
+     * exist, anything else that fails is retried and then reported as busy.
+     */
+    private static java.util.UUID lookupId(String name) {
+        for (int attempt = 0; attempt < 3; attempt++) {
+            if (attempt > 0) {
+                pause(attempt * 4000L);
+            }
+            try {
+                java.net.http.HttpRequest req = java.net.http.HttpRequest.newBuilder(
+                                java.net.URI.create("https://api.mojang.com/users/profiles/minecraft/" + name))
+                        .timeout(java.time.Duration.ofSeconds(10)).GET().build();
+                java.net.http.HttpResponse<String> res = HTTP.send(req, java.net.http.HttpResponse.BodyHandlers.ofString());
+                if (res.statusCode() == 404 || res.statusCode() == 204) {
+                    throw new NoSuchPlayer();
+                }
+                if (res.statusCode() == 200) {
+                    String raw = com.google.gson.JsonParser.parseString(res.body()).getAsJsonObject().get("id").getAsString();
+                    return java.util.UUID.fromString(raw.replaceFirst(
+                            "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{12})", "$1-$2-$3-$4-$5"));
+                }
+                AquaClient.LOGGER.info("Skin Protect: name lookup returned HTTP {} (attempt {})", res.statusCode(), attempt + 1);
+            } catch (NoSuchPlayer e) {
+                throw e;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            } catch (Exception e) {
+                AquaClient.LOGGER.info("Skin Protect: name lookup failed (attempt {}): {}", attempt + 1, e.toString());
+            }
+        }
+        throw new Busy();
+    }
+
+    private static void pause(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     /** Skin to show for yourself, or null to keep your own. */
