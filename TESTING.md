@@ -24,9 +24,9 @@ API (`src/gametest/java/dev/aqua/gametest/AquaClientGameTest.java`). Each run la
 
 | Mode | What runs | Result |
 |---|---|---|
-| `dev` | Loom development run (Yarn-named) with Aqua and Fabric API | **184 / 184 checks passed** (run before the last one-line HUD change, which the two runs below include) |
-| `production` | **The release jar** `aqua-client-1.0.0+mc1.21.11.jar`, remapped, in the production (intermediary) game with the Fabric API release jar | **184 / 184 checks passed** |
-| `compat` | Same as production, plus the unmodified Modrinth jars of Sodium, Iris and Mod Menu | **184 / 184 checks passed** |
+| `dev` | Loom development run (Yarn-named) with Aqua and Fabric API | **186 / 186 checks passed** |
+| `production` | **The release jar** `aqua-client-1.0.0+mc1.21.11.jar`, remapped, in the production (intermediary) game with the Fabric API release jar | **186 / 186 checks passed** |
+| `compat` | Same as production, plus the unmodified Modrinth jars of Sodium, Iris and Mod Menu | **186 / 186 checks passed** |
 
 Exact versions:
 
@@ -79,9 +79,9 @@ and reduced-motion were all restored. A deliberately malformed profile is rename
 
 ## Final runs
 
-The final `production` and `compat` runs used the delivered jar, SHA-256 `18c2e62e05fe1f9935efd062d920e95fc2cc19e4e89266e84d61ee12702485e2`.
-Launch 1 recorded 181 PASS lines and launch 2 recorded 3, with 0 failures and 0 skips in each mode.
-The 181 lines in launch 1 include one PASS per module for enabling it and one for disabling it (126
+The final `production` and `compat` runs used the delivered jar, SHA-256 `12e638310d097c15738a46f9bf6515082a015aa3938e10d60482d5a15324b5ca`.
+Launch 1 recorded 183 PASS lines and launch 2 recorded 3, with 0 failures and 0 skips in each mode.
+The 183 lines in launch 1 include one PASS per module for enabling it and one for disabling it (126
 lines for 63 modules). In the compat run, the log shows `Loading 58 mods` including `sodium 0.8.14+mc1.21.11`,
 `iris 1.10.8+mc1.21.11` and `modmenu 17.0.1`. No Aqua errors or mixin failures were logged with them.
 The only errors in that log come from the test environment: the offline test account (user
