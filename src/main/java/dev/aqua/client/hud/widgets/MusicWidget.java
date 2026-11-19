@@ -174,13 +174,13 @@ public final class MusicWidget extends HudWidget {
                 if (li < 0 || li >= lines.size()) {
                     continue;
                 }
-                float pos = k + sc;
+                float rel = k + sc;
                 // Previous, current and next line fully inside the card; lines scrolling in or out fade.
-                float vis = Math.max(0f, Math.min(1f, 2f - Math.abs(pos)));
+                float vis = Math.max(0f, Math.min(1f, 2f - Math.abs(rel)));
                 if (vis <= 0.01f) {
                     continue;
                 }
-                float ly = 54.5f + pos * 9.2f;
+                float ly = 54.5f + rel * 9.2f;
                 boolean cur = k == 0;
                 String txt = AquaFont.ellipsize(lines.get(li).text(), W - 12, cur ? 5.6f : 5f, cur ? AquaFont.Weight.SEMIBOLD : AquaFont.Weight.MEDIUM);
                 R2D.textMid(ctx, txt, 6, ly, cur ? 5.6f : 5f, cur ? AquaFont.Weight.SEMIBOLD : AquaFont.Weight.MEDIUM,

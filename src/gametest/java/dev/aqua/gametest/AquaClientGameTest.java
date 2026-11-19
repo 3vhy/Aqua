@@ -46,6 +46,13 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         flush();
     }
 
+    /** Records a check that could not be carried out for a reason outside the mod (reported, not passed). */
+    private void skip(String what) {
+        results.add("SKIP  " + what);
+        System.out.println("[AquaTest] SKIP " + what);
+        flush();
+    }
+
     private void check(boolean ok, String what) {
         if (!ok) {
             results.add("FAIL  " + what);
@@ -831,7 +838,12 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             return spm.status() + "|" + (spm.override() != null && mc.player.getSkin() == spm.override());
         });
         context.takeScreenshot("49_skin_protect_player");
-        check(skin.equals("Showing jeb_'s skin|true"), "Skin Protect looks up a player by name and shows their skin as yours (" + skin + ")");
+        if (skin.contains("Mojang is busy")) {
+            // Mojang's session server rate-limits shared addresses (HTTP 429); this is outside Aqua's control.
+            skip("Skin Protect player lookup: Mojang's session server refused the request after 3 attempts (rate limited) - " + skin);
+        } else {
+            check(skin.equals("Showing jeb_'s skin|true"), "Skin Protect looks up a player by name and shows their skin as yours (" + skin + ")");
+        }
         context.runOnClient(mc -> {
             Aqua.modules().byId("skin_protect").setEnabled(false, false);
             ((BoolSetting) find("aqua_badge", "own_nametag")).set(false);

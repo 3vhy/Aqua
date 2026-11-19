@@ -9,6 +9,9 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.command.ModelCommandRenderer;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.render.entity.feature.FeatureRenderer;
+import net.minecraft.client.render.entity.feature.HeldItemFeatureRenderer;
+import net.minecraft.client.render.entity.state.EntityRenderState;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.client.texture.Sprite;
@@ -32,5 +35,22 @@ public abstract class LivingEntityRendererMixin {
             }
         }
         original.call(queue, model, state, matrices, layer, light, overlay, tint, sprite, outline, crumbling);
+    }
+
+    /**
+     * With a 3D skin, armour, cape, elytra and the other player layers would not fit the character, so
+     * only the held-item layer (which follows the posed arms) is kept.
+     */
+    @WrapOperation(method = "render(Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/render/state/CameraRenderState;)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/feature/FeatureRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;ILnet/minecraft/client/render/entity/state/EntityRenderState;FF)V"))
+    private void aqua$characterFeatures(FeatureRenderer<?, ?> feature, MatrixStack matrices, OrderedRenderCommandQueue queue, int light,
+                                        EntityRenderState state, float limbAngle, float limbDistance, Operation<Void> original) {
+        if (state instanceof PlayerEntityRenderState ps && !(feature instanceof HeldItemFeatureRenderer<?, ?>)) {
+            Look look = Look.of(ps);
+            if (look != null && look.character() != null) {
+                return;
+            }
+        }
+        original.call(feature, matrices, queue, light, state, limbAngle, limbDistance);
     }
 }

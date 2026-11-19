@@ -23,14 +23,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PlayerEntityRenderer.class)
 public abstract class PlayerEntityRendererMixin {
     /** 3D skins replace the vanilla model, so vanilla layers (armour, held items, cape) are skipped too. */
-    @Inject(method = "shouldRenderFeatures(Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;)Z", at = @At("HEAD"), cancellable = true)
-    private void aqua$noFeaturesForCharacter(PlayerEntityRenderState state, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean> cir) {
-        dev.aqua.client.cosmetic.Look look = dev.aqua.client.cosmetic.Look.of(state);
-        if (look != null && look.character() != null) {
-            cir.setReturnValue(false);
-        }
-    }
-
     /** Hand Shader: restyle the first-person arm (this method is only used for first-person arms). */
     @Redirect(method = "renderArm", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;submitModelPart(Lnet/minecraft/client/model/ModelPart;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/RenderLayer;IILnet/minecraft/client/texture/Sprite;)V"))

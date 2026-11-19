@@ -201,10 +201,17 @@ public final class WardrobePage implements Page {
 
     private String currentLabel() {
         Look l = Look.current();
-        if (l.character() != null) {
-            return l.character().label;
-        }
-        return MinecraftClient.getInstance().getSession() != null ? "Your skin" : "Preview";
+        String none = "Nothing equipped";
+        return switch (tab) {
+            case SKINS -> l.character() != null ? l.character().label : "Your skin";
+            case WINGS -> l.wings() != null ? l.wings().displayName() + " wings" : none;
+            case HATS -> l.hat() != null ? l.hat().displayName() : none;
+            case CAPES -> l.cape() != null ? l.cape().displayName() + " cape" : none;
+            case KNIVES -> mod(Knives.class).isEnabled() ? mod(Knives.class).type().displayName() : none;
+            case EMOTES -> Emotes.current() != null ? Emotes.current().label : "Emotes";
+            case KILL -> mod(KillEffects.class).isEnabled()
+                    ? WardrobePage.<KillEffects.Effect>enumSetting(mod(KillEffects.class), "effect").get().displayName() : none;
+        };
     }
 
     @SuppressWarnings("unchecked")

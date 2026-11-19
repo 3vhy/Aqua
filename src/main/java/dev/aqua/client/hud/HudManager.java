@@ -69,13 +69,29 @@ public final class HudManager {
         if (needsArrange) {
             dev.aqua.client.hud.editor.HudEditorScreen.autoArrange();
         }
+        // The vanilla tab list is drawn at the top centre; widgets there step aside while it is open.
+        boolean tab = mc.options.playerListKey.isPressed() && mc.currentScreen == null && mc.world != null;
+        float tabFade = tabAnim.target(tab).get();
         for (HudWidget w : widgets) {
             if (!w.isEnabled() || !w.hasContent()) {
                 continue;
             }
-            drawWidget(ctx, w, sw, sh, false, 1f);
+            float a = 1f;
+            if (tabFade > 0.001f) {
+                w.layout(sw, sh, false);
+                boolean topCentre = w.sy < sh * 0.3f && w.sx < sw / 2f + 90 && w.sx + w.sw > sw / 2f - 90;
+                if (topCentre) {
+                    a = 1f - tabFade;
+                    if (a <= 0.01f) {
+                        continue;
+                    }
+                }
+            }
+            drawWidget(ctx, w, sw, sh, false, a);
         }
     }
+
+    private final dev.aqua.client.render.Anim tabAnim = new dev.aqua.client.render.Anim(0f, 140f);
 
     public void drawWidget(DrawContext ctx, HudWidget w, float sw, float sh, boolean preview, float alpha) {
         try {

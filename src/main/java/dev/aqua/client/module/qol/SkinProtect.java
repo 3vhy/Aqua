@@ -7,6 +7,9 @@ import dev.aqua.client.module.Module;
 import dev.aqua.client.setting.ActionSetting;
 import dev.aqua.client.setting.EnumSetting;
 import dev.aqua.client.setting.StringSetting;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.yggdrasil.ProfileResult;
+import com.mojang.authlib.yggdrasil.response.NameAndId;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.entity.player.SkinTextures;
@@ -99,17 +102,20 @@ public final class SkinProtect extends Module {
                     return;
                 }
                 loading = true;
+                override = null;
                 status = "Looking up " + name + "…";
-                CompletableFuture.supplyAsync(() -> mc.getApiServices().profileResolver().getProfileByName(name), Util.getDownloadWorkerExecutor())
+                CompletableFuture.supplyAsync(() -> resolve(mc, name), Util.getDownloadWorkerExecutor())
                         .thenCompose(profile -> profile.isPresent()
                                 ? mc.getSkinProvider().fetchSkinTextures(profile.get())
                                 : CompletableFuture.completedFuture(Optional.<SkinTextures>empty()))
                         .whenComplete((skin, error) -> mc.execute(() -> {
                             loading = false;
                             if (error != null || skin == null || skin.isEmpty()) {
-                                status = "Could not load the skin of " + name;
-                                if (error != null) {
-                                    AquaClient.LOGGER.warn("Skin Protect lookup failed for {}", name, error);
+                                Throwable cause = error instanceof java.util.concurrent.CompletionException c && c.getCause() != null ? c.getCause() : error;
+                                status = cause instanceof NoSuchPlayer ? "No player called " + name
+                                        : "Could not load the skin of " + name + (cause instanceof Busy ? " (Mojang is busy, try again soon)" : "");
+                                if (error != null && !(cause instanceof NoSuchPlayer)) {
+                                    AquaClient.LOGGER.warn("Skin Protect lookup failed for {}: {}", name, cause.toString());
                                 }
                                 Aqua.notifications().warn("Skin Protect", status);
                                 return;
@@ -121,6 +127,44 @@ public final class SkinProtect extends Module {
                         }));
             }
         }
+    }
+
+    private static final class NoSuchPlayer extends RuntimeException {
+        NoSuchPlayer() {
+            super("no such player", null, false, false);
+        }
+    }
+
+    private static final class Busy extends RuntimeException {
+        Busy() {
+            super("skin service busy", null, false, false);
+        }
+    }
+
+    /**
+     * Name to UUID, then the signed profile with its textures. The session server rate-limits
+     * profile requests, so a failed fetch is retried twice with a short pause (uncached path).
+     */
+    private static Optional<GameProfile> resolve(MinecraftClient mc, String name) {
+        Optional<NameAndId> id = mc.getApiServices().profileRepository().findProfileByName(name);
+        if (id.isEmpty()) {
+            throw new NoSuchPlayer();
+        }
+        for (int attempt = 0; attempt < 3; attempt++) {
+            if (attempt > 0) {
+                try {
+                    Thread.sleep(attempt * 4000L);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+            ProfileResult r = mc.getApiServices().sessionService().fetchProfile(id.get().id(), true);
+            if (r != null && r.profile() != null && r.profile().properties().containsKey("textures")) {
+                return Optional.of(r.profile());
+            }
+        }
+        throw new Busy();
     }
 
     /** Skin to show for yourself, or null to keep your own. */
