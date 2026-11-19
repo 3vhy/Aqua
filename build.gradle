@@ -1,0 +1,150 @@
+plugins {
+    id 'fabric-loom' version "${loom_version}"
+    id 'maven-publish'
+}
+
+version = "${project.mod_version}+mc${project.minecraft_version}"
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    // Optional compatibility testing only (never bundled).
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'Modrinth'
+                url = 'https://api.modrinth.com/maven'
+            }
+        }
+        filter { includeGroup 'maven.modrinth' }
+    }
+}
+
+loom {
+    accessWidenerPath = file('src/main/resources/aqua.accesswidener')
+}
+
+configurations {
+    productionTestMods { transitive = false }
+    compatTestMods { transitive = false }
+}
+
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = 'aqua-gametest'
+        enableGameTests = false
+        enableClientGameTests = true
+        eula = true
+        // Keep the run directory between launches so the second launch can verify persisted settings.
+        clearRunDirectory = false
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+    // Optional Mod Menu integration: compile-only, never bundled.
+    modCompileOnly "maven.modrinth:modmenu:${project.property('modmenu_version')}"
+
+    // Production test runtime (never bundled): Fabric API release jar and third-party mods as published.
+    productionTestMods "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    // The release fabric-api jar does not bundle the test-only client gametest module.
+    productionTestMods "net.fabricmc.fabric-api:fabric-client-gametest-api-v1:${project.fabric_gametest_api_version}"
+    compatTestMods "maven.modrinth:sodium:${project.property('sodium_version')}"
+    compatTestMods "maven.modrinth:iris:${project.property('iris_version')}"
+    compatTestMods "maven.modrinth:modmenu:${project.property('modmenu_version')}"
+}
+
+processResources {
+    inputs.property 'version', project.version
+    inputs.property 'minecraft_version', project.minecraft_version
+    inputs.property 'loader_version', project.loader_version
+    filteringCharset = 'UTF-8'
+
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version,
+                'minecraft_version': project.minecraft_version,
+                'loader_version': project.loader_version
+    }
+}
+
+def targetJavaVersion = 21
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = 'UTF-8'
+    it.options.release.set(targetJavaVersion)
+    it.options.compilerArgs.add('-Xlint:deprecation')
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    withSourcesJar()
+}
+
+jar {
+    inputs.property 'archivesName', project.base.archivesName
+    from('LICENSE') {
+        rename { "${it}_${inputs.properties.archivesName}" }
+    }
+    from('THIRD_PARTY_NOTICES.md')
+}
+
+tasks.register('aquaChecksum') {
+    dependsOn remapJar
+    doLast {
+        def f = remapJar.archiveFile.get().asFile
+        def md = java.security.MessageDigest.getInstance('SHA-256')
+        f.withInputStream { is ->
+            byte[] buf = new byte[65536]
+            int n
+            while ((n = is.read(buf)) > 0) md.update(buf, 0, n)
+        }
+        def hex = md.digest().collect { String.format('%02x', it) }.join()
+        new File(f.parentFile, f.name + '.sha256').text = "${hex}  ${f.name}\n"
+        println "SHA-256 ${hex}  ${f.name}"
+    }
+}
+build.finalizedBy aquaChecksum
+
+// ---------------------------------------------------------------------------------------------
+// Production-environment tests: run the remapped release jar in the real (intermediary) game,
+// optionally next to unmodified Sodium, Iris and Mod Menu jars from Modrinth.
+// ---------------------------------------------------------------------------------------------
+def gametestJar = tasks.register('gametestJar', Jar) {
+    from sourceSets.gametest.output
+    archiveClassifier = 'gametest-dev'
+}
+
+def remapGametestJar = tasks.register('remapGametestJar', net.fabricmc.loom.task.RemapJarTask) {
+    dependsOn gametestJar
+    inputFile = gametestJar.flatMap { it.archiveFile }
+    archiveClassifier = 'gametest'
+    addNestedDependencies = false
+}
+
+def productionTest = { String name, boolean compat ->
+    tasks.register(name, net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+        dependsOn remapJar, remapGametestJar
+        mods.from(tasks.named('remapJar').flatMap { it.archiveFile })
+        mods.from(remapGametestJar.flatMap { it.archiveFile })
+        mods.from(configurations.productionTestMods)
+        if (compat) {
+            mods.from(configurations.compatTestMods)
+        }
+        def dirName = compat ? 'compatTest' : 'productionTest'
+        // The production run directory is recreated for every launch, so test state lives beside it.
+        jvmArgs.addAll('-Dfabric.client.gametest', '-Xmx3G',
+                "-Daqua.test.stateDir=${project.projectDir}/build/run/${dirName}-state".toString(),
+                "-Daqua.test.musicFixture=${project.projectDir}/build/test-fixtures/music".toString())
+        runDir = project.layout.projectDirectory.dir("build/run/${dirName}")
+        outputs.upToDateWhen { false }
+    }
+}
+productionTest('runProductionGameTest', false)
+productionTest('runCompatGameTest', true)

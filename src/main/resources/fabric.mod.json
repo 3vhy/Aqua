@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "aqua",
+  "version": "${version}",
+  "name": "Aqua Client",
+  "description": "Cosmetic, HUD and quality-of-life client for Minecraft ${minecraft_version}. Contains no gameplay automation or cheat features.",
+  "authors": ["Aqua Client contributors"],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/aqua/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["dev.aqua.client.AquaClient"],
+    "modmenu": ["dev.aqua.client.compat.ModMenuIntegration"]
+  },
+  "mixins": ["aqua.mixins.json"],
+  "accessWidener": "aqua.accesswidener",
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}

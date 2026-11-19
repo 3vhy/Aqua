@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Runs Aqua's in-game test suite twice (launch 1, then a fresh launch 2 that verifies persistence)
+# under a virtual display with software OpenGL and a null audio device.
+#
+#   tools/run_gametests.sh            # development environment (Loom runClientGameTest)
+#   tools/run_gametests.sh production # remapped release jar in the production (intermediary) game
+#   tools/run_gametests.sh compat     # production + Sodium, Iris and Mod Menu from Modrinth
+#
+# Results and screenshots are collected in build/test-results-<mode>/.
+set -uo pipefail
+cd "$(dirname "$0")/.."
+MODE="${1:-dev}"
+case "$MODE" in
+  dev) TASK=runClientGameTest; DIR=build/run/clientGameTest; STATE=$DIR ;;
+  production) TASK=runProductionGameTest; DIR=build/run/productionTest; STATE=build/run/productionTest-state ;;
+  compat) TASK=runCompatGameTest; DIR=build/run/compatTest; STATE=build/run/compatTest-state ;;
+  *) echo "unknown mode $MODE"; exit 2 ;;
+esac
+OUT=build/test-results-$MODE
+rm -rf "$DIR" "$STATE" "$OUT"
+mkdir -p "$DIR" "$STATE" "$OUT"
+./tools/make_test_music.sh build/test-fixtures/music >/dev/null
+./tools/make_test_music.sh "$DIR/config/aqua/music" >/dev/null
+export ALSOFT_DRIVERS=null LP_NUM_THREADS=3
+for phase in 1 2; do
+  echo "=== Aqua game tests ($MODE): launch $phase ==="
+  xvfb-run -a -s "-screen 0 1920x1080x24" ./gradlew "$TASK" --no-daemon
+  code=$?
+  if [ -d "$DIR/screenshots" ]; then mkdir -p "$OUT/screenshots"; cp "$DIR"/screenshots/*.png "$OUT/screenshots/" 2>/dev/null; fi
+  cp "$STATE"/aqua-test-results-phase*.txt "$OUT/" 2>/dev/null
+  cp "$DIR"/logs/latest.log "$OUT/latest-launch$phase.log" 2>/dev/null
+  [ $code -eq 0 ] || exit $code
+done
+cat "$OUT"/aqua-test-results-phase1.txt "$OUT"/aqua-test-results-phase2.txt

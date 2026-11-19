@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "aqua-gametest",
+  "version": "1.0.0",
+  "name": "Aqua Client Game Tests",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-client-gametest": ["dev.aqua.gametest.AquaClientGameTest"]
+  },
+  "depends": {
+    "aqua": "*",
+    "fabric-client-gametest-api-v1": "*"
+  }
+}

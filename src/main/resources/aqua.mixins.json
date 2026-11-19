@@ -1,0 +1,32 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.aqua.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ChatHudBackendMixin",
+    "ChatHudMixin",
+    "ClientPlayNetworkHandlerMixin",
+    "ClientWorldMixin",
+    "ClientWorldPropertiesMixin",
+    "FogRendererMixin",
+    "GameRendererMixin",
+    "HeldItemRendererMixin",
+    "InactivityFpsLimiterMixin",
+    "ItemRenderStateMixin",
+    "KeyboardMixin",
+    "LivingEntityMixin",
+    "MinecraftClientMixin",
+    "MouseMixin",
+    "ParticleManagerMixin",
+    "PlayerEntityModelMixin",
+    "PlayerEntityRendererMixin",
+    "ScreenshotRecorderMixin",
+    "SoundLoaderMixin",
+    "WeatherRenderingMixin",
+    "WorldMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
