@@ -63,6 +63,7 @@ Exact versions:
 | Kill effects | A chicken hit with a sword dies and the lightning effect starts at that spot; soul and firework effects rendered |
 | Wardrobe | All seven tabs (3D Skins, Wings, Hats, Capes, Knives, Emotes, Kill FX) render with live previews; choosing a 3D skin makes it your look |
 | Keystrokes | Real mouse movement moves the dot in the pad between LMB and RMB |
+| HUD with other HUD mods | A simulated HUD-replacing mod stops Fabric's HUD layers: Aqua notices and draws its HUD directly (no false trigger during world loading); when the layer runs again Aqua goes back to it |
 | Aqua badge | The `aqua:hello` handshake makes a round trip through the integrated server; your tab-list name carries the badge (with a scoreboard list objective so singleplayer draws the tab list); own nametag with the badge in third person |
 | Name Protect | Drawn text shows the alias instead of your username (chat and tab list); switching it off shows the real name again |
 | Skin Protect | Steve skin applied; the skin of the public player `jeb_` is looked up from Mojang and shown as yours |
