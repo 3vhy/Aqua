@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aqua Client download</title>
+<meta name="description" content="Download Aqua Client 1.0.0, a cosmetic, HUD and quality-of-life Fabric mod for Minecraft Java Edition 1.21.11.">
+<link rel="icon" type="image/png" href="data:image/png;base64,@@FAVICON@@">
+<style>
+  :root {
+    --bg: #f3f7f9;
+    --card: #ffffff;
+    --text: #0f1b24;
+    --muted: #5b6b77;
+    --border: #dbe4ea;
+    --accent: #0fa9bd;
+    --accent-ink: #ffffff;
+    --code-bg: #eef3f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d151c;
+      --card: #142029;
+      --text: #e7f1f5;
+      --muted: #8fa3b0;
+      --border: #22323d;
+      --accent: #52e4f2;
+      --accent-ink: #062028;
+      --code-bg: #0f1a22;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+  }
+  main { max-width: 680px; margin: 0 auto; padding: 48px 16px 40px; }
+  header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+  header img { width: 64px; height: 64px; }
+  h1 { margin: 0; font-size: 32px; line-height: 1.15; letter-spacing: -0.01em; }
+  .sub { margin: 4px 0 0; color: var(--muted); }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .download {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 14px 20px;
+    background: var(--accent); color: var(--accent-ink);
+    border-radius: 10px; text-decoration: none; font-weight: 650; font-size: 17px;
+  }
+  .download:hover { filter: brightness(1.06); }
+  .download:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  #dl-status:empty { display: none; }
+  .meta { margin: 12px 0 0; text-align: center; color: var(--muted); font-size: 14px; }
+  h2 { margin: 0 0 12px; font-size: 18px; }
+  .hash { display: flex; gap: 8px; align-items: stretch; }
+  code {
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+  }
+  .hash code { flex: 1; min-width: 0; padding: 8px 10px; overflow-wrap: anywhere; }
+  button {
+    flex: none; padding: 0 14px; border-radius: 8px; cursor: pointer;
+    background: transparent; color: var(--text); border: 1px solid var(--border); font: inherit; font-size: 14px;
+  }
+  button:hover { border-color: var(--accent); }
+  pre { margin: 10px 0 0; }
+  pre code { display: block; padding: 10px 12px; overflow-x: auto; }
+  ol, ul { margin: 0; padding-left: 22px; }
+  li + li { margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  td { padding: 7px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  td:last-child { text-align: right; color: var(--muted); padding-left: 12px; }
+  a { color: var(--accent); }
+  .note { color: var(--muted); font-size: 14px; margin: 12px 0 0; }
+  footer { color: var(--muted); font-size: 13px; text-align: center; margin-top: 24px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="data:image/png;base64,@@LOGO@@" alt="">
+    <div>
+      <h1>Aqua Client</h1>
+      <p class="sub">Version 1.0.0 &middot; Minecraft Java Edition 1.21.11 &middot; Fabric</p>
+    </div>
+  </header>
+
+  <section class="card">
+    <a class="download" id="download" href="@@JAR@@" download="@@JAR@@">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+      Download Aqua Client
+    </a>
+    <p class="meta"><code style="padding:1px 5px; overflow-wrap:anywhere">@@JAR@@</code><br><span style="white-space:nowrap">@@SIZE@@</span> &middot; a Fabric mod for your <code style="padding:1px 5px">mods</code> folder, not a launcher</p>
+    <p class="meta" id="dl-status" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="card">
+    <h2>Check the download</h2>
+    <div class="hash">
+      <code id="sha">@@SHA256@@</code>
+      <button type="button" id="copy">Copy</button>
+    </div>
+    <p class="note">This is the SHA-256 of the jar. The page checks it before the download starts, and you can check the saved file with:</p>
+    <pre><code>sha256sum @@JAR@@</code></pre>
+  </section>
+
+  <section class="card">
+    <h2>You also need</h2>
+    <table>
+      <tr><td>Minecraft Java Edition</td><td>1.21.11</td></tr>
+      <tr><td><a href="https://fabricmc.net/use/installer/">Fabric Loader</a></td><td>0.20.1 or newer</td></tr>
+      <tr><td><a href="https://modrinth.com/mod/fabric-api">Fabric API</a></td><td>0.141.6+1.21.11 or newer</td></tr>
+      <tr><td>Java</td><td>21 (bundled with the launcher)</td></tr>
+    </table>
+    <p class="note">Sodium, Iris and Mod Menu are optional and were tested alongside Aqua.</p>
+  </section>
+
+  <section class="card">
+    <h2>Install</h2>
+    <ol>
+      <li>Install Fabric Loader for 1.21.11 with the <a href="https://fabricmc.net/use/installer/">Fabric installer</a>.</li>
+      <li>Start the <code style="padding:1px 5px">fabric-loader-1.21.11</code> profile once, then close the game.</li>
+      <li>Put Fabric API and the Aqua jar in your <code style="padding:1px 5px">mods</code> folder:
+        <ul>
+          <li>Windows: <code style="padding:1px 5px">%APPDATA%\.minecraft\mods</code></li>
+          <li>macOS: <code style="padding:1px 5px">~/Library/Application Support/minecraft/mods</code></li>
+          <li>Linux: <code style="padding:1px 5px">~/.minecraft/mods</code></li>
+        </ul>
+      </li>
+      <li>Start the Fabric profile and press <strong>Right Shift</strong> to open the Aqua menu.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>What&rsquo;s inside</h2>
+    <ul>
+      <li>Fern-style HUD with a drag-and-drop editor, and a new menu and title screen</li>
+      <li>Wardrobe: original 3D skins, wings, hats, capes, knife skins, emotes and kill effects</li>
+      <li>Music player for your own <code style="padding:1px 5px">.ogg</code> files, with synced lyrics found automatically</li>
+      <li>Zoom, Name Protect, Skin Protect, screenshot notifications, profiles and themes</li>
+    </ul>
+    <p class="note">No cheats: no combat, movement, x-ray, ESP or other unfair features. Cosmetics are only visible to you. Check each server&rsquo;s rules before you play.</p>
+  </section>
+
+  <footer>Aqua Client is released under the MIT licence.</footer>
+</main>
+<script type="application/octet-stream" id="jar-data">@@JARDATA@@</script>
+<script>
+  (function () {
+    var NAME = '@@JAR@@';
+    var SHA = '@@SHA256@@';
+    var link = document.getElementById('download');
+    var status = document.getElementById('dl-status');
+    var url = null;
+
+    function bytes() {
+      var b64 = document.getElementById('jar-data').textContent.replace(/\s+/g, '');
+      var bin = atob(b64);
+      var out = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+      return out;
+    }
+
+    function hex(buf) {
+      return Array.prototype.map.call(new Uint8Array(buf), function (x) {
+        return ('0' + x.toString(16)).slice(-2);
+      }).join('');
+    }
+
+    function save() {
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = NAME;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (url) { save(); return; }
+      var data;
+      try { data = bytes(); } catch (err) { status.textContent = 'The download could not be prepared.'; return; }
+      var blob = new Blob([data], { type: 'application/java-archive' });
+      if (window.crypto && crypto.subtle) {
+        crypto.subtle.digest('SHA-256', data).then(function (d) {
+          if (hex(d) !== SHA) { status.textContent = 'Checksum mismatch: this page is damaged, so the download was stopped.'; return; }
+          url = URL.createObjectURL(blob);
+          status.textContent = 'Checksum verified.';
+          save();
+        }, function () { url = URL.createObjectURL(blob); save(); });
+      } else {
+        url = URL.createObjectURL(blob);
+        save();
+      }
+    });
+
+    var btn = document.getElementById('copy');
+    var text = document.getElementById('sha').textContent;
+    btn.addEventListener('click', function () {
+      function done(ok) {
+        btn.textContent = ok ? 'Copied' : 'Select and copy';
+        setTimeout(function () { btn.textContent = 'Copy'; }, 1600);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      } else {
+        try {
+          var r = document.createRange();
+          r.selectNodeContents(document.getElementById('sha'));
+          var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+          done(document.execCommand('copy'));
+        } catch (e) { done(false); }
+      }
+    });
+  })();
+</script>
+</body>
+</html>
