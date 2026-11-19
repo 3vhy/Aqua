@@ -51,12 +51,22 @@ Exact versions:
 | No cheats | Whole-word scan of every module id and name against a list of 60 excluded cheat and service names |
 | Music | Ogg metadata, duration and `.lrc` parsed; the local Ogg file **streams through Minecraft's sound engine**; pause, then resume from the paused position |
 | Event features | Zoom narrows FOV while held and returns; Toggle Sprint sprints; emote wheel opens from its key and plays an emote; F2 screenshot shows the Island notification; card notification style with thumbnail; Hit Particles on hitting an entity; Totem Pop Effect on a real totem use; Death Waypoints records a real death and respawn |
-| Menu | Every page opens (HUD, Visuals, Cosmetics, QoL, Performance, Wardrobe, Themes, Profiles, Keybinds, Settings); type-to-search; Escape clears the search, then closes the menu |
+| Menu | Every page opens (HUD, Visuals, Cosmetics, QoL, Performance, Wardrobe, Music, Themes, Profiles, Keybinds, Settings); type-to-search; Escape clears the search, then closes the menu |
 | Airborne menu | While holding W and jumping: player is airborne → Right Shift opens the menu → forward, jump and sprint are released → no drift for 20 ticks → Right Shift closes it |
 | Key binds | Capture records a key; Escape cancels capture without closing the menu; conflict found when binding W ("Walk Forward"); a module bind toggles its module in game |
-| Modules | **All 54 modules** enabled (rendered at least 3 ticks without errors) and disabled cleanly; 79 boolean settings flipped |
+| Modules | **All 63 modules** enabled (rendered at least 3 ticks without errors) and disabled cleanly; 89 boolean settings flipped |
 | HUD editor | Real mouse drag moves a widget; Reset all restores the default layout |
 | Cosmetics | First person, jump, third person (wings and halo), emote, wardrobe preview |
+| 3D skins | A character replaces your player model in third person (character draw calls counted, so the render hook is proven to run in the remapped jar); Robo, Shark and an emote on a character; the held item stays in the character's hand |
+| Wings, hats, capes | Devil wings with the glow hat and orbit, angel wings with crown and cape from behind |
+| Knife skins | Karambit, katana, dagger and butterfly knife each replace the held sword in first person (knife draw calls counted); third person; knife inspect |
+| Kill effects | A chicken hit with a sword dies and the lightning effect starts at that spot; soul and firework effects rendered |
+| Wardrobe | All seven tabs (3D Skins, Wings, Hats, Capes, Knives, Emotes, Kill FX) render with live previews; choosing a 3D skin makes it your look |
+| Keystrokes | Real mouse movement moves the dot in the pad between LMB and RMB |
+| Aqua badge | The `aqua:hello` handshake makes a round trip through the integrated server; your tab-list name carries the badge (with a scoreboard list objective so singleplayer draws the tab list); own nametag with the badge in third person |
+| Name Protect | Drawn text shows the alias instead of your username (chat and tab list); switching it off shows the real name again |
+| Skin Protect | Steve skin applied; the skin of the public player `jeb_` is looked up from Mojang and shown as yours |
+| Lyrics | A song with no `.lrc` file gets synced lyrics from LRCLIB automatically (the test song is the public-domain hymn "Amazing Grace"; the audio is a generated tone); the Music page; the **Lyrics** switch turns lyrics off while the song keeps playing |
 | Profiles | Create, duplicate, rename, switch; per-profile HUD layout restored; share-code export, import and rejection of an invalid code |
 | Resolution | 854×480 at GUI scale 2 and 1920×1080 at GUI scale 4: every visible widget stays on screen; the menu fits |
 | Resources | Full resource reload (F3+T path) and Aqua still renders afterwards |
@@ -97,10 +107,23 @@ much lower than on a real GPU.
   listened to it.
 * **Mod Menu's own screen**: Mod Menu loaded without errors and the Aqua integration entrypoint is
   declared. The "Configure" button was not clicked by the tests.
+* **Aqua badge between two players**: the handshake was tested with one Aqua client on its own
+  integrated server. Two Aqua players on one LAN world were not tested, and nothing was tested on a
+  public server (where the badge only appears next to your own name; see *Known limitations*).
+* **Online lookups depend on outside services**: the LRCLIB and Mojang lookups ran against the live
+  services. If Mojang rate-limits the address a test runs from, the Skin Protect player lookup is
+  recorded as `SKIP`, not as a pass. No run recorded a `SKIP`.
 
 ## Known limitations
 
-* Aqua's cosmetics are not networked: other players never see your wings, halo, emotes or trails.
+* Aqua's cosmetics are not networked: other players never see your wings, halo, hats, cape, 3D
+  skin, knife skins, kill effects, emotes or trails. Skin Protect and Name Protect change only your
+  own screen.
+* The Aqua badge needs the server to pass on Aqua's `aqua:hello` channel. That happens in
+  singleplayer and on LAN worlds hosted by an Aqua user. Ordinary multiplayer servers do not, and
+  Aqua has no central server, so there only your own name gets the badge.
+* Automatic lyrics only work for songs that LRCLIB has synced lyrics for, and need an internet
+  connection the first time (results are cached in `config/aqua/lyrics/`).
 * Music playback supports **Ogg Vorbis only**. Other files are listed as unsupported.
 * Motion blur, seen during fast turns in R1/R2, was not implemented (see `REFERENCE_FEATURES.md`).
 * No official Aqua logo was attached, so a placeholder emblem ships; see the README to replace it.

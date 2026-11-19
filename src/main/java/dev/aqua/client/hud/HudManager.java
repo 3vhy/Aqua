@@ -79,7 +79,7 @@ public final class HudManager {
             float a = 1f;
             if (tabFade > 0.001f) {
                 w.layout(sw, sh, false);
-                boolean topCentre = w.sy < sh * 0.3f && w.sx < sw / 2f + 90 && w.sx + w.sw > sw / 2f - 90;
+                boolean topCentre = w.sy < sh * 0.25f && w.sx < sw / 2f + 40 && w.sx + w.sw > sw / 2f - 40;
                 if (topCentre) {
                     a = 1f - tabFade;
                     if (a <= 0.01f) {
