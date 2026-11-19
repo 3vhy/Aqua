@@ -64,6 +64,7 @@ public final class HudManager {
         if (mc.currentScreen instanceof dev.aqua.client.hud.editor.HudEditorScreen) {
             return;
         }
+        frames++;
         float sw = ctx.getScaledWindowWidth();
         float sh = ctx.getScaledWindowHeight();
         if (needsArrange) {
@@ -73,7 +74,7 @@ public final class HudManager {
         boolean tab = mc.options.playerListKey.isPressed() && mc.currentScreen == null && mc.world != null;
         float tabFade = tabAnim.target(tab).get();
         for (HudWidget w : widgets) {
-            if (!w.isEnabled() || !w.hasContent()) {
+            if (!w.isEnabled() || !w.hasContent() || suspended.contains(w)) {
                 continue;
             }
             float a = 1f;
@@ -92,6 +93,13 @@ public final class HudManager {
     }
 
     private final dev.aqua.client.render.Anim tabAnim = new dev.aqua.client.render.Anim(0f, 140f);
+    private final java.util.Set<HudWidget> suspended = new java.util.HashSet<>();
+    private long frames;
+
+    /** Frames in which the HUD was drawn (used by the in-game tests). */
+    public long frames() {
+        return frames;
+    }
 
     public void drawWidget(DrawContext ctx, HudWidget w, float sw, float sh, boolean preview, float alpha) {
         try {
@@ -104,8 +112,12 @@ public final class HudManager {
             ctx.getMatrices().popMatrix();
         } catch (Throwable t) {
             ctx.getMatrices().popMatrix();
-            dev.aqua.client.AquaClient.LOGGER.error("HUD widget {} failed to render; disabling it", w.id(), t);
-            w.setEnabled(false, false);
+            // Skip the widget for this session only; its saved on/off state is left alone, so one
+            // error never makes the HUD disappear permanently.
+            if (suspended.add(w)) {
+                dev.aqua.client.AquaClient.LOGGER.error("HUD widget {} failed to render; skipping it until restart", w.id(), t);
+                dev.aqua.client.Aqua.notifications().warn("HUD", w.name() + " hit an error and is hidden until restart");
+            }
         }
     }
 

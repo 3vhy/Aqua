@@ -6,6 +6,11 @@ import dev.aqua.client.module.qol.Zoom;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.RenderTickCounter;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import dev.aqua.client.hud.HudFallback;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.hud.InGameHud;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,5 +33,14 @@ public abstract class GameRendererMixin {
                 cir.setReturnValue(cir.getReturnValue() * f);
             }
         }
+    }
+
+    /** Draws Aqua's HUD directly when another mod stops Fabric's HUD layers from running. */
+    @WrapOperation(method = "render(Lnet/minecraft/client/render/RenderTickCounter;Z)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;render(Lnet/minecraft/client/gui/DrawContext;Lnet/minecraft/client/render/RenderTickCounter;)V"))
+    private void aqua$hudFallback(InGameHud hud, DrawContext ctx, RenderTickCounter tickCounter, Operation<Void> original) {
+        HudFallback.beforeVanillaHud();
+        original.call(hud, ctx, tickCounter);
+        HudFallback.afterVanillaHud(ctx);
     }
 }

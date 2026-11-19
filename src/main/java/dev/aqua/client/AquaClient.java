@@ -56,6 +56,7 @@ public final class AquaClient implements ClientModInitializer {
         dev.aqua.client.net.Presence.init();
 
         HudElementRegistry.addLast(Identifier.of(MOD_ID, "hud"), (ctx, tick) -> {
+            dev.aqua.client.hud.HudFallback.layerRan();
             Aqua.hud.render(ctx);
             Aqua.notifications.render(ctx);
         });

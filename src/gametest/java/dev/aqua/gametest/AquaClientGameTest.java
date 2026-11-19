@@ -173,6 +173,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             cosmetics(context);
             skinsAndKnives(context, sp);
             identity(context, sp);
+            hudFallback(context);
             profilesAndLayouts(context);
             resizeAndScale(context);
             reloadResources(context);
@@ -851,6 +852,39 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         });
         sp.getServer().runCommand("scoreboard objectives remove aqua_test");
         context.waitTicks(5);
+    }
+
+    private static volatile boolean blockAquaLayer;
+    private static boolean blockerInstalled;
+
+    /**
+     * Some HUD mods and modded clients replace Minecraft's HUD drawing so Fabric's HUD layers never
+     * run. Simulate that by suppressing Aqua's layer, and check that Aqua draws its HUD directly.
+     */
+    private void hudFallback(ClientGameTestContext context) {
+        context.runOnClient(mc -> {
+            if (!blockerInstalled) {
+                blockerInstalled = true;
+                net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry.replaceElement(
+                        net.minecraft.util.Identifier.of("aqua", "hud"), original -> (ctx, tick) -> {
+                            if (!blockAquaLayer) {
+                                original.render(ctx, tick);
+                            }
+                        });
+            }
+            blockAquaLayer = true;
+        });
+        context.waitTicks(5);
+        long f0 = context.computeOnClient(mc -> Aqua.hud().frames());
+        context.waitTicks(15);
+        String blocked = context.computeOnClient(mc -> dev.aqua.client.hud.HudFallback.active() + "|" + (Aqua.hud().frames() - f0));
+        context.takeScreenshot("50_hud_drawn_by_fallback");
+        check(blocked.startsWith("true|") && !blocked.endsWith("|0"),
+                "HUD still draws when another mod stops Fabric's HUD layers (fallback active, frames drawn: " + blocked + ")");
+        context.runOnClient(mc -> blockAquaLayer = false);
+        context.waitTicks(10);
+        boolean normal = context.computeOnClient(mc -> !dev.aqua.client.hud.HudFallback.active());
+        check(normal, "HUD goes back to the normal Fabric layer when it runs again");
     }
 
     private static void setWardrobeTab(AquaMenuScreen menu, String tab) {

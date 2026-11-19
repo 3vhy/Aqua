@@ -264,6 +264,19 @@ This regenerates the mod icon, the menu emblem, the small emblem and `branding/i
 
 ---
 
+## Troubleshooting
+
+**The Aqua HUD is not showing**
+
+1. Press **F1**: it hides the whole HUD, Aqua's included.
+2. Open Aqua > **HUD** and check that the widgets you want are switched on. Use **Edit layout >
+   Reset all** if they were moved off screen.
+3. **Hide while F3 is open** (on by default) hides the HUD while the debug screen is showing.
+4. Another HUD mod, or a modded client with its own HUD, can replace Minecraft's HUD drawing so
+   that Fabric's HUD layers never run. Aqua notices this and draws its HUD itself; `latest.log`
+   then contains `Aqua is drawing its HUD directly`. If the HUD still does not appear, please share
+   `logs/latest.log` and your list of mods.
+
 ## Privacy and network use
 Aqua makes no network requests unless you use one of these features:
 
