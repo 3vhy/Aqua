@@ -15,6 +15,8 @@ import java.util.Map;
 public final class FxLayers {
     public static final RenderLayer GLOW = RenderLayer.of("aqua_glow",
             RenderSetup.builder(AquaPipelines.WORLD_GLOW).translucent().expectedBufferSize(262144).build());
+    public static final RenderLayer SOLID = RenderLayer.of("aqua_solid",
+            RenderSetup.builder(AquaPipelines.WORLD_SOLID).expectedBufferSize(131072).build());
     public static final RenderLayer COLOR = RenderLayer.of("aqua_color",
             RenderSetup.builder(AquaPipelines.WORLD_COLOR).translucent().expectedBufferSize(131072).build());
     private static final Map<Identifier, RenderLayer> TEXTURED = new HashMap<>();

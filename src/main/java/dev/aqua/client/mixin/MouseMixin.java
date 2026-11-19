@@ -16,6 +16,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Mouse.class)
 public abstract class MouseMixin {
+    @org.spongepowered.asm.mixin.Shadow
+    private double cursorDeltaX;
+    @org.spongepowered.asm.mixin.Shadow
+    private double cursorDeltaY;
+    @org.spongepowered.asm.mixin.Unique
+    private long aqua$lastNanos;
+
+    /** Keystrokes mouse indicator: sample the real cursor movement the camera is about to use. */
+    @Inject(method = "updateMouse", at = @At("HEAD"))
+    private void aqua$mouseMovement(double timeDelta, CallbackInfo ci) {
+        long now = System.nanoTime();
+        double seconds = aqua$lastNanos == 0 ? 0.016 : Math.min(0.1, (now - aqua$lastNanos) / 1.0e9);
+        aqua$lastNanos = now;
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc.currentScreen == null && mc.mouse.isCursorLocked() && (cursorDeltaX != 0 || cursorDeltaY != 0)) {
+            dev.aqua.client.util.MouseTracker.onDelta(cursorDeltaX, cursorDeltaY, seconds);
+        } else {
+            dev.aqua.client.util.MouseTracker.decay(seconds);
+        }
+    }
+
     @Inject(method = "onMouseButton", at = @At("HEAD"))
     private void aqua$clicks(long window, MouseInput input, int action, CallbackInfo ci) {
         MinecraftClient mc = MinecraftClient.getInstance();

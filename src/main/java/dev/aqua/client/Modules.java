@@ -51,8 +51,14 @@ final class Modules {
         m.add(new ItemGlow());
         m.add(new HandShader());
         // Cosmetics
+        m.add(new CharacterSkin());
         m.add(new Wings());
+        m.add(new Hats());
+        m.add(new Cape());
         m.add(new Halo());
+        m.add(new Orbit());
+        m.add(new Knives());
+        m.add(new KillEffects());
         m.add(new JumpCircles());
         m.add(new JumpEffects());
         m.add(new DashTrail());
@@ -73,6 +79,9 @@ final class Modules {
         m.add(new ScreenshotHelper());
         m.add(new ChatStyle());
         m.add(new DeathWaypoints());
+        m.add(new NameProtect());
+        m.add(new SkinProtect());
+        m.add(new AquaBadge());
         m.add(new StreamerMode());
         // Performance
         m.add(new EffectBudget());

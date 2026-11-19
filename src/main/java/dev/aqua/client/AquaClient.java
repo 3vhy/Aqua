@@ -53,6 +53,7 @@ public final class AquaClient implements ClientModInitializer {
         }
         AquaFont.load();
         Aqua.config.load();
+        dev.aqua.client.net.Presence.init();
 
         HudElementRegistry.addLast(Identifier.of(MOD_ID, "hud"), (ctx, tick) -> {
             Aqua.hud.render(ctx);

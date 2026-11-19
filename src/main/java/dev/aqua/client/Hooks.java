@@ -124,6 +124,10 @@ public final class Hooks {
                 if (h != null) {
                     h.onHit(entity);
                 }
+                dev.aqua.client.module.cosmetic.KillEffects k = on(dev.aqua.client.module.cosmetic.KillEffects.class);
+                if (k != null) {
+                    k.onAttack(entity);
+                }
             }
             return ActionResult.PASS;
         });
@@ -179,8 +183,26 @@ public final class Hooks {
     static void tick(MinecraftClient mc) {
     }
 
+    /** Adds the Aqua badge to player nametags. */
+    public static void decoratePlayerState(net.minecraft.entity.PlayerLikeEntity entity, net.minecraft.client.render.entity.state.PlayerEntityRenderState state) {
+        if (state.displayName == null || Aqua.modules() == null) {
+            return;
+        }
+        dev.aqua.client.module.qol.AquaBadge b = Aqua.modules().get(dev.aqua.client.module.qol.AquaBadge.class);
+        if (b != null && b.onNametags()) {
+            state.displayName = dev.aqua.client.module.qol.AquaBadge.decorate(state.displayName, entity.getUuid());
+        }
+    }
+
     public static void onEntityStatus(EntityStatusS2CPacket packet) {
         MinecraftClient mc = MinecraftClient.getInstance();
+        if (packet.getStatus() == 3 && mc.world != null) {
+            dev.aqua.client.module.cosmetic.KillEffects k = on(dev.aqua.client.module.cosmetic.KillEffects.class);
+            Entity dead = packet.getEntity(mc.world);
+            if (k != null && dead != null) {
+                k.onDeath(dead);
+            }
+        }
         if (packet.getStatus() == 35 && mc.world != null) {
             PopEffect p = on(PopEffect.class);
             Entity e = packet.getEntity(mc.world);

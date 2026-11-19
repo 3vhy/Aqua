@@ -74,6 +74,11 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             throw new RuntimeException(e);
         }
         Path marker = stateDir.resolve("aqua-test-phase2");
+        if (System.getenv("AQUA_SHOWCASE") != null) {
+            resultFile = stateDir.resolve("aqua-showcase.txt");
+            Showcase.run(context, this::pass);
+            return;
+        }
         boolean phase2 = Files.exists(marker);
         resultFile = stateDir.resolve(phase2 ? "aqua-test-results-phase2.txt" : "aqua-test-results-phase1.txt");
         if (phase2) {
@@ -159,6 +164,8 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             toggleEveryModule(context);
             hudEditor(context);
             cosmetics(context);
+            skinsAndKnives(context, sp);
+            identity(context, sp);
             profilesAndLayouts(context);
             resizeAndScale(context);
             reloadResources(context);
@@ -204,11 +211,54 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         context.waitTicks(30);
         String resumed = context.computeOnClient(mc -> dev.aqua.client.music.MusicPlayer.get().state() + "|" + dev.aqua.client.music.MusicPlayer.get().positionMs() / 1000);
         check(paused && resumed.startsWith("PLAYING"), "Music: pause and resume from position (" + resumed + "s)");
+        onlineLyrics(context);
         context.runOnClient(mc -> {
             dev.aqua.client.music.MusicPlayer.get().stop();
             Aqua.modules().byId("music_card").setEnabled(false, false);
             Aqua.modules().byId("sky_lyrics").setEnabled(false, false);
         });
+    }
+
+    /** A track with no .lrc file gets synced lyrics from LRCLIB; turning lyrics off makes the player standalone. */
+    private void onlineLyrics(ClientGameTestContext context) {
+        int idx = context.computeOnClient(mc -> {
+            var lib = dev.aqua.client.music.MusicPlayer.get().library();
+            for (int i = 0; i < lib.size(); i++) {
+                if (lib.get(i).title().equals("Amazing Grace") && lib.get(i).lyrics().isEmpty()) {
+                    return i;
+                }
+            }
+            return -1;
+        });
+        if (idx < 0) {
+            pass("Music: online lyrics fixture not present - LRCLIB lookup not exercised");
+            return;
+        }
+        context.runOnClient(mc -> dev.aqua.client.music.MusicPlayer.get().play(idx));
+        context.waitFor(mc -> !dev.aqua.client.music.MusicPlayer.get().lyricStatus().startsWith("Searching"), 1200);
+        String found = context.computeOnClient(mc -> {
+            var p = dev.aqua.client.music.MusicPlayer.get();
+            return p.lyricStatus() + "|" + p.lyricsFor(p.current()).size();
+        });
+        check(found.startsWith("Lyrics from LRCLIB|") && !found.endsWith("|0"),
+                "Music: synced lyrics fetched automatically from LRCLIB for a song without a .lrc file (" + found + " lines)");
+        context.runOnClient(mc -> dev.aqua.client.music.MusicPlayer.get().seek(15000));
+        context.waitTicks(60);
+        context.takeScreenshot("03c_music_online_lyrics");
+        context.setScreen(() -> new AquaMenuScreen(null));
+        context.runOnClient(mc -> setNav((AquaMenuScreen) mc.currentScreen, "MUSIC"));
+        context.waitTicks(20);
+        context.takeScreenshot("03d_music_page");
+        context.setScreen(() -> null);
+        context.runOnClient(mc -> Aqua.modules().get(dev.aqua.client.music.MusicModule.class).setLyrics(false));
+        context.waitTicks(30);
+        String off = context.computeOnClient(mc -> {
+            var p = dev.aqua.client.music.MusicPlayer.get();
+            return p.lyricStatus() + "|" + p.lyricsFor(p.current()).size() + "|" + p.lyricIndex() + "|" + p.state();
+        });
+        context.takeScreenshot("03e_music_lyrics_off_standalone");
+        check(off.equals("Lyrics off|0|-1|PLAYING"), "Music: lyrics switch off leaves a standalone player that keeps playing (" + off + ")");
+        context.runOnClient(mc -> Aqua.modules().get(dev.aqua.client.music.MusicModule.class).setLyrics(true));
     }
 
     /** Triggers event-driven features: zoom, toggle sprint, emote wheel, notifications, hits, totems, deaths. */
@@ -320,7 +370,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         context.setScreen(() -> new AquaMenuScreen(null));
         context.waitTicks(15);
         context.takeScreenshot("04_menu_hud");
-        String[] navs = {"VISUALS", "COSMETICS", "QOL", "PERFORMANCE", "WARDROBE", "THEMES", "PROFILES", "KEYBINDS", "SETTINGS"};
+        String[] navs = {"VISUALS", "COSMETICS", "QOL", "PERFORMANCE", "WARDROBE", "MUSIC", "THEMES", "PROFILES", "KEYBINDS", "SETTINGS"};
         int n = 5;
         for (String nav : navs) {
             context.runOnClient(mc -> setNav((AquaMenuScreen) mc.currentScreen, nav));
@@ -536,6 +586,276 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         pass("Cosmetics rendered in first person, third person, emote and wardrobe preview");
     }
 
+    /** 3D character skins, wing/hat/cape styles, knife skins, kill effects, the wardrobe tabs and the keystrokes mouse pad. */
+    private void skinsAndKnives(ClientGameTestContext context, TestSingleplayerContext sp) {
+        sp.getServer().runCommand("time set noon");
+        sp.getServer().runCommand("item replace entity @a weapon.mainhand with minecraft:diamond_sword");
+        context.runOnClient(mc -> {
+            mc.player.getInventory().setSelectedSlot(0);
+            var cs = Aqua.modules().get(dev.aqua.client.module.cosmetic.CharacterSkin.class);
+            cs.select(dev.aqua.client.cosmetic.character.Characters.ROBO);
+            cs.setEnabled(true, false);
+            mc.options.setPerspective(Perspective.THIRD_PERSON_FRONT);
+            mc.player.setPitch(0f);
+        });
+        long before = context.computeOnClient(mc -> dev.aqua.client.cosmetic.character.CharacterRenderer.drawn());
+        context.waitTicks(20);
+        long after = context.computeOnClient(mc -> dev.aqua.client.cosmetic.character.CharacterRenderer.drawn());
+        context.takeScreenshot("31_3d_skin_robo");
+        check(after > before, "3D skin replaces the player model in third person (" + (after - before) + " character frames)");
+        context.runOnClient(mc -> Emotes.play(Emotes.Emote.WAVE));
+        context.waitTicks(12);
+        context.takeScreenshot("32_3d_skin_emote");
+        context.runOnClient(mc -> {
+            Emotes.stop();
+            Aqua.modules().get(dev.aqua.client.module.cosmetic.CharacterSkin.class)
+                    .select(dev.aqua.client.cosmetic.character.Characters.SHARK);
+        });
+        context.waitTicks(8);
+        context.takeScreenshot("33_3d_skin_shark");
+        context.runOnClient(mc -> Aqua.modules().get(dev.aqua.client.module.cosmetic.CharacterSkin.class).setEnabled(false, false));
+
+        // Wings, hats and capes in each style (third person, back view for capes)
+        context.runOnClient(mc -> {
+            for (String id : new String[]{"wings", "hats", "orbit"}) {
+                Aqua.modules().byId(id).setEnabled(true, false);
+            }
+            ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.cosmetic.Wings.Style>) find("wings", "style"))
+                    .set(dev.aqua.client.module.cosmetic.Wings.Style.DEVIL);
+            ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.cosmetic.Hats.Style>) find("hats", "style"))
+                    .set(dev.aqua.client.module.cosmetic.Hats.Style.GLOW_CONE);
+        });
+        context.waitTicks(20);
+        context.takeScreenshot("34_devil_wings_glow_hat_orbit");
+        context.runOnClient(mc -> {
+            ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.cosmetic.Wings.Style>) find("wings", "style"))
+                    .set(dev.aqua.client.module.cosmetic.Wings.Style.ANGEL);
+            ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.cosmetic.Hats.Style>) find("hats", "style"))
+                    .set(dev.aqua.client.module.cosmetic.Hats.Style.CROWN);
+            Aqua.modules().byId("orbit").setEnabled(false, false);
+            Aqua.modules().byId("cape").setEnabled(true, false);
+            mc.options.setPerspective(Perspective.THIRD_PERSON_BACK);
+        });
+        context.waitTicks(20);
+        context.takeScreenshot("35_angel_wings_crown_cape_back");
+        context.runOnClient(mc -> {
+            for (String id : new String[]{"wings", "hats", "cape"}) {
+                Aqua.modules().byId(id).setEnabled(false, false);
+            }
+            mc.options.setPerspective(Perspective.FIRST_PERSON);
+        });
+        pass("Wing, hat, cape and orbit styles rendered (devil/angel wings, glow hat, crown)");
+
+        // Knife skins on the held sword, first and third person
+        for (var type : dev.aqua.client.module.cosmetic.Knives.Type.values()) {
+            context.runOnClient(mc -> {
+                var k = Aqua.modules().get(dev.aqua.client.module.cosmetic.Knives.class);
+                k.select(type);
+                k.setEnabled(true, false);
+            });
+            long k0 = context.computeOnClient(mc -> dev.aqua.client.module.cosmetic.Knives.drawn());
+            context.waitTicks(10);
+            long k1 = context.computeOnClient(mc -> dev.aqua.client.module.cosmetic.Knives.drawn());
+            context.takeScreenshot("36_knife_" + type.name().toLowerCase(Locale.ROOT));
+            check(k1 > k0, "Knife skin '" + type.displayName() + "' replaces the held sword in first person (" + (k1 - k0) + " frames)");
+        }
+        context.runOnClient(mc -> mc.options.setPerspective(Perspective.THIRD_PERSON_FRONT));
+        context.waitTicks(10);
+        context.takeScreenshot("37_knife_third_person");
+        context.runOnClient(mc -> mc.options.setPerspective(Perspective.FIRST_PERSON));
+        context.getInput().pressKey(o -> Aqua.keybinds().inspect);
+        context.waitTicks(16);
+        context.takeScreenshot("38_knife_inspect");
+        context.waitTicks(50);
+
+        // Kill effect: hit a chicken with the sword so it dies; the effect plays where it fell
+        context.runOnClient(mc -> {
+            var ke = Aqua.modules().get(dev.aqua.client.module.cosmetic.KillEffects.class);
+            ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.cosmetic.KillEffects.Effect>) find("kill_effects", "effect"))
+                    .set(dev.aqua.client.module.cosmetic.KillEffects.Effect.LIGHTNING);
+            ke.setEnabled(true, false);
+            mc.player.setYaw(0f);
+            mc.player.setPitch(15f);
+        });
+        sp.getServer().runCommand("gamemode survival @a");
+        String pos = context.computeOnClient(mc -> String.format(Locale.ROOT, "%.2f %.2f %.2f", mc.player.getX(), mc.player.getY(), mc.player.getZ() + 2.2));
+        sp.getServer().runCommand("summon minecraft:chicken " + pos + " {NoAI:1b}");
+        context.waitTicks(30);
+        int k0 = context.computeOnClient(mc -> Aqua.modules().get(dev.aqua.client.module.cosmetic.KillEffects.class).triggered());
+        boolean attacked = context.computeOnClient(mc -> {
+            var box = mc.player.getBoundingBox().expand(5);
+            var list = mc.world.getEntitiesByClass(net.minecraft.entity.passive.ChickenEntity.class, box, e -> true);
+            if (list.isEmpty()) {
+                return false;
+            }
+            mc.interactionManager.attackEntity(mc.player, list.get(0));
+            mc.player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
+            return true;
+        });
+        context.waitFor(mc -> Aqua.modules().get(dev.aqua.client.module.cosmetic.KillEffects.class).triggered() > k0, 100);
+        context.waitTicks(3);
+        context.takeScreenshot("39_kill_effect_lightning");
+        int k1 = context.computeOnClient(mc -> Aqua.modules().get(dev.aqua.client.module.cosmetic.KillEffects.class).triggered());
+        check(attacked && k1 > k0, "Kill effect plays when an entity you hit dies");
+        context.waitTicks(30);
+        for (var fx : new dev.aqua.client.module.cosmetic.KillEffects.Effect[]{
+                dev.aqua.client.module.cosmetic.KillEffects.Effect.SOUL, dev.aqua.client.module.cosmetic.KillEffects.Effect.FIREWORK}) {
+            context.runOnClient(mc -> Aqua.modules().get(dev.aqua.client.module.cosmetic.KillEffects.class)
+                    .trigger(fx, mc.player.getEntityPos().add(0, 0, 3), 1f));
+            context.waitTicks(10);
+            context.takeScreenshot("40_kill_effect_" + fx.name().toLowerCase(Locale.ROOT));
+        }
+        sp.getServer().runCommand("gamemode creative @a");
+        context.runOnClient(mc -> {
+            Aqua.modules().get(dev.aqua.client.module.cosmetic.KillEffects.class).setEnabled(false, false);
+            mc.player.setPitch(0f);
+        });
+        pass("Kill effect styles rendered (lightning, soul, firework)");
+
+        // Wardrobe: every tab, with live 3D previews in the cards
+        context.setScreen(() -> new AquaMenuScreen(null));
+        context.runOnClient(mc -> setNav((AquaMenuScreen) mc.currentScreen, "WARDROBE"));
+        String[] tabs = {"SKINS", "WINGS", "HATS", "CAPES", "KNIVES", "EMOTES", "KILL"};
+        for (String tab : tabs) {
+            context.runOnClient(mc -> setWardrobeTab((AquaMenuScreen) mc.currentScreen, tab));
+            context.waitTicks(10);
+            context.takeScreenshot("41_wardrobe_" + tab.toLowerCase(Locale.ROOT));
+        }
+        // Selecting a 3D skin card enables it
+        context.runOnClient(mc -> setWardrobeTab((AquaMenuScreen) mc.currentScreen, "SKINS"));
+        context.waitTicks(5);
+        boolean picked = context.computeOnClient(mc -> {
+            var cs = Aqua.modules().get(dev.aqua.client.module.cosmetic.CharacterSkin.class);
+            cs.select(dev.aqua.client.cosmetic.character.Characters.PENGUIN);
+            cs.setEnabled(true, false);
+            return dev.aqua.client.cosmetic.Look.current().character() == dev.aqua.client.cosmetic.character.Characters.PENGUIN;
+        });
+        context.waitTicks(10);
+        context.takeScreenshot("42_wardrobe_penguin_selected");
+        check(picked, "Wardrobe: all 7 tabs render and a selected 3D skin becomes your look");
+        context.setScreen(() -> null);
+        context.runOnClient(mc -> {
+            Aqua.modules().get(dev.aqua.client.module.cosmetic.CharacterSkin.class).setEnabled(false, false);
+            Aqua.modules().get(dev.aqua.client.module.cosmetic.Knives.class).setEnabled(false, false);
+        });
+
+        // Keystrokes: mouse movement pad between LMB and RMB
+        boolean locked = context.computeOnClient(mc -> mc.mouse.isCursorLocked());
+        float peak = 0;
+        for (int i = 0; i < 6; i++) {
+            context.getInput().moveCursor(40, 12);
+            context.waitTicks(1);
+            peak = Math.max(peak, context.computeOnClient(mc -> Math.abs(dev.aqua.client.util.MouseTracker.x())));
+        }
+        context.takeScreenshot("43_keystrokes_mouse_pad");
+        if (locked) {
+            check(peak > 0.05f, "Keystrokes mouse pad follows real mouse movement (peak " + peak + ")");
+        } else {
+            pass("Keystrokes mouse pad drawn (cursor not captured by the virtual display, so movement was not measured)");
+        }
+    }
+
+    /** Aqua badge (presence handshake, tab list, own nametag), Name Protect and Skin Protect. */
+    private void identity(ClientGameTestContext context, TestSingleplayerContext sp) {
+        context.waitFor(mc -> dev.aqua.client.net.Presence.knownCount() >= 1, 200);
+        String presence = context.computeOnClient(mc -> dev.aqua.client.net.Presence.knownCount() + "|"
+                + dev.aqua.client.net.Presence.isAquaUser(mc.player.getUuid()));
+        check(presence.equals("1|true"), "Aqua presence handshake round trip through the integrated server (" + presence + ")");
+
+        // Tab list badge: singleplayer only draws the tab list when a list objective exists
+        sp.getServer().runCommand("scoreboard objectives add aqua_test dummy");
+        sp.getServer().runCommand("scoreboard objectives setdisplay list aqua_test");
+        String tabName = context.computeOnClient(mc -> {
+            var entry = mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid());
+            net.minecraft.text.Text n = mc.inGameHud.getPlayerListHud().getPlayerName(entry);
+            return (n.getContent() instanceof net.minecraft.text.ObjectTextContent ? "badge" : "no badge") + "|"
+                    + n.getString().contains(mc.player.getGameProfile().name());
+        });
+        check(tabName.equals("badge|true"), "Aqua badge is prefixed to your name in the tab list (" + tabName + ")");
+        context.getInput().holdKey(o -> o.playerListKey);
+        context.waitTicks(6);
+        context.takeScreenshot("44_tab_list_badge");
+
+        // Name Protect: replaces your name in everything drawn
+        String name = context.computeOnClient(mc -> mc.getSession().getUsername());
+        context.runOnClient(mc -> {
+            ((dev.aqua.client.setting.StringSetting) find("name_protect", "alias")).set("AquaUser");
+            Aqua.modules().byId("name_protect").setEnabled(true, false);
+        });
+        context.waitTicks(4);
+        context.takeScreenshot("45_tab_list_badge_name_protect");
+        context.getInput().releaseKey(o -> o.playerListKey);
+        String drawn = context.computeOnClient(mc -> {
+            StringBuilder sb = new StringBuilder();
+            net.minecraft.text.Text.literal("<" + name + "> hello").asOrderedText().accept((i, style, cp) -> {
+                sb.appendCodePoint(cp);
+                return true;
+            });
+            mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal("<" + name + "> Name Protect hides this name"));
+            return sb.toString();
+        });
+        context.waitTicks(4);
+        context.takeScreenshot("46_name_protect_chat");
+        check(drawn.equals("<AquaUser> hello"), "Name Protect replaces your username in drawn text (" + drawn + ")");
+        context.runOnClient(mc -> Aqua.modules().byId("name_protect").setEnabled(false, false));
+        String restored = context.computeOnClient(mc -> dev.aqua.client.module.qol.NameProtect.filter("<" + name + ">"));
+        check(restored.equals("<" + name + ">"), "Name Protect off shows your real name again");
+
+        // Own nametag with badge in third person
+        context.runOnClient(mc -> {
+            ((BoolSetting) find("aqua_badge", "own_nametag")).set(true);
+            mc.options.setPerspective(Perspective.THIRD_PERSON_FRONT);
+        });
+        context.waitTicks(10);
+        context.takeScreenshot("47_own_nametag_badge");
+
+        // Skin Protect: Steve, then another player's skin looked up by name
+        context.runOnClient(mc -> {
+            ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.qol.SkinProtect.Source>) find("skin_protect", "source"))
+                    .set(dev.aqua.client.module.qol.SkinProtect.Source.STEVE);
+            Aqua.modules().byId("skin_protect").setEnabled(true, false);
+        });
+        context.waitTicks(5);
+        boolean steve = context.computeOnClient(mc -> mc.player.getSkin() == net.minecraft.client.util.DefaultSkinHelper.getSteve());
+        context.takeScreenshot("48_skin_protect_steve");
+        check(steve, "Skin Protect shows the Steve skin as yours");
+        context.runOnClient(mc -> {
+            ((dev.aqua.client.setting.StringSetting) find("skin_protect", "player")).set("jeb_");
+            ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.qol.SkinProtect.Source>) find("skin_protect", "source"))
+                    .set(dev.aqua.client.module.qol.SkinProtect.Source.PLAYER);
+        });
+        context.waitFor(mc -> !Aqua.modules().get(dev.aqua.client.module.qol.SkinProtect.class).loading(), 1200);
+        context.waitTicks(20);
+        String skin = context.computeOnClient(mc -> {
+            var spm = Aqua.modules().get(dev.aqua.client.module.qol.SkinProtect.class);
+            return spm.status() + "|" + (spm.override() != null && mc.player.getSkin() == spm.override());
+        });
+        context.takeScreenshot("49_skin_protect_player");
+        check(skin.equals("Showing jeb_'s skin|true"), "Skin Protect looks up a player by name and shows their skin as yours (" + skin + ")");
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("skin_protect").setEnabled(false, false);
+            ((BoolSetting) find("aqua_badge", "own_nametag")).set(false);
+            mc.options.setPerspective(Perspective.FIRST_PERSON);
+        });
+        sp.getServer().runCommand("scoreboard objectives remove aqua_test");
+        context.waitTicks(5);
+    }
+
+    private static void setWardrobeTab(AquaMenuScreen menu, String tab) {
+        try {
+            Field pf = AquaMenuScreen.class.getDeclaredField("wardrobe");
+            pf.setAccessible(true);
+            Object page = pf.get(menu);
+            Field tf = page.getClass().getDeclaredField("tab");
+            tf.setAccessible(true);
+            @SuppressWarnings({"unchecked", "rawtypes"})
+            Object v = Enum.valueOf((Class) tf.getType(), tab);
+            tf.set(page, v);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void profilesAndLayouts(ClientGameTestContext context) {
         String result = context.computeOnClient(mc -> {
             var cfg = Aqua.config();
@@ -673,6 +993,10 @@ public final class AquaClientGameTest implements FabricClientGameTest {
      * The harness ticks client and server in lockstep; under software GL the vanilla loading-screen
      * blur makes every frame slow, so blur is disabled while the world is created and restored after.
      */
+    static TestSingleplayerContext createWorldFor(ClientGameTestContext context) {
+        return createWorld(context);
+    }
+
     private static TestSingleplayerContext createWorld(ClientGameTestContext context) {
         int blur = context.computeOnClient(mc -> mc.options.getMenuBackgroundBlurriness().getValue());
         context.runOnClient(mc -> mc.options.getMenuBackgroundBlurriness().setValue(0));

@@ -4,7 +4,7 @@ import dev.aqua.client.Aqua;
 import dev.aqua.client.hud.Anchor;
 import dev.aqua.client.hud.HudWidget;
 import dev.aqua.client.hud.Pill;
-import dev.aqua.client.module.qol.StreamerMode;
+import dev.aqua.client.module.qol.NameProtect;
 import dev.aqua.client.render.Icon;
 import net.minecraft.client.gui.DrawContext;
 
@@ -16,9 +16,9 @@ public final class AccountWidget extends HudWidget {
 
     private Pill pill() {
         String name = mc.getSession() != null ? mc.getSession().getUsername() : "Player";
-        StreamerMode sm = Aqua.modules().get(StreamerMode.class);
-        if (sm != null && sm.isEnabled()) {
-            name = sm.alias();
+        NameProtect np = Aqua.modules().get(NameProtect.class);
+        if (np != null && np.isEnabled()) {
+            name = np.alias();
         }
         return Pill.create().icon(Icon.USER).value(name);
     }

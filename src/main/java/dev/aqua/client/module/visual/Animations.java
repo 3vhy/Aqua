@@ -87,6 +87,42 @@ public final class Animations extends Module {
         }
     }
 
+    /** Knife-specific inspect animations (visual only). */
+    private static void knifeInspect(MatrixStack m, dev.aqua.client.module.cosmetic.Knives.Type type, float t, float e) {
+        switch (type) {
+            case KARAMBIT -> {
+                // Spin twice around the finger ring, then present the blade.
+                float spin = Anim.easeInOutCubic(Anim.clamp01((t - 0.1f) / 0.5f)) * 720f;
+                m.translate(-0.1f * e, 0.12f * e, 0f);
+                m.translate(0.2f, -0.05f, 0f);
+                m.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-spin));
+                m.translate(-0.2f, 0.05f, 0f);
+                m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-40f * e));
+            }
+            case BUTTERFLY -> {
+                // Three fast flips around the long axis.
+                float flips = Anim.easeInOutCubic(Anim.clamp01((t - 0.08f) / 0.7f)) * 1080f;
+                m.translate(-0.08f * e, 0.1f * e, 0.04f * e);
+                m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(flips));
+                m.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(15f * e));
+            }
+            case KATANA -> {
+                // Slowly turn the blade to show its length.
+                m.translate(-0.18f * e, 0.1f * e, 0.08f * e);
+                m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-70f * e + (float) Math.sin(t * Math.PI * 2) * 20f * e));
+                m.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(35f * e));
+            }
+            case DAGGER -> {
+                // Toss up, one full flip, catch.
+                float air = (float) Math.sin(Anim.clamp01((t - 0.15f) / 0.5f) * Math.PI);
+                float flip = Anim.easeInOutCubic(Anim.clamp01((t - 0.15f) / 0.5f)) * 360f;
+                m.translate(-0.06f * e, 0.35f * air, 0f);
+                m.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(flip));
+                m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-30f * e));
+            }
+        }
+    }
+
     /** Applies offsets, scale and the inspect pose to the first-person item transform. */
     public void apply(MatrixStack m, boolean mainHand) {
         m.translate(x.f() * (mainHand ? 1 : -1), y.f(), z.f());
@@ -95,13 +131,20 @@ public final class Animations extends Module {
             m.scale(s, s, s);
         }
         if (mainHand && inspectStart >= 0) {
-            float t = (System.currentTimeMillis() - inspectStart) / 2200f;
+            dev.aqua.client.module.cosmetic.Knives knives = Aqua.modules().get(dev.aqua.client.module.cosmetic.Knives.class);
+            boolean knife = knives != null && mc.player != null && knives.appliesTo(mc.player.getMainHandStack());
+            float dur = knife ? 2600f : 2200f;
+            float t = (System.currentTimeMillis() - inspectStart) / dur;
             if (t >= 1f) {
                 inspectStart = -1;
                 return;
             }
             float env = Math.min(1f, Math.min(t * 5f, (1f - t) * 5f));
             float e = Anim.easeInOutCubic(env);
+            if (knife) {
+                knifeInspect(m, knives.type(), t, e);
+                return;
+            }
             m.translate(-0.12f * e, 0.08f * e, 0.05f * e);
             m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-35f * e + (float) Math.sin(t * Math.PI * 2) * 25f * e));
             m.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(20f * e));

@@ -50,7 +50,7 @@ import java.util.Set;
 public final class AquaMenuScreen extends Screen {
     public enum Nav {
         HUD(Category.HUD), VISUALS(Category.VISUALS), COSMETICS(Category.COSMETICS), QOL(Category.QOL), PERFORMANCE(Category.PERFORMANCE),
-        WARDROBE(null), THEMES(null), PROFILES(null), KEYBINDS(null), SETTINGS(null);
+        WARDROBE(null), MUSIC(null), THEMES(null), PROFILES(null), KEYBINDS(null), SETTINGS(null);
 
         @Nullable final Category category;
 
@@ -75,6 +75,7 @@ public final class AquaMenuScreen extends Screen {
     private final Anim pageFade = new Anim(1f, 160f);
 
     private final Page wardrobe = new WardrobePage();
+    private final Page music = new dev.aqua.client.gui.pages.MusicPage();
     private final Page themes = new ThemesPage();
     private final Page profiles = new ProfilesPage();
     private final Page keybinds = new KeybindsPage();
@@ -204,11 +205,11 @@ public final class AquaMenuScreen extends Screen {
         // Fit the navigation to the window height (small windows / large GUI scales).
         float footer = 22;
         float avail = y + h - iy - 6;
-        boolean showFooter = avail - footer >= 10 * 13f + 22;
+        boolean showFooter = avail - footer >= 11 * 13f + 22;
         if (showFooter) {
             avail -= footer;
         }
-        itemH = Math.max(10.5f, Math.min(14f, (avail - 22) / 10f - 1.5f));
+        itemH = Math.max(10f, Math.min(14f, (avail - 22) / 11f - 1.5f));
         iy = sectionLabel(ctx, t, "MODULES", x + 10, iy, a);
         for (Nav n : new Nav[]{Nav.HUD, Nav.VISUALS, Nav.COSMETICS, Nav.QOL, Nav.PERFORMANCE}) {
             iy = navItem(ctx, t, n, n.category.title, n.category.icon, x, iy, w, a);
@@ -216,6 +217,7 @@ public final class AquaMenuScreen extends Screen {
         iy += 3;
         iy = sectionLabel(ctx, t, "CLIENT", x + 10, iy, a);
         iy = navItem(ctx, t, Nav.WARDROBE, "Wardrobe", Icon.HANGER, x, iy, w, a);
+        iy = navItem(ctx, t, Nav.MUSIC, "Music", Icon.NOTE, x, iy, w, a);
         iy = navItem(ctx, t, Nav.THEMES, "Themes", Icon.PALETTE, x, iy, w, a);
         iy = navItem(ctx, t, Nav.PROFILES, "Profiles", Icon.FOLDER, x, iy, w, a);
         iy = navItem(ctx, t, Nav.KEYBINDS, "Keybinds", Icon.KEYBOARD, x, iy, w, a);
@@ -276,13 +278,15 @@ public final class AquaMenuScreen extends Screen {
         } else {
             title = switch (nav) {
                 case WARDROBE -> "Wardrobe";
+                case MUSIC -> "Music";
                 case THEMES -> "Themes";
                 case PROFILES -> "Profiles";
                 case KEYBINDS -> "Keybinds";
                 default -> "Settings";
             };
             subtitle = switch (nav) {
-                case WARDROBE -> "Preview and toggle your cosmetics";
+                case WARDROBE -> "3D skins, knives and wearables, previewed live";
+                case MUSIC -> "Your own music with synced lyrics";
                 case THEMES -> "Colours used across Aqua";
                 case PROFILES -> "Separate setups with their own HUD layout";
                 case KEYBINDS -> "Every Aqua binding in one place";
@@ -333,6 +337,7 @@ public final class AquaMenuScreen extends Screen {
         } else {
             Page page = switch (nav) {
                 case WARDROBE -> wardrobe;
+                case MUSIC -> music;
                 case THEMES -> themes;
                 case PROFILES -> profiles;
                 case KEYBINDS -> keybinds;

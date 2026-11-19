@@ -65,7 +65,7 @@ public final class SkyLyrics extends Module implements WorldEffect {
         if (t == null || idx < 0 || !MusicPlayer.get().isPlaying()) {
             return "";
         }
-        return t.lyrics().get(idx).text();
+        return MusicPlayer.get().lyricsFor(t).get(idx).text();
     }
 
     private Vec3d placeAhead() {

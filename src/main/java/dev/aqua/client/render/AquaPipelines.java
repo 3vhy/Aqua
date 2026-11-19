@@ -34,6 +34,17 @@ public final class AquaPipelines {
                     .withCull(false)
                     .build());
 
+    /** Opaque shaded geometry for 3D cosmetics (characters, knives, hats): depth tested and written. */
+    public static final RenderPipeline WORLD_SOLID = RenderPipelines.register(
+            RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET)
+                    .withLocation(Identifier.of("aqua", "pipeline/world_solid"))
+                    .withoutBlend()
+                    .withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS)
+                    .withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+                    .withDepthWrite(true)
+                    .withCull(false)
+                    .build());
+
     /** World-space additive glow geometry (particles, halos, trails). */
     public static final RenderPipeline WORLD_GLOW = RenderPipelines.register(
             RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET)

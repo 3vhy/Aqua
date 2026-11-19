@@ -88,7 +88,8 @@ The widgets are:
 * Key Binds panel
 * Effects panel
 * Module List: enabled cosmetic modules only
-* Keystrokes with CPS
+* Keystrokes: W A S D, LMB and RMB with a mouse-movement pad between them (as in the Fern
+  reference), a labelled SPACE bar, optional CPS
 * CPS
 * Armour and held-item durability
 * Inventory preview
@@ -114,16 +115,44 @@ Rain, Custom Fog (colour, and it can only make fog thicker), World Tint, Block O
 (visual swing length and style, equip animation, hand position and scale, item **inspect**
 animation), Item Glow, Hand Shader.
 
+### Wardrobe
+Aqua > **Wardrobe** has tabs for **3D Skins, Wings, Hats, Capes, Knives, Emotes and Kill FX**. A large
+preview of your player spins on the left; every card shows a live 3D preview of that item, and
+hovering a card shows it in the large preview. Click a card to wear it; **Show in game** turns the
+category on or off.
+
+* **3D Skins:** eight original 3D characters (Droplet, Robo, Penguin, Sea Dragon, Ghost, Knight,
+  Shark, Snowman). The player model poses them, so walking, swinging and emotes all animate.
+* **Knives:** karambit, katana, dagger or butterfly knife drawn instead of your sword (optionally
+  axes), with eight finishes. Press **Y** to inspect. Only the look changes: the item, damage and
+  reach are vanilla.
+* **Wings:** angel, devil, butterfly, crystal and feather, with custom colours, size and flap.
+* **Hats:** glow hat, top hat, crown, witch hat, horns and cat ears.
+* **Capes:** Aqua, Theme, Topographic, Galaxy and Flame, flowing with your movement.
+* **Kill FX:** lightning, soul, burst, blood, hearts or firework where something you hit within
+  the last six seconds dies, with an optional sound only you hear.
+
 ### Cosmetics (visible only to you; nothing is networked)
-Wings, Halo, Jump Circles and landing shockwave, Jump Effects, Dash Trail, Projectile Trails (past
-path only, no prediction), Fireflies, Floating Cubes, Wind, **Sky Lyrics** (glowing 3D text from
-lyrics or your own text), Totem Pop Effect, Hit Particles, Crystal Pulse (depth tested), World Join
-Effect (typewriter title), Emotes (wheel plus wardrobe preview).
+Wings, Hats, Cape, Halo, Orbit, 3D Skins, Knife Skins, Kill Effects, Jump Circles and landing
+shockwave, Jump Effects, Dash Trail, Projectile Trails (past path only, no prediction), Fireflies,
+Floating Cubes, Wind, **Sky Lyrics** (glowing 3D text from lyrics or your own text), Totem Pop
+Effect, Hit Particles, Crystal Pulse (depth tested), World Join Effect (typewriter title), Emotes
+(wheel plus wardrobe preview).
 
 ### Quality of life
 Smooth Zoom, Toggle Sprint (holds the vanilla sprint key, so there is no omni-sprint), Music Player,
 Screenshot notifications with a thumbnail, Chat Style (background and timestamps), Death Waypoints
-(your own deaths only), Streamer Mode (hides your name, coordinates and server on your own screen).
+(your own deaths only), Streamer Mode (hides coordinates and the server address on your own screen).
+
+* **Name Protect** replaces your username with an alias of your choice in everything the game draws:
+  chat, tab list, nametags, scoreboard and the HUD.
+* **Skin Protect** shows another skin as yours, on your screen only. Type a player's name and
+  press **Apply** to load their skin from Mojang, or pick Steve or a default skin (no network).
+* **Aqua Badge** puts a small Aqua mark before the names of Aqua users in the tab list and on
+  nametags. Aqua clients say hello on the `aqua:hello` channel, and a server that knows the channel
+  shares who uses Aqua. That works in singleplayer and on LAN worlds hosted by an Aqua user. Normal
+  multiplayer servers do not pass the hello on and Aqua has no central server, so there the badge is
+  only shown next to your own name. You can turn the hello off with *Let others see that I use Aqua*.
 
 ### Performance
 Effect Budget, Background FPS Limit and Particle Limiter. Under Settings you can also set **Effects
@@ -144,10 +173,21 @@ turn the Aqua title screen off in Settings.
    * Optional synced lyrics: add `Artist - Title.lrc` next to the song, using the standard
      `[mm:ss.xx] line` format. `[offset:]` is supported.
    * Optional cover art: add `Artist - Title.png` (or `.jpg`) or `cover.png` next to the song.
-2. In Aqua > Quality of Life > Music Player, use **Rescan folder**, then **Play / Pause**.
+2. Open Aqua > **Music**, press **Rescan**, then click a song. The Music page is a full player:
+   seek bar, previous/play/next, shuffle, repeat, volume, a lyrics preview and your library. You can
+   also use Quality of Life > Music Player and the play/pause and next keys.
+
+**Automatic lyrics.** When a song has no `.lrc` file, Aqua looks up synced lyrics on
+[LRCLIB](https://lrclib.net), a free public lyrics database, and saves them in
+`config/aqua/lyrics/` so each song is looked up once. Only the song's **title, artist and length**
+are sent. Turn this off with *Find lyrics online (LRCLIB)* in the Music Player settings.
+
+**No lyrics at all.** Switch **Lyrics** off on the Music page (or in the Music Player settings) to
+use the player on its own: the music card, island and sky text then show no lyrics. The music card
+also has a **Compact** style.
 
 Only `.ogg` files can be played. Other formats are listed as unsupported instead of failing silently.
-No songs are bundled and nothing is streamed. Music plays through Minecraft's Jukebox/Note Blocks
+No songs are bundled and no audio is streamed. Music plays through Minecraft's Jukebox/Note Blocks
 volume.
 
 ---
@@ -162,6 +202,7 @@ Everything is stored under `config/aqua/`:
 | `exports/` | profiles you export to a file |
 | `import/` | drop exported files here and press **Import** (processed files move to `import/done`) |
 | `music/` | your music, lyrics and cover art |
+| `lyrics/` | lyrics found online, cached per song |
 
 Saves happen one second after a change and when the game closes. Each save goes to a temporary file
 first and is then moved into place. A damaged file is renamed to `*.corrupt-<time>`, defaults are
@@ -218,6 +259,17 @@ This regenerates the mod icon, the menu emblem, the small emblem and `branding/i
 (16–512 px), keeping the artwork's proportions and transparent edges.
 
 ---
+
+## Privacy and network use
+Aqua makes no network requests unless you use one of these features:
+
+| Feature | Sends | To |
+|---|---|---|
+| Automatic lyrics | song title, artist and length | `lrclib.net` |
+| Skin Protect (player name) | the player name you typed | Mojang (`api.mojang.com`, `sessionserver.mojang.com`, `textures.minecraft.net`) |
+| Aqua Badge hello | the Aqua version | only the server you are connected to |
+
+Your own account details are never sent by Aqua.
 
 ## Compatibility
 See `TESTING.md` for exactly what was tested and the versions involved.

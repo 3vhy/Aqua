@@ -56,6 +56,7 @@ Status column:
 | R1 | 0:00–end | Key Binds panel | Title "Key Binds" + ⌘ icon, rows "Module …… key" | Include | Lists Aqua modules that have a bind | `hud/widgets/KeybindsWidget` | Done |
 | R1, R2 | 0:00–end | Module list (array list) | Right edge, one rounded pill per module, sorted longest first, slide in/out | Include | Lists Aqua's enabled cosmetic modules only | `hud/widgets/ModuleListWidget` | Done |
 | R1, R2, R3 | 0:00–end | Keystrokes | W/A/S/D squares, LMB/RMB, wide SPACE bar; pressed key fills with accent; R3 shows "LMB 0 / RMB 1" CPS inside the mouse keys | Include | Real input only | `hud/widgets/KeystrokesWidget` | Done |
+| R1, R2 | 0:00–end | Keystrokes mouse pad | A small square between LMB and RMB with a dot that follows mouse movement; SPACE bar is a thin labelled bar | Include | Dot follows real mouse movement (smoothed, eases back to centre); option to hide it; "S P A C E" label | `KeystrokesWidget` (`mouse_pad`, `space_label`), `util/MouseTracker` | Done |
 | R2 | 0:01 | Effects panel | Title "Effects" + flask icon; effect icon, "Speed 2", "01:29" | Include | Own status effects | `hud/widgets/EffectsWidget` | Done |
 | R1, R2 | 0:00–end | Top-centre capsule | Shows "Fern" brand when idle (R1), the playing track "trick – acoustic" with disc + equaliser icons (R2), and toggle notices "● FreeCam enabled" (R1 0:12) in the same spot | Include | Implemented as the **Island**: idle brand → music → notification morphs | `hud/widgets/IslandWidget`, `notify/Notifications` | Done |
 | R1 | 0:12 | Toggle notification | Green dot + "<Module> enabled" pill, fades | Include | Shows Aqua module toggles (red dot when disabled) | `notify/Notifications` | Done |
@@ -85,7 +86,7 @@ Status column:
 | S1 | — | Category names Combat/Utility/Movement/Visual and modules Triggerbot, Aim Assist, Kill Aura, Shield Breaker, Sprint Reset, Piercing, Reach, Backtrack | Exclude | Cheats; Aqua uses HUD / Visuals / Cosmetics / Quality of Life / Performance | — | n/a |
 | S1 | — | Client group: Themes, Profiles, Binds, Servers, GUI | Include / Adapt | Themes, Profiles, Keybinds, Settings pages. "Servers" is not a feature here (vanilla server list is used) | `gui/pages/*` | Done |
 | R4 | 0:53–0:56 | Top tab bar, category sidebar with icons, search, "19 MODULES" count, close button, profile dropdown | Include (partial) | Module count and per-category icons adopted; the screenshot layout (sidebar navigation) wins over R4's tab bar | `AquaMenuScreen` | Done |
-| R4 | 0:57–1:04 | Wardrobe page with 3D preview and "Show in game" toggle | Adapt | Wardrobe page previews **your own player** wearing Aqua's original cosmetics. The 3D character skins shown (SpongeBob, Charizard, Batman, FNAF Bonnie, Skibidi Toilet, Tung Tung Tung Sahur, Ballerina Cappuccina, Rico, "Six Seven" mascot) are third-party IP and are **not** reproduced | `gui/pages/WardrobePage` | Done |
+| R4 | 0:57–1:04 | Wardrobe page with 3D preview, 3D character skins and "Show in game" toggle | Adapt | Tabbed wardrobe (3D Skins, Wings, Hats, Capes, Knives, Emotes, Kill FX) with a large spinning preview and a live 3D preview in every card. The 3D skins are **original characters** made for Aqua in the same chunky style (Droplet, Robo, Penguin, Sea Dragon, Ghost, Knight, Shark, Snowman). They are posed by the player model, so walking, swinging and emotes animate them. The characters in the video (SpongeBob, Charizard, Batman, FNAF Bonnie, Skibidi Toilet, Tung Tung Tung Sahur, Ballerina Cappuccina, Rico, the "Six Seven" mascot) are third-party IP and are **not** reproduced | `gui/pages/WardrobePage`, `cosmetic/character/*`, `module/cosmetic/CharacterSkin` | Done |
 | R4 | 0:58 | Community configs with 5-digit share codes, likes, online list | Adapt | No server: profiles export/import as an offline **share code** (compressed text) and as files | `config/ConfigManager`, `gui/pages/ProfilesPage` | Done |
 | R4 | 1:13–1:15 | Emotes ("your skin dances in the wheel and in the world") | Adapt | Emote wheel with original emotes rendered on your own model locally (F5 / inventory / wardrobe). Not networked, so other players do not see them | `cosmetic/Emotes`, `gui/EmoteWheelScreen` | Done |
 | R4 | 1:16–1:19 | 67 Chat (global client chat) | Exclude | External network service | — | n/a |
@@ -118,14 +119,14 @@ Status column:
 | R2 | list | Shockwave | — | Adapt | Landing shockwave ring (visual only) | `JumpCircles` (landing mode) | Done |
 | R1 | list | Dash Trail | — | Include | Ribbon trail behind your player | `module/cosmetic/DashTrail` | Done |
 | R2 | 0:03, 0:11–0:14 | Wire-frame trail behind a thrown ender pearl | Adapt | **Projectile Trails** for your own projectiles' past path only — no landing prediction | `module/cosmetic/ProjectileTrails` | Done |
-| R1 | list | Wings | — | Include | Original animated wings | `module/cosmetic/Wings` | Done |
+| R1 | list | Wings | — | Include | Original animated wings in five styles: angel (feathered), devil (bat-style membrane), butterfly, crystal, feather; custom colours, size and flap speed | `module/cosmetic/Wings` | Done |
 | R1 | list | Halo | — | Include | Original halo | `module/cosmetic/Halo` | Done |
 | R2 | 0:09, 0:16 | Totem pop burst | Bright yellow/green flash | Include | Themed burst at the totem position; vanilla particles still appear | `module/cosmetic/PopEffect` | Done |
 | R4 | 0:54 | Hit Particles ("themed particle bursts when you hit") | Include | Spawned locally on hits you make; no effect on combat | `module/cosmetic/HitParticles` | Done |
 | R4 | 0:54 | Crystal Pulse ("pearlescent crystal halos") | Adapt | Depth-tested halo on visible end crystals only (never through walls) | `module/cosmetic/CrystalPulse` | Done |
 | R4 | 0:54 | Crosshair ("a crisp, fully customisable crosshair") | Include | Custom crosshair | `module/visual/CustomCrosshair` (HUD category) | Done |
 | R3 | list | Block Outline | Include | Colour, width, fill | `module/visual/BlockOutline` | Done |
-| R3 | list | Skin Protect | Adapt | **Streamer Mode**: hides your own name/skin locally; does not hide anything from others | `module/qol/StreamerMode` | Done |
+| R3 | list | Skin Protect | Include | **Skin Protect**: type a player's name and their skin is shown as yours (or Steve / a default skin), on your screen only. **Name Protect** replaces your username everywhere it is drawn. **Streamer Mode** hides coordinates and the server address | `module/qol/SkinProtect`, `module/qol/NameProtect`, `module/qol/StreamerMode` | Done |
 | R3 | list | Creamy Keys | Unclear | Treated as a keystroke style ("Soft") | `KeystrokesWidget` | Done |
 | R1 | 0:13–0:17 | Death markers "Latest Death", "3rd Death 19.3km" | Adapt | **Death Waypoints**: your own recorded death positions only | `module/qol/DeathWaypoints` | Done |
 | R1, R2 | 0:19–0:20, 0:25–0:27 | Motion blur during fast turns | Unclear | Probably added in video editing (fast camera turns). Not implemented: a frame-blending blur is a post-processing pass that could not be verified reliably in this build, so it was left out rather than shipped untested | — | not implemented |
@@ -169,7 +170,9 @@ All of the following appeared in R1–R4 or S1 and are **not** implemented in an
 * **Server / anticheat tooling:** Anticheat Alerts (R4 0:46, 1:20), Goliath RTP, Region
   Map, Home Reset, Tp Directions, Schematic Builder (auto-build), Fake Player.
 * **External services:** Discord Presence, 67 Chat, community config server,
-  "Claim your username" website, Spotify.
+  "Claim your username" website, Spotify. (The only online lookups Aqua makes are ones you ask
+  for: Skin Protect fetches the skin of the name you type from Mojang, and the music player looks
+  up synced lyrics on LRCLIB by title, artist and length. The lyrics lookup can be switched off.)
 * **Third-party IP:** 3D character skins of SpongeBob, Charizard, Batman, Bonnie (FNAF),
   Skibidi Toilet, Tung Tung Tung Sahur, Ballerina Cappuccina, Rico, the "Six Seven"
   mascot; Fern / 67 / Clarity logos and names.
@@ -208,3 +211,20 @@ shows the feature it is listed above instead.
 | Profiles: create / duplicate / rename / import / export | `gui/pages/ProfilesPage` | Done |
 | Reduced motion, blur off, quality levels | `gui/pages/SettingsPage` | Done |
 | Title screen | `AquaTitleScreen` | Done |
+
+## 8. Follow-up requests (after the first build)
+
+These were asked for after the first delivery. They are listed here so the audit stays complete.
+
+| Request | What was built | Aqua location | Status |
+|---|---|---|---|
+| "Skins like in 67" | Eight original 3D characters, chosen in the wardrobe; the vanilla player model poses them, so they walk, swing and play emotes. Only you see them | `cosmetic/character/*`, `module/cosmetic/CharacterSkin`, `mixin/LivingEntityRendererMixin` | Done |
+| Knife skins: karambit, katana, dagger | Karambit, katana, dagger and butterfly knife drawn in place of your sword (optionally axes) in first and third person. Eight finishes (Fade, Sapphire, Ruby, Emerald, Gold, Obsidian, Steel, Theme). Inspect key (Y) plays a knife-specific inspect. Looks only: the item, damage and reach are untouched | `cosmetic/knife/KnifeModels`, `module/cosmetic/Knives`, `mixin/ItemRenderStateMixin`, `mixin/ItemModelManagerMixin` | Done |
+| Name Protect | Replaces your username in every piece of text the game draws (chat, tab list, nametags, scoreboard, HUD) with an alias you choose | `module/qol/NameProtect`, `mixin/TextVisitFactoryMixin` | Done |
+| Skin Protect | Type a player name; their skin is looked up from Mojang and shown as yours (also on your tab-list head). Steve or a default skin are offline options | `module/qol/SkinProtect` | Done |
+| Aqua badge in the tab list and on nametags | Aqua clients greet the server on the `aqua:hello` channel and the server shares the list of Aqua users. Works in singleplayer, on LAN worlds hosted by an Aqua user, and on any server that runs Aqua's channel. Ordinary servers do not relay the greeting, and Aqua has no central server, so there the badge is shown only next to your own name | `net/Presence`, `module/qol/AquaBadge`, `mixin/PlayerListHudMixin` | Done |
+| Mouse movement between LMB and RMB (Fern keystrokes) | See the keystrokes mouse pad row in section 1 | `KeystrokesWidget` | Done |
+| Angel wings, devil wings, glow hat, "etc." | Wings (5 styles), Hats (glow hat, top hat, crown, witch hat, horns, cat ears), Cape (Aqua, Theme, Topographic, Galaxy, Flame), Orbit (glowing orbs circling you), Halo | `module/cosmetic/Wings`, `Hats`, `Cape`, `Orbit`, `Halo`, `cosmetic/CosmeticFeature` | Done |
+| Music player without lyrics ("standalone") | A **Lyrics** switch hides lyrics everywhere (card, island, sky text); the card has a compact style; a new **Music** page in the menu is a full player (seek bar, library, shuffle, repeat, volume) | `music/MusicModule`, `gui/pages/MusicPage`, `hud/widgets/MusicWidget` | Done |
+| Kill effects | Lightning, Soul, Burst, Blood, Hearts and Firework, played where something you hit within the last 6 s dies; optional sound only you hear; players-only option | `module/cosmetic/KillEffects` | Done |
+| Automatically fetch lyrics | When a song has no `.lrc` file, synced lyrics are looked up on LRCLIB (title, artist and length only) and cached in `config/aqua/lyrics/` | `music/LyricsFetcher` | Done |

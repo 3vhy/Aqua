@@ -27,9 +27,14 @@ public final class MusicModule extends Module {
             .describe("Multiplied by Minecraft's Jukebox/Note Blocks volume").onChange(v -> MusicPlayer.get().applyVolume()));
     private final BoolSetting shuffle = add(new BoolSetting("shuffle", "Shuffle", false));
     private final EnumSetting<Repeat> repeat = add(new EnumSetting<>("repeat", "Repeat", Repeat.ALL));
+    private final BoolSetting lyrics = add(new BoolSetting("lyrics", "Lyrics", true)
+            .describe("Turn off for a standalone player with no lyrics anywhere"));
+    private final BoolSetting fetchOnline = add(new BoolSetting("fetch_online", "Find lyrics online (LRCLIB)", true)
+            .describe("When a song has no .lrc file, look up synced lyrics on lrclib.net (title, artist and length are sent)")
+            .visibleWhen(lyrics::on));
 
     public MusicModule() {
-        super("music", "Music Player", "Plays your own .ogg files from config/aqua/music with .lrc lyrics.", Category.QOL, true,
+        super("music", "Music Player", "Plays your own .ogg files from config/aqua/music, with synced lyrics.", Category.QOL, true,
                 "music", "songs", "lyrics", "spotify", "audio", "player");
         add(new ActionSetting("play_pause", "Playback", "Play / Pause", () -> MusicPlayer.get().togglePause()));
         add(new ActionSetting("next", "Next track", "Next", () -> MusicPlayer.get().next()));
@@ -59,6 +64,38 @@ public final class MusicModule extends Module {
 
     public boolean repeatOne() {
         return repeat.is(Repeat.ONE);
+    }
+
+    public NumberSetting volumeSetting() {
+        return volume;
+    }
+
+    public BoolSetting shuffleSetting() {
+        return shuffle;
+    }
+
+    public EnumSetting<Repeat> repeatSetting() {
+        return repeat;
+    }
+
+    public BoolSetting lyricsSetting() {
+        return lyrics;
+    }
+
+    public BoolSetting fetchSetting() {
+        return fetchOnline;
+    }
+
+    public boolean lyricsEnabled() {
+        return lyrics.on();
+    }
+
+    public void setLyrics(boolean on) {
+        lyrics.set(on);
+    }
+
+    public boolean fetchOnline() {
+        return lyrics.on() && fetchOnline.on();
     }
 
     public boolean autoAdvance() {

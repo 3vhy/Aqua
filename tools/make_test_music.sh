@@ -20,4 +20,11 @@ cat > "$DIR/Aqua Test - Generated Tone.lrc" <<'LRC'
 [00:12.00]and on the music card
 [00:20.00]end of test lyrics
 LRC
+# Second track WITHOUT a .lrc file: its synced lyrics are looked up online (LRCLIB) by title and
+# artist. "Amazing Grace" is a public-domain hymn (John Newton, 1779); the audio is again only a tone.
+OUT2="$DIR/Traditional - Amazing Grace.ogg"
+if [ ! -f "$OUT2" ]; then
+  ffmpeg -v error -y -f lavfi -i "sine=frequency=262:duration=30,volume=0.12" \
+    -c:a libvorbis -q:a 2 -metadata TITLE="Amazing Grace" -metadata ARTIST="Traditional" "$OUT2"
+fi
 echo "Test music fixture ready in $DIR"

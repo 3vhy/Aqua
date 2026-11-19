@@ -32,8 +32,11 @@ public final class KeystrokesWidget extends HudWidget {
 
     private final EnumSetting<Style> style = add(new EnumSetting<>("style", "Style", Style.FERN));
     private final BoolSetting mouse = add(new BoolSetting("mouse", "Mouse buttons", true));
-    private final BoolSetting cps = add(new BoolSetting("cps", "CPS in mouse keys", true));
+    private final BoolSetting cps = add(new BoolSetting("cps", "CPS in mouse keys", false));
+    private final BoolSetting mousePad = add(new BoolSetting("mouse_pad", "Mouse movement between LMB and RMB", true)
+            .describe("A dot that follows your real mouse movement (Fern style)"));
     private final BoolSetting space = add(new BoolSetting("space", "Space bar", true));
+    private final BoolSetting spaceLabel = add(new BoolSetting("space_label", "SPACE label", true).visibleWhen(space::on));
 
     private static final float K = 14f;
     private static final float G = 2f;
@@ -59,7 +62,7 @@ public final class KeystrokesWidget extends HudWidget {
             h += G + K;
         }
         if (space.on()) {
-            h += G + 7;
+            h += G + (spaceLabel.on() ? 10 : 7);
         }
         return h;
     }
@@ -83,6 +86,21 @@ public final class KeystrokesWidget extends HudWidget {
         R2D.textCentered(ctx, label, x + w / 2f, y + h / 2f, size, AquaFont.Weight.SEMIBOLD, Colors.fade(tc, alpha));
     }
 
+    /** Small square whose dot follows your actual mouse movement and settles back to the centre. */
+    private void drawMousePad(DrawContext ctx, float x, float y, float w, float h, float alpha) {
+        Theme t = Aqua.theme();
+        if (showBackground()) {
+            R2D.round(ctx, x, y, w, h, 3.2f, bg(alpha));
+        }
+        float cx = x + w / 2f, cy = y + h / 2f;
+        float range = Math.min(w, h) / 2f - 2.2f;
+        float dx = dev.aqua.client.util.MouseTracker.x() * range;
+        float dy = dev.aqua.client.util.MouseTracker.y() * range;
+        float moving = Math.min(1f, (float) Math.hypot(dx, dy) / Math.max(0.1f, range));
+        R2D.circle(ctx, cx, cy, 0.5f, Colors.fade(t.muted(), alpha * 0.5f));
+        R2D.circle(ctx, cx + dx, cy + dy, 1.4f, Colors.fade(Colors.lerp(t.text(), t.accent(), moving), alpha));
+    }
+
     private static String keyName(KeyBinding kb, String fallback) {
         String s = kb.getBoundKeyLocalizedText().getString();
         if (s.isEmpty()) {
@@ -101,21 +119,36 @@ public final class KeystrokesWidget extends HudWidget {
         float y = (K + G) * 2;
         float full = K * 3 + G * 2;
         if (mouse.on()) {
-            float mw = (full - G) / 2f;
             String l = cps.on() ? "LMB " + CpsTracker.left() : "LMB";
             String r = cps.on() ? "RMB " + CpsTracker.right() : "RMB";
-            key(ctx, 0, y, mw, K, l, press[4], o.attackKey.isPressed(), alpha);
-            key(ctx, mw + G, y, mw, K, r, press[5], o.useKey.isPressed(), alpha);
+            if (mousePad.on()) {
+                float pad = 10f;
+                float mw = (full - pad - G * 2) / 2f;
+                key(ctx, 0, y, mw, K, l, press[4], o.attackKey.isPressed(), alpha);
+                drawMousePad(ctx, mw + G, y, pad, K, alpha);
+                key(ctx, mw + G * 2 + pad, y, mw, K, r, press[5], o.useKey.isPressed(), alpha);
+            } else {
+                float mw = (full - G) / 2f;
+                key(ctx, 0, y, mw, K, l, press[4], o.attackKey.isPressed(), alpha);
+                key(ctx, mw + G, y, mw, K, r, press[5], o.useKey.isPressed(), alpha);
+            }
             y += K + G;
         }
         if (space.on()) {
             Theme t = Aqua.theme();
+            float sh = spaceLabel.on() ? 10f : 7f;
             float p = press[6].target(o.jumpKey.isPressed()).get();
             int fill = Colors.lerp(bg(alpha), Colors.fade(t.accent(), alpha), p);
             if (showBackground() || p > 0.01f) {
-                R2D.round(ctx, 0, y, full, 7, 3, fill);
+                R2D.round(ctx, 0, y, full, sh, 3, fill);
             }
-            R2D.round(ctx, full / 2f - 8, y + 3, 16, 1.1f, 0.55f, Colors.fade(Colors.lerp(t.muted(), t.onAccent(), p), alpha));
+            int fg = Colors.fade(Colors.lerp(t.muted(), t.onAccent(), p), alpha);
+            if (spaceLabel.on()) {
+                String label = "S P A C E";
+                R2D.textCentered(ctx, label, full / 2f, y + sh / 2f, 4.2f, AquaFont.Weight.SEMIBOLD, fg);
+            } else {
+                R2D.round(ctx, full / 2f - 8, y + 3, 16, 1.1f, 0.55f, fg);
+            }
         }
     }
 }

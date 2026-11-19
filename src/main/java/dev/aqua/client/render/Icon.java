@@ -680,6 +680,111 @@ public enum Icon {
             g.draw(q);
         }
     },
+
+    KNIFE_KARAMBIT {
+        void draw(Graphics2D g) {
+            g.draw(new Ellipse2D.Double(3, 15, 5, 5));
+            g.draw(new Line2D.Double(7, 15, 10, 11));
+            Path2D p = new Path2D.Double();
+            p.moveTo(10, 11);
+            p.curveTo(12, 6, 17, 3.5, 21, 5);
+            p.curveTo(17, 6.5, 14.5, 9, 12.5, 12.5);
+            p.closePath();
+            g.draw(p);
+        }
+    },
+    KNIFE_KATANA {
+        void draw(Graphics2D g) {
+            g.draw(new Line2D.Double(3, 21, 7, 17));
+            g.draw(new Line2D.Double(5.5, 15.5, 8.5, 18.5));
+            Path2D p = new Path2D.Double();
+            p.moveTo(7.5, 16.5);
+            p.curveTo(12, 11, 16, 7, 21, 3);
+            p.curveTo(17, 8, 13.5, 12, 9, 17.5);
+            g.draw(p);
+        }
+    },
+    KNIFE_DAGGER {
+        void draw(Graphics2D g) {
+            g.draw(new Line2D.Double(4, 20, 8, 16));
+            g.draw(new Line2D.Double(5.5, 13.5, 10.5, 18.5));
+            Path2D p = new Path2D.Double();
+            p.moveTo(8, 16);
+            p.lineTo(18.5, 5.5);
+            p.lineTo(20, 4);
+            p.lineTo(19, 7.5);
+            p.lineTo(9.5, 17);
+            g.draw(p);
+        }
+    },
+    KNIFE_BUTTERFLY {
+        void draw(Graphics2D g) {
+            g.draw(new RoundRectangle2D.Double(3, 14, 3, 8, 1.5, 1.5));
+            g.draw(new RoundRectangle2D.Double(7, 14, 3, 8, 1.5, 1.5));
+            Path2D p = new Path2D.Double();
+            p.moveTo(5, 14);
+            p.lineTo(5, 4);
+            p.lineTo(8.5, 2.5);
+            p.lineTo(8.5, 14);
+            g.draw(p);
+        }
+    },
+    WING {
+        void draw(Graphics2D g) {
+            Path2D p = new Path2D.Double();
+            p.moveTo(4, 18);
+            p.curveTo(6, 9, 13, 4, 21, 4);
+            p.curveTo(19, 8, 17, 9.5, 14, 10);
+            p.curveTo(16, 11, 15, 13, 12, 13.5);
+            p.curveTo(13, 15, 11, 16.5, 8, 16.5);
+            p.closePath();
+            g.draw(p);
+        }
+    },
+    HAT {
+        void draw(Graphics2D g) {
+            g.draw(new Ellipse2D.Double(2.5, 15, 19, 5));
+            g.draw(new RoundRectangle2D.Double(7, 5, 10, 12, 2, 2));
+            g.draw(new Line2D.Double(7, 13, 17, 13));
+        }
+    },
+    CAPE {
+        void draw(Graphics2D g) {
+            Path2D p = new Path2D.Double();
+            p.moveTo(8, 3);
+            p.lineTo(16, 3);
+            p.lineTo(19, 21);
+            p.quadTo(12, 18.5, 5, 21);
+            p.closePath();
+            g.draw(p);
+        }
+    },
+    SKULL {
+        void draw(Graphics2D g) {
+            Path2D p = new Path2D.Double();
+            p.moveTo(6, 17);
+            p.curveTo(3, 15, 3, 11, 3.5, 9);
+            p.curveTo(4.5, 4.5, 8, 3, 12, 3);
+            p.curveTo(16, 3, 19.5, 4.5, 20.5, 9);
+            p.curveTo(21, 11, 21, 15, 18, 17);
+            p.lineTo(18, 20.5);
+            p.lineTo(6, 20.5);
+            p.closePath();
+            g.draw(p);
+            g.fill(new Ellipse2D.Double(7, 10, 3.5, 3.5));
+            g.fill(new Ellipse2D.Double(13.5, 10, 3.5, 3.5));
+        }
+    },
+    PERSON {
+        void draw(Graphics2D g) {
+            g.draw(new Ellipse2D.Double(9, 2.5, 6, 6));
+            g.draw(new RoundRectangle2D.Double(8, 10, 8, 7, 2, 2));
+            g.draw(new Line2D.Double(10, 17, 10, 21.5));
+            g.draw(new Line2D.Double(14, 17, 14, 21.5));
+            g.draw(new Line2D.Double(8, 11, 5, 15));
+            g.draw(new Line2D.Double(16, 11, 19, 15));
+        }
+    },
     WAVE {
         void draw(Graphics2D g) {
             for (int k = 0; k < 2; k++) {

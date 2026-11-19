@@ -58,6 +58,8 @@ public final class MusicPlayer {
     private Path coverFor;
     private volatile NativeImage pendingCover;
     private String lastError = "";
+    private final ConcurrentHashMap<Path, List<LyricLine>> onlineLyrics = new ConcurrentHashMap<>();
+    private volatile String lyricStatus = "";
     private final Random random = new Random();
 
     public static MusicPlayer get() {
@@ -213,6 +215,71 @@ public final class MusicPlayer {
         pausedTotal = 0;
         pausedAt = 0;
         requestCover(t);
+        requestLyrics(t);
+    }
+
+    private void requestLyrics(Track t) {
+        MusicModule m = Aqua.modules().get(MusicModule.class);
+        if (!t.lyrics().isEmpty()) {
+            lyricStatus = "Lyrics from .lrc file";
+            return;
+        }
+        if (onlineLyrics.containsKey(t.file())) {
+            lyricStatus = onlineLyrics.get(t.file()).isEmpty() ? "No synced lyrics found" : "Lyrics from LRCLIB";
+            return;
+        }
+        if (m == null || !m.fetchOnline()) {
+            lyricStatus = "";
+            return;
+        }
+        lyricStatus = "Searching lyrics online…";
+        LyricsFetcher.fetch(t).thenAccept(o -> {
+            switch (o.result()) {
+                case FOUND -> {
+                    onlineLyrics.put(t.file(), List.copyOf(o.lines()));
+                    lyricStatus = "Lyrics from LRCLIB";
+                }
+                case NOT_FOUND -> {
+                    onlineLyrics.put(t.file(), List.of());
+                    lyricStatus = "No synced lyrics found";
+                }
+                case FAILED -> lyricStatus = "Lyrics lookup failed (offline?)";
+            }
+        });
+    }
+
+    /** Lyrics for a track: its .lrc file first, otherwise lyrics found online. Empty when lyrics are off. */
+    public List<LyricLine> lyricsFor(@Nullable Track t) {
+        if (t == null) {
+            return List.of();
+        }
+        MusicModule m = Aqua.modules().get(MusicModule.class);
+        if (m != null && !m.lyricsEnabled()) {
+            return List.of();
+        }
+        if (!t.lyrics().isEmpty()) {
+            return t.lyrics();
+        }
+        return onlineLyrics.getOrDefault(t.file(), List.of());
+    }
+
+    public String lyricStatus() {
+        MusicModule m = Aqua.modules().get(MusicModule.class);
+        return m != null && !m.lyricsEnabled() ? "Lyrics off" : lyricStatus;
+    }
+
+    /** Restarts the current track from a position (used by the seek bar). */
+    public void seek(long ms) {
+        Track t = current();
+        if (t == null) {
+            return;
+        }
+        long clamped = Math.max(0, t.durationMs() > 0 ? Math.min(ms, t.durationMs() - 500) : ms);
+        play(index, clamped);
+    }
+
+    public int index() {
+        return index;
     }
 
     private float volume() {
@@ -299,13 +366,14 @@ public final class MusicPlayer {
     /** Index of the lyric line active at the current position, or -1. */
     public int lyricIndex() {
         Track t = current();
-        if (t == null || t.lyrics().isEmpty()) {
+        List<LyricLine> lines = lyricsFor(t);
+        if (t == null || lines.isEmpty()) {
             return -1;
         }
         long pos = positionMs();
         int idx = -1;
-        for (int i = 0; i < t.lyrics().size(); i++) {
-            if (t.lyrics().get(i).timeMs() <= pos) {
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).timeMs() <= pos) {
                 idx = i;
             } else {
                 break;
