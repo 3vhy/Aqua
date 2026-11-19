@@ -38,6 +38,9 @@ each server before you play, because no client mod is approved everywhere.
 5. Start the `fabric-loader-1.21.11` profile. The Aqua title screen appears.
 6. Press **Right Shift**, or choose **Aqua Settings** on the title screen, to open the menu.
 
+`dist/index.html` is a simple download page for the jar. Put it next to the jar (as in `dist/`)
+on any static host, such as GitHub Pages, and its button downloads the file.
+
 To check the download, compare its SHA-256 checksum with `aqua-client-1.0.0+mc1.21.11.jar.sha256`:
 
 ```bash
