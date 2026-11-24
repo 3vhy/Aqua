@@ -266,7 +266,7 @@ the videos".
 | R8 | Cherry Petals; R6 Halloween | Include: Ambience (petals, autumn leaves, snow, Halloween bats and embers) | `module/cosmetic/Ambience` | Done |
 | R8 | Floating cube companion | Include: Pet (cube, crystal, orb) | `module/cosmetic/Pet` | Done |
 | R7, R8 | Glass / crystal player | Include for your own player | `module/cosmetic/GlassSkin` | Done |
-| R7 | Hand Aura | Include: glowing pixel outline around the held item | `module/visual/HandAura`, `render/HandAuraRenderer` | Done |
+| R7 | Hand Aura | Include as **Hand Glow** (renamed so it cannot be mistaken for a combat "aura"): glowing pixel outline around the held item | `module/visual/HandAura`, `render/HandAuraRenderer` | Done |
 | R8 | Kawaii blob skin | Include: original Blob 3D skin | `cosmetic/character/Characters` | Done |
 | R7 | 3D skins Peely, Private, Shpioniro | Exclude: third-party characters (Fortnite, Madagascar, …); the original Penguin and Blob cover the style | — | n/a |
 | R8 | Nebula skies (violet, emerald, azure, crimson, silver); R7 aurora; R6 red Voronoi sky | Include: Nebula (5 colours), Aurora, Lava cells | `module/visual/CustomSky`, `render/world/SkyTextures` | Done |

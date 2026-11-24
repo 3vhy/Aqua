@@ -6,7 +6,7 @@ import dev.aqua.client.setting.BoolSetting;
 import dev.aqua.client.setting.ColorSetting;
 
 /**
- * Hand Aura (R7): a glowing outline around the item in your hand in first person, drawn with the same
+ * Hand Glow (R7 "Hand aura"): a glowing outline around the item in your hand in first person, drawn with the same
  * outline effect the game uses for glowing entities.
  */
 public final class HandAura extends Module {
@@ -14,8 +14,8 @@ public final class HandAura extends Module {
     private final BoolSetting offhand = add(new BoolSetting("offhand", "Off-hand too", false));
 
     public HandAura() {
-        super("hand_aura", "Hand Aura", "A glowing outline around the item in your hand.", Category.VISUALS, false,
-                "hand aura", "item outline", "aura", "glow outline");
+        super("hand_glow", "Hand Glow", "A glowing outline around the item in your hand.", Category.VISUALS, false,
+                "hand aura", "item outline", "glow outline", "hand glow");
     }
 
     /** Outline colour for this hand's item, or 0 for none. */

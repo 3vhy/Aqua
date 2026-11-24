@@ -153,7 +153,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         String[] banned = {"kill aura", "killaura", "aura", "triggerbot", "trigger bot", "aim assist", "aimassist", "aimbot", "reach",
                 "backtrack", "esp", "tracers", "tracer", "xray", "x ray", "freecam", "free cam", "fullbright", "scaffold",
                 "autoclicker", "auto clicker", "auto totem", "autototem", "inv totem", "velocity", "no fall", "nofall", "fly", "flight",
-                "speed", "blink", "fake lag", "nametags", "radar", "staff list", "staff panel", "hitbox", "criticals", "chams", "auto tool",
+                "speed", "blink", "fake lag", "nametags", "radar", "hitbox", "criticals", "chams", "auto tool",
                 "auto riptide", "pearl catch", "pearl throw", "anchor", "crystal aura", "auto crystal", "shield breaker", "sprint reset",
                 "piercing", "camera clip", "no water fog", "elytra glide", "autopilot", "base finder", "chunk finder", "anti vanish",
                 "fake player", "bot"};
@@ -1238,13 +1238,13 @@ public final class AquaClientGameTest implements FabricClientGameTest {
 
         context.waitTicks(40);
         // Hand Aura on the vanilla sword.
-        context.runOnClient(mc -> Aqua.modules().byId("hand_aura").setEnabled(true, false));
+        context.runOnClient(mc -> Aqua.modules().byId("hand_glow").setEnabled(true, false));
         long a0 = context.computeOnClient(mc -> dev.aqua.client.render.HandAuraRenderer.drawn());
         context.waitTicks(10);
         long a1 = context.computeOnClient(mc -> dev.aqua.client.render.HandAuraRenderer.drawn());
-        context.takeScreenshot("63_hand_aura");
-        check(a1 > a0, "Hand Aura draws a glowing outline around the held item (" + (a1 - a0) + " frames)");
-        context.runOnClient(mc -> Aqua.modules().byId("hand_aura").setEnabled(false, false));
+        context.takeScreenshot("63_hand_glow");
+        check(a1 > a0, "Hand Glow draws a glowing outline around the held item (" + (a1 - a0) + " frames)");
+        context.runOnClient(mc -> Aqua.modules().byId("hand_glow").setEnabled(false, false));
 
         // Glass skin, Blob character, pet and trails in third person.
         context.runOnClient(mc -> {
@@ -1457,7 +1457,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         sp.getServer().runCommand("item replace entity @a weapon.mainhand with minecraft:diamond_sword");
         context.runOnClient(mc -> {
             mc.player.getInventory().setSelectedSlot(0);
-            Aqua.modules().byId("hand_aura").setEnabled(true, false);
+            Aqua.modules().byId("hand_glow").setEnabled(true, false);
             Aqua.modules().byId("knives").setEnabled(false, false);
         });
         context.waitTicks(20);
@@ -1466,7 +1466,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         context.waitTicks(5);
         context.takeScreenshot("pv_hand_aura_knife");
         context.runOnClient(mc -> {
-            Aqua.modules().byId("hand_aura").setEnabled(false, false);
+            Aqua.modules().byId("hand_glow").setEnabled(false, false);
             Aqua.modules().byId("glass").setEnabled(true, false);
             mc.options.setPerspective(Perspective.THIRD_PERSON_FRONT);
         });

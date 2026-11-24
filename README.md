@@ -124,7 +124,7 @@ silver, **Aurora**, or glowing **Lava cells**, with optional **shooting stars**)
 Weather Changer, Custom Rain, **Rain Splashes**, Custom Fog (colour, and it can only make fog
 thicker), World Tint, Block Outline, **Water Colour** (colour only; underwater visibility is
 unchanged), **No Block Rotation**, Animations (visual swing length and style, equip animation, hand
-position and scale), Item Glow, **Hand Aura** (glowing outline around your held item), Hand Shader,
+position and scale), Item Glow, **Hand Glow** (glowing outline around your held item; R7's "Hand aura"), Hand Shader,
 **Smooth Camera** (eases mouse movement; every bit of movement is still applied), **Attack
 Indicator** (ring or bar), **Low Fire & Shield**. The **inspect** key (Y) works on any held item.
 
