@@ -161,8 +161,16 @@ public final class Mesh {
         return Colors.argb(Colors.alpha(c), Math.round(((c >> 16) & 255) * f), Math.round(((c >> 8) & 255) * f), Math.round((c & 255) * f));
     }
 
+    private int override;
+
+    /** Draw everything that follows in one colour (used for glow outlines around a model). */
+    public Mesh overrideColor(int argb) {
+        this.override = argb;
+        return this;
+    }
+
     private void v(float x, float y, float z, int c) {
-        vc.vertex(m, x, y, z).color(c);
+        vc.vertex(m, x, y, z).color(override != 0 ? override : c);
     }
 
     /** Axis-aligned box from (x0,y0,z0) to (x1,y1,z1). */

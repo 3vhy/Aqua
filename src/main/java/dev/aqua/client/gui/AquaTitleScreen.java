@@ -140,13 +140,20 @@ public final class AquaTitleScreen extends TitleScreen {
         }
         String sub = "C L I E N T   ·   1 . 2 1 . 1 1";
         R2D.textCentered(ctx, sub, cx, wy + size * 1.25f + 3, 4.8f, AquaFont.Weight.SEMIBOLD, Colors.withAlpha(t.accent(), textA));
+        // R7: a short greeting (Name Protect's alias is used when it is on).
+        String who = client != null && client.getSession() != null
+                ? dev.aqua.client.module.qol.NameProtect.filter(client.getSession().getUsername()) : "";
+        if (!who.isEmpty()) {
+            R2D.textCentered(ctx, greeting() + ", " + who, cx, wy + size * 1.25f + 11, 5f, AquaFont.Weight.MEDIUM,
+                    Colors.withAlpha(t.muted(), textA * 0.9f));
+        }
 
         // Buttons
         Entry[] es2 = entries();
         float bw = 130;
         float bh = 15;
         float gap = 4;
-        float by = Math.min(height - (bh + gap) * es2.length - 26, wy + size * 1.25f + 18);
+        float by = Math.min(height - (bh + gap) * es2.length - 26, wy + size * 1.25f + 24);
         for (int i = 0; i < es2.length; i++) {
             Entry e = es2[i];
             float bx = cx - bw / 2f;
@@ -252,5 +259,10 @@ public final class AquaTitleScreen extends TitleScreen {
     @Override
     public boolean charTyped(CharInput input) {
         return true;
+    }
+
+    private static String greeting() {
+        int h = java.time.LocalTime.now().getHour();
+        return h < 5 ? "Up late" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
     }
 }

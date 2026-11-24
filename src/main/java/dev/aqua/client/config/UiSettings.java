@@ -54,6 +54,26 @@ public final class UiSettings {
     public final BoolSetting colorSync = add(new BoolSetting("color_sync", "Colour Sync", false)
             .describe("Every module colour follows the theme accent, so one colour wheel changes them all (R7)"));
     public final BoolSetting sounds = add(new BoolSetting("sounds", "Interface sounds", true));
+    /** Starred modules (comma-separated ids), shown under Starred in the menu. Hidden from the Settings page. */
+    public final dev.aqua.client.setting.StringSetting starred = add(new dev.aqua.client.setting.StringSetting("starred", "Starred", "", 4000)
+            .visibleWhen(() -> false));
+
+    public boolean isStarred(String id) {
+        return ("," + starred.get() + ",").contains("," + id + ",");
+    }
+
+    public void toggleStar(String id) {
+        java.util.LinkedHashSet<String> set = new java.util.LinkedHashSet<>();
+        for (String s : starred.get().split(",")) {
+            if (!s.isBlank()) {
+                set.add(s.trim());
+            }
+        }
+        if (!set.remove(id)) {
+            set.add(id);
+        }
+        starred.set(String.join(",", set));
+    }
     public final NumberSetting soundVolume = add(new NumberSetting("sound_volume", "Interface volume", 0.6, 0.0, 1.0, 0.05)
             .visibleWhen(this::soundsOn));
     public final EnumSetting<NotificationStyle> notificationStyle = add(new EnumSetting<>("notification_style",

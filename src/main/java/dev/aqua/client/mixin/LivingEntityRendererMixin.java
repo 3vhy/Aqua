@@ -33,6 +33,15 @@ public abstract class LivingEntityRendererMixin {
                 CharacterRenderer.render(matrices, queue, pm, ps, look.character());
                 return;
             }
+            dev.aqua.client.module.cosmetic.GlassSkin glass = look != null && dev.aqua.client.Aqua.modules() != null
+                    ? dev.aqua.client.Aqua.modules().get(dev.aqua.client.module.cosmetic.GlassSkin.class) : null;
+            if (glass != null && glass.isEnabled() && ps.skinTextures != null && !ps.invisible) {
+                // Your own player only (a Look is attached to your player's render state alone).
+                RenderLayer clear = net.minecraft.client.render.RenderLayers.entityTranslucent(ps.skinTextures.body().texturePath());
+                original.call(queue, model, state, matrices, clear, light, overlay, glass.tint(), sprite, outline, crumbling);
+                glass.edges(matrices, queue, pm, ps);
+                return;
+            }
         }
         original.call(queue, model, state, matrices, layer, light, overlay, tint, sprite, outline, crumbling);
     }

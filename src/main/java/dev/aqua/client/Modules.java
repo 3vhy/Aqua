@@ -66,6 +66,7 @@ final class Modules {
         m.add(new dev.aqua.client.module.cosmetic.PlayerTrail());
         m.add(new dev.aqua.client.module.cosmetic.Ambience());
         m.add(new dev.aqua.client.module.cosmetic.Pet());
+        m.add(new dev.aqua.client.module.cosmetic.GlassSkin());
         m.add(new JumpCircles());
         m.add(new JumpEffects());
         m.add(new DashTrail());
@@ -83,9 +84,12 @@ final class Modules {
         m.add(new Zoom());
         m.add(new dev.aqua.client.module.qol.Freelook());
         m.add(new dev.aqua.client.module.qol.MediaHider());
+        m.add(new dev.aqua.client.module.qol.CreamyKeys());
         m.add(new dev.aqua.client.module.visual.SmoothCamera());
+        m.add(new dev.aqua.client.module.visual.RainSplashes());
         m.add(new dev.aqua.client.module.visual.LowOverlays());
         m.add(new dev.aqua.client.module.visual.AttackIndicator());
+        m.add(new dev.aqua.client.module.visual.HandAura());
         m.add(new ToggleSprint());
         m.add(new MusicModule());
         m.add(new ScreenshotHelper());

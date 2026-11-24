@@ -18,6 +18,7 @@
     "HeldItemRendererMixin",
     "InGameOverlayRendererMixin",
     "InactivityFpsLimiterMixin",
+    "ItemLayerRenderStateMixin",
     "ItemModelManagerMixin",
     "ItemRenderStateMixin",
     "KeyboardMixin",

@@ -39,7 +39,7 @@ public final class StaffListWidget extends HudWidget {
     private long cacheAt;
 
     public StaffListWidget() {
-        super("staff_list", "Staff List", "Staff online on this server, read from the tab list.", Icon.SHIELD, false, Anchor.TOP_LEFT, 5, 120,
+        super("staff_list", "Staff List", "Staff online on this server, read from the tab list.", Icon.SHIELD, false, Anchor.MIDDLE_RIGHT, -6, 30,
                 "staff", "staff list", "mods", "admins", "moderators");
     }
 

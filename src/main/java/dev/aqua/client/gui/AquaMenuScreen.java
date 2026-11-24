@@ -50,7 +50,7 @@ import java.util.Set;
 public final class AquaMenuScreen extends Screen {
     public enum Nav {
         HUD(Category.HUD), VISUALS(Category.VISUALS), COSMETICS(Category.COSMETICS), QOL(Category.QOL), PERFORMANCE(Category.PERFORMANCE),
-        WARDROBE(null), MUSIC(null), THEMES(null), PROFILES(null), KEYBINDS(null), SETTINGS(null);
+        STARRED(null), WARDROBE(null), MUSIC(null), THEMES(null), PROFILES(null), KEYBINDS(null), SETTINGS(null);
 
         @Nullable final Category category;
 
@@ -205,15 +205,16 @@ public final class AquaMenuScreen extends Screen {
         // Fit the navigation to the window height (small windows / large GUI scales).
         float footer = 22;
         float avail = y + h - iy - 6;
-        boolean showFooter = avail - footer >= 11 * 13f + 22;
+        boolean showFooter = avail - footer >= 12 * 13f + 22;
         if (showFooter) {
             avail -= footer;
         }
-        itemH = Math.max(10f, Math.min(14f, (avail - 22) / 11f - 1.5f));
+        itemH = Math.max(10f, Math.min(14f, (avail - 22) / 12f - 1.5f));
         iy = sectionLabel(ctx, t, "MODULES", x + 10, iy, a);
         for (Nav n : new Nav[]{Nav.HUD, Nav.VISUALS, Nav.COSMETICS, Nav.QOL, Nav.PERFORMANCE}) {
             iy = navItem(ctx, t, n, n.category.title, n.category.icon, x, iy, w, a);
         }
+        iy = navItem(ctx, t, Nav.STARRED, "Starred", Icon.STAR, x, iy, w, a);
         iy += 3;
         iy = sectionLabel(ctx, t, "CLIENT", x + 10, iy, a);
         iy = navItem(ctx, t, Nav.WARDROBE, "Wardrobe", Icon.HANGER, x, iy, w, a);
@@ -277,6 +278,7 @@ public final class AquaMenuScreen extends Screen {
             subtitle = nav.category.subtitle;
         } else {
             title = switch (nav) {
+                case STARRED -> "Starred";
                 case WARDROBE -> "Wardrobe";
                 case MUSIC -> "Music";
                 case THEMES -> "Themes";
@@ -285,6 +287,7 @@ public final class AquaMenuScreen extends Screen {
                 default -> "Settings";
             };
             subtitle = switch (nav) {
+                case STARRED -> "Your favourite modules (click the star on any module)";
                 case WARDROBE -> "3D skins, knives and wearables, previewed live";
                 case MUSIC -> "Your music and Spotify, with synced lyrics";
                 case THEMES -> "Colours used across Aqua";
@@ -300,12 +303,19 @@ public final class AquaMenuScreen extends Screen {
         }
 
         float listY = y + 36;
-        float listH = h - 36 - 8;
+        float listH = h - 36 - 8 - (mods(searching) ? 12 : 0);
         List<Module> mods = null;
         if (searching) {
             mods = Aqua.modules().search(query);
         } else if (nav.category != null) {
             mods = Aqua.modules().inCategory(nav.category);
+        } else if (nav == Nav.STARRED) {
+            mods = new java.util.ArrayList<>();
+            for (Module m : Aqua.modules().all()) {
+                if (Aqua.ui().isStarred(m.id())) {
+                    mods.add(m);
+                }
+            }
         }
         if (mods != null) {
             String count = mods.size() + (mods.size() == 1 ? " module" : " modules");
@@ -329,7 +339,8 @@ public final class AquaMenuScreen extends Screen {
         float cy = listY - scrolled;
         if (mods != null) {
             if (mods.isEmpty()) {
-                R2D.textCentered(ctx, "No modules match your search", x + w / 2f, listY + 30, 6f, AquaFont.Weight.MEDIUM, t.muted());
+                R2D.textCentered(ctx, nav == Nav.STARRED && !searching ? "No starred modules yet: click the star on a module"
+                        : "No modules match your search", x + w / 2f, listY + 30, 6f, AquaFont.Weight.MEDIUM, t.muted());
             }
             for (Module m : mods) {
                 cy = moduleRow(ctx, t, m, x + pad, cy, w - pad * 2 - 4, pa, listY, listY + listH) + 4;
@@ -347,6 +358,9 @@ public final class AquaMenuScreen extends Screen {
         }
         contentHeight = cy + scrolled - listY;
         ui.popClip();
+        if (mods != null) {
+            legend(ctx, t, x + pad, y + h - 14, pa);
+        }
 
         // Scroll handling + scrollbar
         float max = Math.max(0, contentHeight - listH);
@@ -360,6 +374,25 @@ public final class AquaMenuScreen extends Screen {
             float thumbH = Math.max(14, trackH * listH / contentHeight);
             float ty = listY + (trackH - thumbH) * (scrolled / max);
             R2D.round(ctx, x + w - 6, ty, 2, thumbH, 1, Colors.fade(Colors.withAlpha(t.text(), 0.25f), pa));
+        }
+    }
+
+    private boolean mods(boolean searching) {
+        return searching || nav.category != null || nav == Nav.STARRED;
+    }
+
+    /** Key legend under module lists (R7): how to toggle, open settings, bind and search. */
+    private void legend(DrawContext ctx, Theme t, float x, float y, float a) {
+        String[][] items = {{"Click", "Settings"}, {"Right-click", "Toggle"}, {"Middle-click", "Bind key"}, {"Type", "Search"}};
+        float cx = x;
+        for (String[] it : items) {
+            float kw = R2D.width(it[0], 4.4f, AquaFont.Weight.SEMIBOLD) + 6;
+            R2D.round(ctx, cx, y, kw, 8, 2.5f, Colors.fade(Colors.withAlpha(t.panel(), 0.9f), a));
+            R2D.outline(ctx, cx, y, kw, 8, 2.5f, 0.5f, Colors.fade(Colors.withAlpha(t.border(), 0.6f), a));
+            R2D.textMid(ctx, it[0], cx + 3, y + 4, 4.4f, AquaFont.Weight.SEMIBOLD, Colors.fade(t.text(), a));
+            cx += kw + 3;
+            R2D.textMid(ctx, it[1], cx, y + 4, 4.4f, AquaFont.Weight.MEDIUM, Colors.fade(t.muted(), a));
+            cx += R2D.width(it[1], 4.4f, AquaFont.Weight.MEDIUM) + 9;
         }
     }
 
@@ -426,6 +459,30 @@ public final class AquaMenuScreen extends Screen {
             Aqua.config().markDirty();
         });
         float chx = bx - 13;
+        boolean starred = Aqua.ui().isStarred(m.id());
+        float sx = chx - 12;
+        boolean starHover = ui.hover(sx - 1, y + rowH / 2f - 4.5f, 9, 9);
+        if (starred || ha > 0.05f) {
+            R2D.icon(ctx, Icon.STAR, sx, y + rowH / 2f - 3.5f, 7,
+                    Colors.fade(starred ? 0xFFFFC94D : Colors.lerp(t.muted(), t.text(), starHover ? 1f : 0f), a * (starred ? 1f : ha)));
+        }
+        if (ui.clickedIn(sx - 1, y + rowH / 2f - 4.5f, 9, 9)) {
+            Aqua.ui().toggleStar(m.id());
+            UiSounds.click(starred ? 0.9f : 1.2f);
+        }
+        if (ui.middleClickedIn(x, y, w, rowH)) {
+            ui.startCapture("kb" + m.id(), c -> {
+                if (c.cancelled()) {
+                    return;
+                }
+                if (c.cleared()) {
+                    m.bind().clear();
+                } else {
+                    m.bind().set(c.type(), c.code());
+                }
+                Aqua.config().markDirty();
+            });
+        }
         boolean hasSettings = settingsH > 0;
         if (hasSettings) {
             ctx.getMatrices().pushMatrix();
@@ -435,7 +492,7 @@ public final class AquaMenuScreen extends Screen {
             ctx.getMatrices().popMatrix();
         }
         // Clicking the row (outside controls) expands settings
-        if (hasSettings && ui.clickedIn(x, y, chx + 10 - x, rowH)) {
+        if (hasSettings && ui.clickedIn(x, y, sx - 2 - x, rowH)) {
             if (isOpen) {
                 expanded.remove(m.id());
             } else {

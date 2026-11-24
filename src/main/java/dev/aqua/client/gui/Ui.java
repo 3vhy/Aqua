@@ -39,6 +39,8 @@ public final class Ui {
     public boolean down;
     private boolean clickQueued;
     private boolean rightQueued;
+    private boolean middleQueued;
+    public boolean middleClicked;
     public boolean clicked;
     public boolean rightClicked;
     public boolean released;
@@ -77,6 +79,8 @@ public final class Ui {
             down = true;
         } else if (button == 1) {
             rightQueued = true;
+        } else if (button == 2) {
+            middleQueued = true;
         }
     }
 
@@ -148,8 +152,10 @@ public final class Ui {
         this.my = mouseY;
         clicked = clickQueued;
         rightClicked = rightQueued;
+        middleClicked = middleQueued;
         clickQueued = false;
         rightQueued = false;
+        middleQueued = false;
         scroll = scrollQueued;
         scrollQueued = 0;
         keys.clear();
@@ -242,6 +248,14 @@ public final class Ui {
     public boolean clickedIn(float x, float y, float w, float h) {
         if (clicked && hover(x, y, w, h)) {
             clicked = false;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean middleClickedIn(float x, float y, float w, float h) {
+        if (middleClicked && hover(x, y, w, h)) {
+            middleClicked = false;
             return true;
         }
         return false;

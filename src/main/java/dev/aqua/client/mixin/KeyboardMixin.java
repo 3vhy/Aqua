@@ -14,6 +14,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class KeyboardMixin {
     @Inject(method = "onKey", at = @At("HEAD"))
     private void aqua$moduleBinds(long window, int action, KeyInput input, CallbackInfo ci) {
+        if (action == InputUtil.GLFW_PRESS && dev.aqua.client.Aqua.modules() != null
+                && window == net.minecraft.client.MinecraftClient.getInstance().getWindow().getHandle()) {
+            dev.aqua.client.module.qol.CreamyKeys ck = dev.aqua.client.Aqua.modules().get(dev.aqua.client.module.qol.CreamyKeys.class);
+            if (ck != null) {
+                ck.onKeyPress();
+            }
+        }
         if (Aqua.keybinds() == null || window != MinecraftClient.getInstance().getWindow().getHandle()) {
             return;
         }

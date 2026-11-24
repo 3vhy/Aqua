@@ -66,6 +66,18 @@ public abstract class HeldItemRendererMixin {
                 ((dev.aqua.client.render.GlintAccess) state).aqua$forceGlint();
             }
         }
-        state.render(matrices, queue, light, overlay, seed);
+        int aura = 0;
+        dev.aqua.client.module.visual.HandAura ha = Aqua.modules().get(dev.aqua.client.module.visual.HandAura.class);
+        if (ha != null && entity == net.minecraft.client.MinecraftClient.getInstance().player
+                && (context == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND || context == ItemDisplayContext.FIRST_PERSON_LEFT_HAND)) {
+            boolean main = (context == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND) == (entity.getMainArm() == net.minecraft.util.Arm.RIGHT);
+            aura = ha.outline(main);
+        }
+        dev.aqua.client.render.HandAuraRenderer.begin(aura);
+        try {
+            state.render(matrices, queue, light, overlay, seed);
+        } finally {
+            dev.aqua.client.render.HandAuraRenderer.end();
+        }
     }
 }

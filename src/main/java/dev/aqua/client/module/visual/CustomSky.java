@@ -56,7 +56,7 @@ public final class CustomSky extends Module implements WorldEffect {
 
     private final EnumSetting<Nebula> nebula = add(new EnumSetting<>("nebula", "Nebula colours", Nebula.VIOLET)
             .visibleWhen(() -> mode.is(Mode.NEBULA)));
-    private final ColorSetting cells = add(new ColorSetting("cells", "Cell glow colour", 0xFFFF4A12, false, true)
+    private final ColorSetting cells = add(new ColorSetting("cells", "Cell glow colour", 0xFFFF4A12, false, false)
             .visibleWhen(() -> mode.is(Mode.CELLS)));
     private final BoolSetting shootingStars = add(new BoolSetting("shooting_stars", "Shooting stars", true)
             .describe("Streaks of light across the sky now and then (R5, R6 \"Celestial\")"));

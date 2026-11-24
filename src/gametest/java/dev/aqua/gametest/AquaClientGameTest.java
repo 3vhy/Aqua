@@ -100,6 +100,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
                         case "external_media" -> externalMedia(context);
                         case "freelook" -> freelook(context);
                         case "sky_lyrics" -> skyLyricsText(context);
+                        case "preview_new" -> previewNew(context, sp);
                         case "music" -> music(context);
                         case "knife_gallery" -> knifeGallery(context, sp);
                         case "identity" -> identity(context, sp);
@@ -1152,6 +1153,137 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             Aqua.modules().byId("sky_lyrics").setEnabled(false, false);
             mc.player.setPitch(0f);
         });
+    }
+
+    /** Developer preview of the R5-R8 modules (screenshots only). */
+    private void previewNew(ClientGameTestContext context, TestSingleplayerContext sp) {
+        sp.getServer().runCommand("time set noon");
+        sp.getServer().runCommand("item replace entity @a weapon.mainhand with minecraft:diamond_sword");
+        context.runOnClient(mc -> {
+            mc.player.getInventory().setSelectedSlot(0);
+            Aqua.modules().byId("hand_aura").setEnabled(true, false);
+            Aqua.modules().byId("knives").setEnabled(false, false);
+        });
+        context.waitTicks(20);
+        context.takeScreenshot("pv_hand_aura");
+        context.runOnClient(mc -> Aqua.modules().byId("knives").setEnabled(true, false));
+        context.waitTicks(5);
+        context.takeScreenshot("pv_hand_aura_knife");
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("hand_aura").setEnabled(false, false);
+            Aqua.modules().byId("glass").setEnabled(true, false);
+            mc.options.setPerspective(Perspective.THIRD_PERSON_FRONT);
+        });
+        context.waitTicks(10);
+        context.takeScreenshot("pv_glass");
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("glass").setEnabled(false, false);
+            Aqua.modules().byId("pet").setEnabled(true, false);
+            Aqua.modules().byId("player_trail").setEnabled(true, false);
+            ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.cosmetic.PlayerTrail.Style>) find("player_trail", "style"))
+                    .set(dev.aqua.client.module.cosmetic.PlayerTrail.Style.AFTERIMAGES);
+            mc.options.setPerspective(Perspective.THIRD_PERSON_BACK);
+        });
+        context.getInput().holdKeyFor(o -> o.forwardKey, 12);
+        context.takeScreenshot("pv_afterimages_pet");
+        context.runOnClient(mc -> ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.cosmetic.PlayerTrail.Style>)
+                find("player_trail", "style")).set(dev.aqua.client.module.cosmetic.PlayerTrail.Style.FOOTPRINTS));
+        context.getInput().holdKeyFor(o -> o.forwardKey, 20);
+        context.waitTicks(2);
+        context.takeScreenshot("pv_footprints");
+        context.runOnClient(mc -> ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.cosmetic.PlayerTrail.Style>)
+                find("player_trail", "style")).set(dev.aqua.client.module.cosmetic.PlayerTrail.Style.SPARKLES));
+        context.getInput().holdKeyFor(o -> o.forwardKey, 12);
+        context.takeScreenshot("pv_sparkles");
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("player_trail").setEnabled(false, false);
+            Aqua.modules().byId("pet").setEnabled(false, false);
+            mc.options.setPerspective(Perspective.FIRST_PERSON);
+            Aqua.modules().byId("swing_trails").setEnabled(true, false);
+            Aqua.modules().byId("hit_fx").setEnabled(true, false);
+        });
+        sp.getServer().runCommand("gamemode survival @a");
+        String pos = context.computeOnClient(mc -> String.format(Locale.ROOT, "%.2f %.2f %.2f", mc.player.getX(), mc.player.getY(), mc.player.getZ() + 2.2));
+        sp.getServer().runCommand("summon minecraft:husk " + pos + " {NoAI:1b,Health:200f,attributes:[{id:\"minecraft:max_health\",base:200d}]}");
+        context.waitTicks(20);
+        context.runOnClient(mc -> {
+            mc.player.setYaw(0f);
+            mc.player.setPitch(10f);
+            var list = mc.world.getEntitiesByClass(net.minecraft.entity.mob.HuskEntity.class, mc.player.getBoundingBox().expand(5), e -> true);
+            if (!list.isEmpty()) {
+                mc.interactionManager.attackEntity(mc.player, list.get(0));
+                mc.player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
+            }
+        });
+        context.waitTicks(2);
+        context.takeScreenshot("pv_hit_fx");
+        context.waitTicks(30);
+        context.runOnClient(mc -> mc.options.setPerspective(Perspective.THIRD_PERSON_FRONT));
+        context.runOnClient(mc -> {
+            var list = mc.world.getEntitiesByClass(net.minecraft.entity.mob.HuskEntity.class, mc.player.getBoundingBox().expand(5), e -> true);
+            if (!list.isEmpty()) {
+                mc.interactionManager.attackEntity(mc.player, list.get(0));
+                mc.player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
+            }
+        });
+        context.waitTicks(3);
+        context.takeScreenshot("pv_swing_hit_third");
+        sp.getServer().runCommand("kill @e[type=minecraft:husk]");
+        sp.getServer().runCommand("gamemode creative @a");
+        context.runOnClient(mc -> {
+            mc.options.setPerspective(Perspective.FIRST_PERSON);
+            Aqua.modules().byId("swing_trails").setEnabled(false, false);
+            Aqua.modules().byId("hit_fx").setEnabled(false, false);
+            Aqua.modules().byId("custom_sky").setEnabled(true, false);
+            mc.player.setPitch(-25f);
+        });
+        for (String mode : new String[]{"NEBULA", "AURORA", "CELLS"}) {
+            context.runOnClient(mc -> ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.visual.CustomSky.Mode>) find("custom_sky", "mode"))
+                    .set(dev.aqua.client.module.visual.CustomSky.Mode.valueOf(mode)));
+            context.waitFor(mc -> System.currentTimeMillis() > 0 && dev.aqua.client.render.world.SkyTextures.get(
+                    mode.equals("NEBULA") ? dev.aqua.client.render.world.SkyTextures.Kind.NEBULA_VIOLET
+                            : mode.equals("AURORA") ? dev.aqua.client.render.world.SkyTextures.Kind.AURORA
+                            : dev.aqua.client.render.world.SkyTextures.Kind.CELLS) != null, 1200);
+            context.waitTicks(5);
+            context.takeScreenshot("pv_sky_" + mode.toLowerCase(Locale.ROOT));
+        }
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("custom_sky").setEnabled(false, false);
+            Aqua.modules().byId("ambience").setEnabled(true, false);
+            mc.player.setPitch(0f);
+        });
+        context.waitTicks(40);
+        context.takeScreenshot("pv_cherry");
+        context.runOnClient(mc -> ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.cosmetic.Ambience.Theme>) find("ambience", "theme"))
+                .set(dev.aqua.client.module.cosmetic.Ambience.Theme.HALLOWEEN));
+        context.waitTicks(40);
+        context.takeScreenshot("pv_halloween");
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("ambience").setEnabled(false, false);
+            Aqua.modules().byId("staff_list").setEnabled(true, false);
+            Aqua.modules().byId("damage_fx").setEnabled(true, false);
+            Aqua.modules().byId("attack_indicator").setEnabled(true, false);
+        });
+        sp.getServer().runCommand("gamemode survival @a");
+        sp.getServer().runCommand("team add aqua_mods \"Mod\"");
+        sp.getServer().runCommand("team modify aqua_mods prefix {\"text\":\"[Mod] \",\"color\":\"green\"}");
+        sp.getServer().runCommand("team join aqua_mods @a");
+        context.waitTicks(20);
+        sp.getServer().runCommand("damage @p 4 minecraft:generic");
+        context.waitTicks(3);
+        context.runOnClient(mc -> mc.player.swingHand(net.minecraft.util.Hand.MAIN_HAND));
+        context.takeScreenshot("pv_staff_damage");
+        sp.getServer().runCommand("team remove aqua_mods");
+        sp.getServer().runCommand("gamemode creative @a");
+        context.setScreen(() -> new AquaMenuScreen(null));
+        context.runOnClient(mc -> {
+            Aqua.ui().toggleStar("hit_fx");
+            Aqua.ui().toggleStar("custom_sky");
+            setNav((AquaMenuScreen) mc.currentScreen, "STARRED");
+        });
+        context.waitTicks(15);
+        context.takeScreenshot("pv_menu_starred");
+        context.setScreen(() -> null);
     }
 
     /** Developer gallery: every knife/sword in first person, a few finishes, and third person. */

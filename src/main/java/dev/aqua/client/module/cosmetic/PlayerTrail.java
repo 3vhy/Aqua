@@ -95,11 +95,11 @@ public final class PlayerTrail extends Module implements WorldEffect {
                 }
             }
             case AFTERIMAGES -> {
-                if (speed > 0.06 && now - lastGhost > 110) {
+                if (speed > 0.08 && now - lastGhost > 140) {
                     lastGhost = now;
                     ghosts.addLast(new Ghost(pos, p.getBodyYaw(), p.getHeadYaw(), p.limbAnimator.getAnimationProgress(1f),
                             p.limbAnimator.getAmplitude(1f), p.isInSneakingPose(), now));
-                    while (ghosts.size() > 10) {
+                    while (ghosts.size() > 6) {
                         ghosts.removeFirst();
                     }
                 }
@@ -155,7 +155,7 @@ public final class PlayerTrail extends Module implements WorldEffect {
                 if (a <= 0) {
                     continue;
                 }
-                drawGhost(fx, vc, g, Colors.fade(col, a * 0.28f));
+                drawGhost(fx, vc, g, Colors.fade(col, a * a * 0.11f));
             }
         }
     }

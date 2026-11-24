@@ -237,19 +237,36 @@ public final class Knives extends Module {
         KnifeModels.Finish fin = finishColours();
         float time = (System.currentTimeMillis() % 1_000_000L) / 1000f;
         float open = Animations.butterflyOpen();
-        queue.submitCustom(matrices, FxLayers.SOLID, (entry, vc) -> {
-            Mesh m = new Mesh(entry, vc, lf);
-            switch (ty) {
-                case KARAMBIT -> KnifeModels.karambit(m, fin);
-                case BUTTERFLY -> KnifeModels.butterfly(m, fin, ctx.isFirstPerson() ? open : 0f);
-                case BAYONET -> KnifeModels.bayonet(m, fin);
-                case STILETTO -> KnifeModels.stiletto(m, fin);
-                case FROST -> KnifeModels.frostSword(m, time);
-                case SUN -> KnifeModels.sunSword(m, time);
-                case VOID -> KnifeModels.voidSword(m, time);
-                case THORN -> KnifeModels.thornSword(m, time);
+        int aura = 0;
+        dev.aqua.client.module.visual.HandAura ha = Aqua.modules().get(dev.aqua.client.module.visual.HandAura.class);
+        if (ha != null && !thirdPerson) {
+            aura = ha.outline(!left);
+        }
+        if (aura != 0) {
+            // Hand Aura on a knife skin: a soft glowing shell drawn slightly larger behind the model.
+            int glowColor = Colors.fade(aura, 0.45f);
+            for (float k : new float[]{1.06f, 1.12f}) {
+                matrices.push();
+                matrices.scale(k, k, k);
+                int c = k > 1.1f ? Colors.fade(aura, 0.22f) : glowColor;
+                queue.submitCustom(matrices, FxLayers.GLOW, (entry, vc) -> drawModel(new Mesh(entry, vc, 1f).overrideColor(c), ty, fin, time, open, ctx));
+                matrices.pop();
             }
-        });
+        }
+        queue.submitCustom(matrices, FxLayers.SOLID, (entry, vc) -> drawModel(new Mesh(entry, vc, lf), ty, fin, time, open, ctx));
         matrices.pop();
+    }
+
+    private static void drawModel(Mesh m, Type ty, KnifeModels.Finish fin, float time, float open, ItemDisplayContext ctx) {
+        switch (ty) {
+            case KARAMBIT -> KnifeModels.karambit(m, fin);
+            case BUTTERFLY -> KnifeModels.butterfly(m, fin, ctx.isFirstPerson() ? open : 0f);
+            case BAYONET -> KnifeModels.bayonet(m, fin);
+            case STILETTO -> KnifeModels.stiletto(m, fin);
+            case FROST -> KnifeModels.frostSword(m, time);
+            case SUN -> KnifeModels.sunSword(m, time);
+            case VOID -> KnifeModels.voidSword(m, time);
+            case THORN -> KnifeModels.thornSword(m, time);
+        }
     }
 }

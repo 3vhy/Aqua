@@ -60,10 +60,10 @@ public final class Ambience extends Module implements WorldEffect {
     private Flake spawn(Vec3d around, boolean anywhere) {
         Flake f = new Flake();
         Theme t = theme.get();
-        double a = random.nextDouble() * Math.PI * 2, r = 2 + random.nextDouble() * 14;
+        double a = random.nextDouble() * Math.PI * 2, r = 1.5 + random.nextDouble() * 10;
         f.x = around.x + Math.cos(a) * r;
         f.z = around.z + Math.sin(a) * r;
-        f.y = around.y + (anywhere ? -2 + random.nextDouble() * 14 : 8 + random.nextDouble() * 5);
+        f.y = around.y + (anywhere ? -1 + random.nextDouble() * 9 : 6 + random.nextDouble() * 4);
         f.spin = random.nextFloat() * 6.28f;
         f.spinSpeed = 0.6f + random.nextFloat() * 1.8f;
         f.phase = random.nextFloat() * 6.28f;
@@ -71,12 +71,12 @@ public final class Ambience extends Module implements WorldEffect {
         switch (t) {
             case CHERRY -> {
                 f.vy = -0.45f - random.nextFloat() * 0.3f;
-                f.size = 0.07f + random.nextFloat() * 0.05f;
+                f.size = 0.13f + random.nextFloat() * 0.08f;
                 f.color = Colors.lerp(0xFFFFB7D5, 0xFFFF7FB0, random.nextFloat());
             }
             case AUTUMN -> {
                 f.vy = -0.6f - random.nextFloat() * 0.4f;
-                f.size = 0.09f + random.nextFloat() * 0.06f;
+                f.size = 0.15f + random.nextFloat() * 0.08f;
                 int[] cs = {0xFFE0702A, 0xFFC9361F, 0xFFE9B93A, 0xFF9C4A1A};
                 f.color = cs[random.nextInt(cs.length)];
             }
