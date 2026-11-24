@@ -101,6 +101,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
                         case "freelook" -> freelook(context);
                         case "sky_lyrics" -> skyLyricsText(context);
                         case "preview_new" -> previewNew(context, sp);
+                        case "video_modules" -> videoModules(context, sp);
                         case "music" -> music(context);
                         case "knife_gallery" -> knifeGallery(context, sp);
                         case "identity" -> identity(context, sp);
@@ -201,6 +202,8 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             debugOverlay(context);
             externalMedia(context);
             freelook(context);
+            skyLyricsText(context);
+            videoModules(context, sp);
             profilesAndLayouts(context);
             resizeAndScale(context);
             reloadResources(context);
@@ -1153,6 +1156,299 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             Aqua.modules().byId("sky_lyrics").setEnabled(false, false);
             mc.player.setPitch(0f);
         });
+    }
+
+    private static <T extends Module> T mod(Class<T> c) {
+        return Aqua.modules().get(c);
+    }
+
+    private void wallWait(ClientGameTestContext context, long ms) {
+        long w0 = System.currentTimeMillis();
+        context.waitFor(mc -> System.currentTimeMillis() - w0 >= ms, 4000);
+    }
+
+    /** Every module added from the second set of reference videos (R5-R8), each with a real check. */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void videoModules(ClientGameTestContext context, TestSingleplayerContext sp) {
+        sp.getServer().runCommand("time set noon");
+        sp.getServer().runCommand("weather clear");
+        sp.getServer().runCommand("item replace entity @a weapon.mainhand with minecraft:diamond_sword");
+        context.runOnClient(mc -> {
+            mc.player.getInventory().setSelectedSlot(0);
+            mc.player.setYaw(0f);
+            mc.player.setPitch(10f);
+            mc.options.setPerspective(Perspective.FIRST_PERSON);
+            Aqua.modules().byId("knives").setEnabled(false, false);
+        });
+
+        // Staff List: a "[Mod]" team prefix in the tab list is recognised.
+        sp.getServer().runCommand("team add aqua_mods");
+        sp.getServer().runCommand("team modify aqua_mods prefix {text:\"[Mod] \",color:\"green\"}");
+        sp.getServer().runCommand("team join aqua_mods @a");
+        context.runOnClient(mc -> Aqua.modules().byId("staff_list").setEnabled(true, false));
+        context.waitTicks(30);
+        String staff = context.computeOnClient(mc -> {
+            var w = (HudWidget) Aqua.modules().byId("staff_list");
+            return w.hasContent() + "|" + w.height(false);
+        });
+        context.takeScreenshot("60_staff_list");
+        check(staff.startsWith("true|") && Float.parseFloat(staff.split("\\|")[1]) > 20,
+                "Staff List shows a player whose tab-list rank is [Mod] (" + staff + ")");
+        sp.getServer().runCommand("team remove aqua_mods");
+        context.runOnClient(mc -> Aqua.modules().byId("staff_list").setEnabled(false, false));
+
+        // Hit FX, Swing Trails and Damage FX on a real hit and real damage.
+        context.runOnClient(mc -> {
+            for (String id : new String[]{"hit_fx", "swing_trails", "damage_fx", "attack_indicator"}) {
+                Aqua.modules().byId(id).setEnabled(true, false);
+            }
+        });
+        sp.getServer().runCommand("gamemode survival @a");
+        String pos = context.computeOnClient(mc -> String.format(Locale.ROOT, "%.2f %.2f %.2f", mc.player.getX(), mc.player.getY(), mc.player.getZ() + 2.2));
+        sp.getServer().runCommand("summon minecraft:husk " + pos + " {NoAI:1b,Health:200f,attributes:[{id:\"minecraft:max_health\",base:200d}]}");
+        context.waitTicks(25);
+        boolean hit = context.computeOnClient(mc -> {
+            var list = mc.world.getEntitiesByClass(net.minecraft.entity.mob.HuskEntity.class, mc.player.getBoundingBox().expand(5), e -> true);
+            if (list.isEmpty()) {
+                return false;
+            }
+            mc.interactionManager.attackEntity(mc.player, list.get(0));
+            mc.player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
+            return true;
+        });
+        context.waitTicks(2);
+        String fx = context.computeOnClient(mc -> mod(dev.aqua.client.module.cosmetic.HitFx.class).active() + "|"
+                + mod(dev.aqua.client.module.cosmetic.SwingTrails.class).active());
+        context.takeScreenshot("61_hit_fx_swing_trail");
+        check(hit && !fx.startsWith("0|") && !fx.endsWith("|0"), "Hit FX and Swing Trails play when you hit something (hits | arcs: " + fx + ")");
+        context.waitTicks(30);
+        sp.getServer().runCommand("damage @p 3 minecraft:generic");
+        context.waitTicks(3);
+        boolean pulse = context.computeOnClient(mc -> mod(dev.aqua.client.module.cosmetic.DamageFx.class).pulsing());
+        context.takeScreenshot("62_damage_fx");
+        check(pulse, "Damage FX pulses when you take damage");
+        sp.getServer().runCommand("kill @e[type=minecraft:husk]");
+        sp.getServer().runCommand("effect give @a minecraft:instant_health 1 5");
+        sp.getServer().runCommand("gamemode creative @a");
+        context.runOnClient(mc -> {
+            for (String id : new String[]{"hit_fx", "swing_trails", "damage_fx", "attack_indicator"}) {
+                Aqua.modules().byId(id).setEnabled(false, false);
+            }
+        });
+
+        context.waitTicks(40);
+        // Hand Aura on the vanilla sword.
+        context.runOnClient(mc -> Aqua.modules().byId("hand_aura").setEnabled(true, false));
+        long a0 = context.computeOnClient(mc -> dev.aqua.client.render.HandAuraRenderer.drawn());
+        context.waitTicks(10);
+        long a1 = context.computeOnClient(mc -> dev.aqua.client.render.HandAuraRenderer.drawn());
+        context.takeScreenshot("63_hand_aura");
+        check(a1 > a0, "Hand Aura draws a glowing outline around the held item (" + (a1 - a0) + " frames)");
+        context.runOnClient(mc -> Aqua.modules().byId("hand_aura").setEnabled(false, false));
+
+        // Glass skin, Blob character, pet and trails in third person.
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("glass").setEnabled(true, false);
+            mc.options.setPerspective(Perspective.THIRD_PERSON_FRONT);
+        });
+        long g0 = context.computeOnClient(mc -> dev.aqua.client.module.cosmetic.GlassSkin.drawn());
+        context.waitTicks(10);
+        long g1 = context.computeOnClient(mc -> dev.aqua.client.module.cosmetic.GlassSkin.drawn());
+        context.takeScreenshot("64_glass_skin");
+        check(g1 > g0, "Glass draws your player as glass with glowing edges (" + (g1 - g0) + " frames)");
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("glass").setEnabled(false, false);
+            var cs = mod(dev.aqua.client.module.cosmetic.CharacterSkin.class);
+            cs.select(dev.aqua.client.cosmetic.character.Characters.BLOB);
+            cs.setEnabled(true, false);
+        });
+        long b0 = context.computeOnClient(mc -> dev.aqua.client.cosmetic.character.CharacterRenderer.drawn());
+        context.waitTicks(10);
+        long b1 = context.computeOnClient(mc -> dev.aqua.client.cosmetic.character.CharacterRenderer.drawn());
+        context.takeScreenshot("65_blob_character");
+        check(b1 > b0, "Blob 3D skin renders");
+        context.runOnClient(mc -> {
+            mod(dev.aqua.client.module.cosmetic.CharacterSkin.class).setEnabled(false, false);
+            Aqua.modules().byId("pet").setEnabled(true, false);
+            Aqua.modules().byId("player_trail").setEnabled(true, false);
+            mc.options.setPerspective(Perspective.THIRD_PERSON_BACK);
+        });
+        context.runOnClient(mc -> ((dev.aqua.client.setting.EnumSetting) find("player_trail", "style"))
+                .set(dev.aqua.client.module.cosmetic.PlayerTrail.Style.FOOTPRINTS));
+        context.getInput().holdKeyFor(o -> o.forwardKey, 15);
+        int marks = context.computeOnClient(mc -> mod(dev.aqua.client.module.cosmetic.PlayerTrail.class).marks());
+        context.takeScreenshot("66_footprints_pet");
+        check(marks > 0, "Player Trail leaves ice footprints as you walk (" + marks + ")");
+        context.runOnClient(mc -> ((dev.aqua.client.setting.EnumSetting) find("player_trail", "style"))
+                .set(dev.aqua.client.module.cosmetic.PlayerTrail.Style.AFTERIMAGES));
+        context.getInput().holdKeyFor(o -> o.forwardKey, 10);
+        int ghosts = context.computeOnClient(mc -> mod(dev.aqua.client.module.cosmetic.PlayerTrail.class).marks());
+        context.takeScreenshot("67_afterimages");
+        check(ghosts > 0, "Player Trail draws afterimages as you move (" + ghosts + ")");
+        context.runOnClient(mc -> ((dev.aqua.client.setting.EnumSetting) find("player_trail", "style"))
+                .set(dev.aqua.client.module.cosmetic.PlayerTrail.Style.SPARKLES));
+        context.getInput().holdKeyFor(o -> o.forwardKey, 10);
+        context.takeScreenshot("68_sparkle_trail");
+        String pet = context.computeOnClient(mc -> {
+            var p = mod(dev.aqua.client.module.cosmetic.Pet.class).position();
+            return p == null ? "none" : String.format(Locale.ROOT, "%.1f", Math.sqrt(p.squaredDistanceTo(mc.player.getEntityPos())));
+        });
+        check(!pet.equals("none") && Double.parseDouble(pet) < 4, "Pet follows you (" + pet + " blocks away)");
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("pet").setEnabled(false, false);
+            Aqua.modules().byId("player_trail").setEnabled(false, false);
+            mc.options.setPerspective(Perspective.FIRST_PERSON);
+        });
+
+        // Jump circle styles.
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("jump_circles").setEnabled(true, false);
+            ((dev.aqua.client.setting.EnumSetting) find("jump_circles", "style")).set(dev.aqua.client.module.cosmetic.JumpCircles.Style.RUNE);
+            mc.options.setPerspective(Perspective.THIRD_PERSON_BACK);
+        });
+        context.getInput().holdKeyFor(o -> o.jumpKey, 2);
+        context.waitTicks(4);
+        context.takeScreenshot("69_rune_jump_circle");
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("jump_circles").setEnabled(false, false);
+            mc.options.setPerspective(Perspective.FIRST_PERSON);
+        });
+        pass("Rune jump circle rendered");
+
+        // Skies: nebula, aurora and lava cells are generated and drawn; shooting stars on.
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("custom_sky").setEnabled(true, false);
+            mc.player.setPitch(-30f);
+        });
+        String[][] skies = {{"NEBULA", "NEBULA_VIOLET"}, {"AURORA", "AURORA"}, {"CELLS", "CELLS"}};
+        for (String[] sk : skies) {
+            context.runOnClient(mc -> ((dev.aqua.client.setting.EnumSetting) find("custom_sky", "mode"))
+                    .set(dev.aqua.client.module.visual.CustomSky.Mode.valueOf(sk[0])));
+            context.waitFor(mc -> dev.aqua.client.render.world.SkyTextures.get(dev.aqua.client.render.world.SkyTextures.Kind.valueOf(sk[1])) != null, 1200);
+            context.waitTicks(5);
+            context.takeScreenshot("70_sky_" + sk[0].toLowerCase(Locale.ROOT));
+        }
+        pass("Nebula, aurora and lava-cell skies generated and drawn");
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("custom_sky").setEnabled(false, false);
+            mc.player.setPitch(5f);
+        });
+
+        // Ambience and Rain Splashes.
+        context.runOnClient(mc -> Aqua.modules().byId("ambience").setEnabled(true, false));
+        context.waitTicks(20);
+        int petals = context.computeOnClient(mc -> mod(dev.aqua.client.module.cosmetic.Ambience.class).count());
+        context.takeScreenshot("71_cherry_petals");
+        check(petals > 20, "Ambience drifts cherry petals around you (" + petals + ")");
+        context.runOnClient(mc -> Aqua.modules().byId("ambience").setEnabled(false, false));
+        sp.getServer().runCommand("weather rain");
+        context.runOnClient(mc -> Aqua.modules().byId("rain_splashes").setEnabled(true, false));
+        context.waitFor(mc -> mc.world.getRainGradient(1f) > 0.5f, 600);
+        context.waitTicks(10);
+        int ripples = context.computeOnClient(mc -> mod(dev.aqua.client.module.visual.RainSplashes.class).ripples());
+        context.takeScreenshot("72_rain_splashes");
+        check(ripples > 0, "Rain Splashes add ripples where rain lands (" + ripples + ")");
+        sp.getServer().runCommand("weather clear");
+        context.runOnClient(mc -> Aqua.modules().byId("rain_splashes").setEnabled(false, false));
+
+        // Smooth Camera: mouse movement still arrives in full, spread over a few frames.
+        boolean locked = context.computeOnClient(mc -> mc.mouse.isCursorLocked());
+        if (locked) {
+            context.runOnClient(mc -> Aqua.modules().byId("smooth_camera").setEnabled(true, false));
+            context.waitTicks(2);
+            double[] t0 = context.computeOnClient(mc -> mod(dev.aqua.client.module.visual.SmoothCamera.class).totals());
+            for (int i = 0; i < 6; i++) {
+                context.getInput().moveCursor(60, 0);
+                context.waitTicks(1);
+            }
+            double[] t1 = context.computeOnClient(mc -> mod(dev.aqua.client.module.visual.SmoothCamera.class).totals());
+            wallWait(context, 1500);
+            double[] t2 = context.computeOnClient(mc -> mod(dev.aqua.client.module.visual.SmoothCamera.class).totals());
+            context.runOnClient(mc -> Aqua.modules().byId("smooth_camera").setEnabled(false, false));
+            double inEarly = t1[0] - t0[0], outEarly = t1[1] - t0[1], in = t2[0] - t0[0], total = t2[1] - t0[1];
+            check(in > 0 && outEarly < inEarly && Math.abs(total - in) < in * 0.02, String.format(Locale.ROOT,
+                    "Smooth Camera eases mouse movement and still applies all of it (in %.0f, passed on while moving %.0f of %.0f, total %.0f)",
+                    in, outEarly, inEarly, total));
+        } else {
+            skip("Smooth Camera: the virtual display did not capture the mouse, so movement could not be measured");
+        }
+
+        // Media Hider, Low Fire & Shield, No Block Rotation, Water Colour.
+        context.runOnClient(mc -> Aqua.modules().byId("media_hider").setEnabled(true, false));
+        long m0 = context.computeOnClient(mc -> mod(dev.aqua.client.module.qol.MediaHider.class).covered());
+        context.waitTicks(5);
+        long m1 = context.computeOnClient(mc -> mod(dev.aqua.client.module.qol.MediaHider.class).covered());
+        context.takeScreenshot("73_media_hider");
+        check(m1 > m0, "Media Hider covers the hotbar");
+        context.runOnClient(mc -> Aqua.modules().byId("media_hider").setEnabled(false, false));
+        sp.getServer().runCommand("item replace entity @a weapon.offhand with minecraft:shield");
+        context.runOnClient(mc -> Aqua.modules().byId("low_overlays").setEnabled(true, false));
+        context.waitTicks(5);
+        context.takeScreenshot("74_low_shield");
+        float low = context.computeOnClient(mc -> mod(dev.aqua.client.module.visual.LowOverlays.class).shieldOffset());
+        check(low > 0, "Low Shield lowers the held shield");
+        sp.getServer().runCommand("item replace entity @a weapon.offhand with minecraft:air");
+        context.runOnClient(mc -> Aqua.modules().byId("low_overlays").setEnabled(false, false));
+        String fp = context.computeOnClient(mc -> {
+            mc.player.setYaw(0f);
+            return String.format(Locale.ROOT, "%d %d %d", (int) Math.floor(mc.player.getX()) - 1,
+                    (int) Math.floor(mc.player.getY()) - 1, (int) Math.floor(mc.player.getZ()) + 2);
+        });
+        String fp2 = context.computeOnClient(mc -> String.format(Locale.ROOT, "%d %d %d", (int) Math.floor(mc.player.getX()) + 1,
+                (int) Math.floor(mc.player.getY()) - 1, (int) Math.floor(mc.player.getZ()) + 4));
+        sp.getServer().runCommand("fill " + fp + " " + fp2 + " minecraft:water");
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("water_colour").setEnabled(true, false);
+            Aqua.modules().byId("no_block_rotation").setEnabled(true, false);
+            mc.player.setPitch(45f);
+        });
+        context.waitTicks(40);
+        context.takeScreenshot("75_water_colour_no_rotation");
+        boolean alive = context.computeOnClient(mc -> Aqua.modules().byId("water_colour").isEnabled() && Aqua.modules().byId("no_block_rotation").isEnabled());
+        check(alive, "Water Colour and No Block Rotation rebuild the world without errors");
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("water_colour").setEnabled(false, false);
+            Aqua.modules().byId("no_block_rotation").setEnabled(false, false);
+            mc.player.setPitch(5f);
+        });
+        sp.getServer().runCommand("fill " + fp + " " + fp2 + " minecraft:grass_block");
+
+        // Creamy Keys while typing in chat.
+        context.runOnClient(mc -> Aqua.modules().byId("creamy_keys").setEnabled(true, false));
+        int k0 = context.computeOnClient(mc -> mod(dev.aqua.client.module.qol.CreamyKeys.class).presses());
+        context.setScreen(() -> new net.minecraft.client.gui.screen.ChatScreen("", false));
+        context.waitTicks(3);
+        for (int key : new int[]{GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_Q, GLFW.GLFW_KEY_U, GLFW.GLFW_KEY_A}) {
+            context.getInput().pressKey(key);
+            context.waitTicks(1);
+        }
+        int k1 = context.computeOnClient(mc -> mod(dev.aqua.client.module.qol.CreamyKeys.class).presses());
+        context.setScreen(() -> null);
+        context.runOnClient(mc -> Aqua.modules().byId("creamy_keys").setEnabled(false, false));
+        check(k1 - k0 >= 3, "Creamy Keys plays a key sound while you type (" + (k1 - k0) + " sounds)");
+
+        // Colour Sync and starred modules.
+        String sync = context.computeOnClient(mc -> {
+            Aqua.ui().colorSync.set(true);
+            int c = ((dev.aqua.client.setting.ColorSetting) find("custom_sky", "cells")).color();
+            boolean ok = (c & 0xFFFFFF) == (Aqua.theme().accent() & 0xFFFFFF);
+            Aqua.ui().colorSync.set(false);
+            return String.valueOf(ok);
+        });
+        check(sync.equals("true"), "Colour Sync makes every module colour follow the theme");
+        context.setScreen(() -> new AquaMenuScreen(null));
+        context.runOnClient(mc -> {
+            if (!Aqua.ui().isStarred("hit_fx")) {
+                Aqua.ui().toggleStar("hit_fx");
+            }
+            setNav((AquaMenuScreen) mc.currentScreen, "STARRED");
+        });
+        context.waitTicks(15);
+        context.takeScreenshot("76_menu_starred_legend");
+        boolean starred = context.computeOnClient(mc -> Aqua.ui().isStarred("hit_fx"));
+        context.setScreen(() -> null);
+        context.runOnClient(mc -> Aqua.ui().toggleStar("hit_fx"));
+        check(starred, "Starring a module lists it under Starred in the menu");
     }
 
     /** Developer preview of the R5-R8 modules (screenshots only). */

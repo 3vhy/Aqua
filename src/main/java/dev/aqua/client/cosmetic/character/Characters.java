@@ -11,7 +11,8 @@ public enum Characters {
     GHOST("Ghost", "Creatures", "A floating sheet ghost.", new Ghost()),
     KNIGHT("Knight", "Characters", "Plate armour with a plumed helmet.", new Knight()),
     SHARK("Shark", "Animals", "A shark costume, fin and all.", new Shark()),
-    SNOWMAN("Snowman", "Characters", "Three snowballs, a carrot and a top hat.", new Snowman());
+    SNOWMAN("Snowman", "Characters", "Three snowballs, a carrot and a top hat.", new Snowman()),
+    BLOB("Blob", "Creatures", "A squishy, glossy little slime with big shiny eyes.", new Blob());
 
     public final String label;
     public final String group;
@@ -443,6 +444,44 @@ public enum Characters {
         public void leftArm(Mesh m, float t) {
             m.box(0.7f, 1f, -0.4f, 1.5f, 11f, 0.4f, STICK);
             m.box(1.4f, 8f, -0.3f, 3f, 8.8f, 0.3f, STICK);
+        }
+    }
+
+    /** R8-style cute blob: a glossy dome that squishes as it hops along; no arms or legs. */
+    static final class Blob implements CharacterDef {
+        static final int BODY = 0xFF2E9BF0, DEEP = 0xFF1B6FC4, SHINE = 0xFFD9F1FF, WHITE = 0xFFFFFFFF, PUPIL = 0xFF102040, BLUSH = 0xFFFF8FB0;
+
+        @Override
+        public void root(Mesh m, float t) {
+            float squish = (float) Math.sin(t * 6f) * 0.06f;
+            float h = 17f * (1f - squish), r = 11f * (1f + squish * 0.8f);
+            // Dome: a ball cut by the ground (y = 24 is the feet), widest at the bottom.
+            int n = 12;
+            float y0 = 24f - h;
+            for (int i = 0; i < n; i++) {
+                float a = (i + 0.5f) / n;
+                float rr = r * (float) Math.sqrt(Math.max(0.04f, 1f - (1f - a) * (1f - a)));
+                float ya = y0 + i * h / n, yb = y0 + (i + 1) * h / n;
+                m.box(-rr, ya, -rr * 0.92f, rr, yb, rr * 0.92f, i > n - 3 ? DEEP : BODY);
+            }
+            // Gloss highlights
+            m.glow(-6.5f, y0 + 2.5f, -8.9f, -4f, y0 + 4f, -8.6f, SHINE);
+            m.glow(-7.5f, y0 + 5f, -9.5f, -6.3f, y0 + 6.2f, -9.2f, SHINE);
+            // Big eyes with sparkles, blush and a tiny mouth
+            float ey = y0 + h * 0.48f;
+            for (int side = -1; side <= 1; side += 2) {
+                float ex = side * 3.6f;
+                m.box(ex - 1.9f, ey - 2.4f, -10.25f, ex + 1.9f, ey + 2.4f, -9.8f, PUPIL);
+                m.glow(ex - 1.3f + side * 0.2f, ey - 1.9f, -10.35f, ex - 0.2f + side * 0.2f, ey - 0.8f, -10.25f, WHITE);
+                m.glow(ex + 0.6f, ey + 0.8f, -10.35f, ex + 1.1f, ey + 1.3f, -10.25f, WHITE);
+                m.box(ex + side * 1.6f - 1.4f, ey + 2.8f, -10.0f, ex + side * 1.6f + 1.4f, ey + 3.8f, -9.7f, BLUSH);
+            }
+            m.box(-1.1f, ey + 3.2f, -10.15f, 1.1f, ey + 4.4f, -9.9f, 0xFF7A1F3A);
+        }
+
+        @Override
+        public float bob(float t) {
+            return -Math.abs((float) Math.sin(t * 3f)) * 1.2f;
         }
     }
 }

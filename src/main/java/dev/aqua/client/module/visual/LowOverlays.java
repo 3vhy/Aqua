@@ -14,7 +14,7 @@ public final class LowOverlays extends Module {
     private final NumberSetting fireHeight = add(new NumberSetting("fire_height", "Fire lowered by", 0.3, 0.1, 0.5, 0.05)
             .visibleWhen(fire::on));
     private final BoolSetting shield = add(new BoolSetting("shield", "Low shield", true));
-    private final NumberSetting shieldHeight = add(new NumberSetting("shield_height", "Shield lowered by", 0.2, 0.05, 0.4, 0.05)
+    private final NumberSetting shieldHeight = add(new NumberSetting("shield_height", "Shield lowered by", 0.1, 0.02, 0.25, 0.01)
             .visibleWhen(shield::on));
 
     public LowOverlays() {

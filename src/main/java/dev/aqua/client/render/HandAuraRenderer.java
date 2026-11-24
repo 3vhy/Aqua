@@ -47,11 +47,19 @@ public final class HandAuraRenderer {
         });
     }
 
+    private static long drawn;
+
+    /** Item layers drawn with an aura (used by the in-game tests). */
+    public static long drawn() {
+        return drawn;
+    }
+
     public static void afterItem(OrderedRenderCommandQueue queue, MatrixStack matrices, List<BakedQuad> quads) {
         int c = color;
         if (c == 0 || quads == null || quads.isEmpty()) {
             return;
         }
+        drawn++;
         BakedQuad front = null;
         for (BakedQuad q : quads) {
             if ((q.face() == Direction.SOUTH || q.face() == Direction.NORTH) && spansSquare(q)) {

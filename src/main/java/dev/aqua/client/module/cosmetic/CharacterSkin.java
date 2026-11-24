@@ -12,7 +12,7 @@ import dev.aqua.client.setting.EnumSetting;
 public final class CharacterSkin extends Module {
     public enum Choice implements EnumSetting.Displayable {
         DROPLET(Characters.DROPLET), ROBO(Characters.ROBO), PENGUIN(Characters.PENGUIN), SEA_DRAGON(Characters.SEA_DRAGON),
-        GHOST(Characters.GHOST), KNIGHT(Characters.KNIGHT), SHARK(Characters.SHARK), SNOWMAN(Characters.SNOWMAN);
+        GHOST(Characters.GHOST), KNIGHT(Characters.KNIGHT), SHARK(Characters.SHARK), SNOWMAN(Characters.SNOWMAN), BLOB(Characters.BLOB);
 
         public final Characters character;
 

@@ -232,6 +232,11 @@ public final class HitFx extends Module implements WorldEffect {
         }
     }
 
+    /** Hits whose effects are still showing (used by the in-game tests). */
+    public int active() {
+        return hits.size();
+    }
+
     /** Crosshair hit marker (four short diagonal strokes that pop and fade). */
     public void drawMarker(DrawContext ctx) {
         if (!isEnabled() || !marker.on() || markerAt < 0 || mc.options.hudHidden) {

@@ -21,12 +21,22 @@ public final class SmoothCamera extends Module {
     }
 
     /** Takes this frame's raw mouse movement and returns the part to apply now; the rest follows over the next frames. */
+    private double totalIn;
+    private double totalOut;
+
+    /** Total mouse movement received and passed on (used by the in-game tests). */
+    public double[] totals() {
+        return new double[]{totalIn, totalOut};
+    }
+
     public double[] smooth(double dx, double dy, double seconds) {
+        totalIn += Math.abs(dx);
         pendingX += dx;
         pendingY += dy;
         double speed = 4 + (1 - smoothness.d()) * 40;
         double k = 1 - Math.exp(-seconds * speed);
         double outX = pendingX * k, outY = pendingY * k;
+        totalOut += Math.abs(outX);
         pendingX -= outX;
         pendingY -= outY;
         if (Math.abs(pendingX) < 1e-3) {

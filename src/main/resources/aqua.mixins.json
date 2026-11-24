@@ -35,6 +35,7 @@
     "SoundLoaderMixin",
     "TextVisitFactoryMixin",
     "WeatherRenderingMixin",
+    "WeightedBlockStateModelMixin",
     "WorldMixin"
   ],
   "injectors": {

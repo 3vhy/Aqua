@@ -90,6 +90,8 @@ final class Modules {
         m.add(new dev.aqua.client.module.visual.LowOverlays());
         m.add(new dev.aqua.client.module.visual.AttackIndicator());
         m.add(new dev.aqua.client.module.visual.HandAura());
+        m.add(new dev.aqua.client.module.visual.NoBlockRotation());
+        m.add(new dev.aqua.client.module.visual.WaterColour());
         m.add(new ToggleSprint());
         m.add(new MusicModule());
         m.add(new ScreenshotHelper());

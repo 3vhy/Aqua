@@ -31,6 +31,13 @@ public final class MediaHider extends Module {
         });
     }
 
+    private long covered;
+
+    /** Frames in which the hotbar was covered (used by the in-game tests). */
+    public long covered() {
+        return covered;
+    }
+
     public boolean coverInventories() {
         return isEnabled() && inventories.on();
     }
@@ -40,6 +47,7 @@ public final class MediaHider extends Module {
         if (!isEnabled() || mc.options.hudHidden || mc.player == null || mc.player.isSpectator()) {
             return;
         }
+        covered++;
         float w = 184, h = 24;
         float x = ctx.getScaledWindowWidth() / 2f - w / 2f, y = ctx.getScaledWindowHeight() - h - 0.5f;
         banner(ctx, x, y, w, h);
