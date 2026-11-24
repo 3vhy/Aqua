@@ -71,6 +71,19 @@ public final class Hooks {
             } else {
                 vanilla.render(ctx, tick);
             }
+            drawCrosshairExtras(ctx);
+        });
+        HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, Identifier.of(AquaClient.MOD_ID, "media_hider"), (ctx, tick) -> {
+            dev.aqua.client.module.qol.MediaHider mh = Aqua.modules().get(dev.aqua.client.module.qol.MediaHider.class);
+            if (mh != null) {
+                mh.drawHotbarCover(ctx);
+            }
+        });
+        HudElementRegistry.attachElementBefore(VanillaHudElements.CROSSHAIR, Identifier.of(AquaClient.MOD_ID, "damage_fx"), (ctx, tick) -> {
+            dev.aqua.client.module.cosmetic.DamageFx d = Aqua.modules().get(dev.aqua.client.module.cosmetic.DamageFx.class);
+            if (d != null) {
+                d.draw(ctx);
+            }
         });
         HudElementRegistry.replaceElement(VanillaHudElements.SCOREBOARD, vanilla -> (ctx, tick) -> {
             if (on(ScoreboardWidget.class) == null) {
@@ -89,6 +102,18 @@ public final class Hooks {
                 j.render(ctx);
             }
         });
+    }
+
+    /** Hit marker and attack indicator, drawn with the crosshair. */
+    public static void drawCrosshairExtras(net.minecraft.client.gui.DrawContext ctx) {
+        dev.aqua.client.module.cosmetic.HitFx hf = Aqua.modules().get(dev.aqua.client.module.cosmetic.HitFx.class);
+        if (hf != null) {
+            hf.drawMarker(ctx);
+        }
+        dev.aqua.client.module.visual.AttackIndicator ai = Aqua.modules().get(dev.aqua.client.module.visual.AttackIndicator.class);
+        if (ai != null) {
+            ai.draw(ctx);
+        }
     }
 
     // ------------------------------------------------------------------ world rendering
@@ -123,6 +148,10 @@ public final class Hooks {
                 HitParticles h = on(HitParticles.class);
                 if (h != null) {
                     h.onHit(entity);
+                }
+                dev.aqua.client.module.cosmetic.HitFx hf = on(dev.aqua.client.module.cosmetic.HitFx.class);
+                if (hf != null) {
+                    hf.onHit(entity);
                 }
                 dev.aqua.client.module.cosmetic.KillEffects k = on(dev.aqua.client.module.cosmetic.KillEffects.class);
                 if (k != null) {

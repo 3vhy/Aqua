@@ -51,6 +51,8 @@ public final class UiSettings {
             .describe("Soft drop shadows under windows and widgets"));
     public final NumberSetting effectIntensity = add(new NumberSetting("effect_intensity", "Cosmetic intensity", 1.0, 0.0, 1.5, 0.05)
             .unit("x").describe("Master scale for cosmetic particle counts, glow and animation strength"));
+    public final BoolSetting colorSync = add(new BoolSetting("color_sync", "Colour Sync", false)
+            .describe("Every module colour follows the theme accent, so one colour wheel changes them all (R7)"));
     public final BoolSetting sounds = add(new BoolSetting("sounds", "Interface sounds", true));
     public final NumberSetting soundVolume = add(new NumberSetting("sound_volume", "Interface volume", 0.6, 0.0, 1.0, 0.05)
             .visibleWhen(this::soundsOn));

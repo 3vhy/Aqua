@@ -30,6 +30,15 @@ public abstract class MouseMixin {
         double seconds = aqua$lastNanos == 0 ? 0.016 : Math.min(0.1, (now - aqua$lastNanos) / 1.0e9);
         aqua$lastNanos = now;
         MinecraftClient mc = MinecraftClient.getInstance();
+        dev.aqua.client.module.visual.SmoothCamera smooth = Aqua.modules() != null
+                ? Aqua.modules().get(dev.aqua.client.module.visual.SmoothCamera.class) : null;
+        if (smooth != null && smooth.isEnabled() && mc.currentScreen == null && mc.mouse.isCursorLocked()) {
+            double[] out = smooth.smooth(cursorDeltaX, cursorDeltaY, seconds);
+            cursorDeltaX = out[0];
+            cursorDeltaY = out[1];
+        } else if (smooth != null) {
+            smooth.reset();
+        }
         if (mc.currentScreen == null && mc.mouse.isCursorLocked() && (cursorDeltaX != 0 || cursorDeltaY != 0)) {
             dev.aqua.client.util.MouseTracker.onDelta(cursorDeltaX, cursorDeltaY, seconds);
         } else {

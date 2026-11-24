@@ -44,6 +44,13 @@ public abstract class HeldItemRendererMixin {
             // Offsets and scale only while Animations is on; the inspect pose always.
             a.apply(matrices, hand == Hand.MAIN_HAND);
         }
+        dev.aqua.client.module.visual.LowOverlays low = Aqua.modules().get(dev.aqua.client.module.visual.LowOverlays.class);
+        if (low != null && item.isOf(net.minecraft.item.Items.SHIELD)) {
+            float d = low.shieldOffset();
+            if (d > 0) {
+                matrices.translate(0f, -d, 0f);
+            }
+        }
     }
 
     @Redirect(method = "renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemDisplayContext;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;I)V",

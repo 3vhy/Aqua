@@ -27,6 +27,7 @@ final class Modules {
         m.add(new NetworkWidget());
         m.add(new ClockWidget());
         m.add(new KeybindsWidget());
+        m.add(new dev.aqua.client.hud.widgets.StaffListWidget());
         m.add(new EffectsWidget());
         m.add(new ModuleListWidget());
         m.add(new KeystrokesWidget());
@@ -59,6 +60,12 @@ final class Modules {
         m.add(new Orbit());
         m.add(new Knives());
         m.add(new KillEffects());
+        m.add(new dev.aqua.client.module.cosmetic.HitFx());
+        m.add(new dev.aqua.client.module.cosmetic.DamageFx());
+        m.add(new dev.aqua.client.module.cosmetic.SwingTrails());
+        m.add(new dev.aqua.client.module.cosmetic.PlayerTrail());
+        m.add(new dev.aqua.client.module.cosmetic.Ambience());
+        m.add(new dev.aqua.client.module.cosmetic.Pet());
         m.add(new JumpCircles());
         m.add(new JumpEffects());
         m.add(new DashTrail());
@@ -75,6 +82,10 @@ final class Modules {
         // Quality of life
         m.add(new Zoom());
         m.add(new dev.aqua.client.module.qol.Freelook());
+        m.add(new dev.aqua.client.module.qol.MediaHider());
+        m.add(new dev.aqua.client.module.visual.SmoothCamera());
+        m.add(new dev.aqua.client.module.visual.LowOverlays());
+        m.add(new dev.aqua.client.module.visual.AttackIndicator());
         m.add(new ToggleSprint());
         m.add(new MusicModule());
         m.add(new ScreenshotHelper());

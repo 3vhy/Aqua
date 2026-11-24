@@ -36,9 +36,12 @@ public final class ColorSetting extends Setting<Integer> {
         set(value);
     }
 
-    /** The effective colour (theme accent when synced, keeping this setting's alpha). */
+    /**
+     * The effective colour: the theme accent when this setting follows the theme, or when Colour Sync
+     * (Settings) makes every colour follow it. The setting's own alpha is kept.
+     */
     public int color() {
-        if (syncTheme) {
+        if (syncTheme() || (Aqua.ui() != null && Aqua.ui().colorSync.on())) {
             return Colors.withAlpha(Aqua.theme().accent(), Colors.alpha(value));
         }
         return value;
