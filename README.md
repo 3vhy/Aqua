@@ -101,6 +101,9 @@ The widgets are:
 * Inventory preview
 * Item counter
 * Compass: shows only your own heading
+* **Staff List**: players whose tab-list rank is a staff rank (Owner, Admin, Mod, Helper, …; the
+  words are editable). It only reads what the tab list already shows, so hidden or vanished staff
+  are never listed
 * **Island**: brand, now playing and notifications
 * Music card with synced lyrics
 * Restyled scoreboard
@@ -116,10 +119,14 @@ nothing to show display clearly marked **SAMPLE** data. Widgets stay on screen w
 window or change the GUI scale.
 
 ### Visuals
-Custom Sky (procedural topographic contours or a gradient), Time Changer, Weather Changer, Custom
-Rain, Custom Fog (colour, and it can only make fog thicker), World Tint, Block Outline, Animations
-(visual swing length and style, equip animation, hand position and scale, item **inspect**
-animation), Item Glow, Hand Shader.
+**Custom Sky** (topographic contours, gradient, **Nebula** in violet, emerald, azure, crimson or
+silver, **Aurora**, or glowing **Lava cells**, with optional **shooting stars**), Time Changer,
+Weather Changer, Custom Rain, **Rain Splashes**, Custom Fog (colour, and it can only make fog
+thicker), World Tint, Block Outline, **Water Colour** (colour only; underwater visibility is
+unchanged), **No Block Rotation**, Animations (visual swing length and style, equip animation, hand
+position and scale), Item Glow, **Hand Aura** (glowing outline around your held item), Hand Shader,
+**Smooth Camera** (eases mouse movement; every bit of movement is still applied), **Attack
+Indicator** (ring or bar), **Low Fire & Shield**. The **inspect** key (Y) works on any held item.
 
 ### Wardrobe
 Aqua > **Wardrobe** has tabs for **3D Skins, Wings, Hats, Capes, Knives, Emotes and Kill FX**. A large
@@ -127,11 +134,13 @@ preview of your player spins on the left; every card shows a live 3D preview of 
 hovering a card shows it in the large preview. Click a card to wear it; **Show in game** turns the
 category on or off.
 
-* **3D Skins:** eight original 3D characters (Droplet, Robo, Penguin, Sea Dragon, Ghost, Knight,
-  Shark, Snowman). The player model poses them, so walking, swinging and emotes all animate.
-* **Knives:** karambit, katana, dagger or butterfly knife drawn instead of your sword (optionally
-  axes), with eight finishes. Press **Y** to inspect. Only the look changes: the item, damage and
-  reach are vanilla.
+* **3D Skins:** nine original 3D characters (Droplet, Robo, Penguin, Sea Dragon, Ghost, Knight,
+  Shark, Snowman, Blob). The player model poses them, so walking, swinging and emotes all animate.
+* **Knives & swords:** karambit (held reverse-grip), butterfly knife, M9-style bayonet and stiletto,
+  in Emerald, Crimson, Silver, Urban, Night, Aqua Fade, Gold or Theme finishes, plus four fantasy
+  swords (Frostbite, Sunforge, Voidrend, Thornheart). They are drawn instead of your sword
+  (optionally axes). Press **Y** to inspect: the karambit spins, the butterfly knife flips open.
+  Only the look changes: the item, damage and reach are vanilla.
 * **Wings:** angel, devil, butterfly, crystal and feather, with custom colours, size and flap.
 * **Hats:** glow hat, top hat, crown, witch hat, horns and cat ears.
 * **Capes:** Aqua, Theme, Topographic, Galaxy and Flame, flowing with your movement.
@@ -139,16 +148,31 @@ category on or off.
   the last six seconds dies, with an optional sound only you hear.
 
 ### Cosmetics (visible only to you; nothing is networked)
-Wings, Hats, Cape, Halo, Orbit, 3D Skins, Knife Skins, Kill Effects, Jump Circles and landing
-shockwave, Jump Effects, Dash Trail, Projectile Trails (past path only, no prediction), Fireflies,
-Floating Cubes, Wind, **Sky Lyrics** (glowing 3D text from lyrics or your own text), Totem Pop
-Effect, Hit Particles, Crystal Pulse (depth tested), World Join Effect (typewriter title), Emotes
-(wheel plus wardrobe preview).
+Wings, Hats, Cape, Halo, Orbit, 3D Skins, **Glass** (your player as clear glass with glowing
+edges), Knife Skins, **Pet** (a floating companion), Kill Effects, **Hit FX**, **Damage FX**,
+**Swing Trails**, **Player Trail** (ice footprints, afterimages or sparkles), Jump Circles (classic,
+rune or electric) and landing shockwave, Jump Effects, Dash Trail, Projectile Trails (past path
+only, no prediction), Fireflies, **Ambience** (cherry petals, autumn leaves, snow or Halloween bats),
+Floating Cubes, Wind, **Sky Lyrics** (glowing 3D text from lyrics or your own text; it follows your
+view), Totem Pop Effect, Hit Particles, Crystal Pulse (depth tested), World Join Effect (typewriter
+title), Emotes (wheel plus wardrobe preview).
+
+* **Hit FX:** when you hit something: a hit marker on the crosshair, a slash, burst or star at the
+  hit, a ring at the target's feet that fades a second later, a floating **HIT** or **CRIT** marker
+  and a hit sound of your choice (click, ding, chime, bell, pling, bonk, crystal, arrow). It shows
+  no damage numbers or health, only that you hit and whether the game counted it as critical.
+* **Damage FX:** the screen edges pulse red when you are hurt, and glow with a heartbeat while your
+  health is low.
 
 ### Quality of life
 Smooth Zoom, Freelook, Toggle Sprint (holds the vanilla sprint key, so there is no omni-sprint), Music Player (with Spotify),
 Screenshot notifications with a thumbnail, Chat Style (background and timestamps), Death Waypoints
-(your own deaths only), Streamer Mode (hides coordinates and the server address on your own screen).
+(your own deaths only), Streamer Mode (hides coordinates and the server address on your own screen),
+**Creamy Keys** (soft keyboard sounds while you type), **Media Hider** (covers your hotbar, and
+optionally inventory screens, with an Aqua banner for videos).
+
+In the menu, **star** a module to list it under **Starred**, **middle-click** a module to bind a key,
+and turn on **Settings › Colour Sync** to make every module colour follow your theme.
 
 * **Freelook**: hold **Left Alt** to look around your player in third person while you keep
   moving and facing the same way. Only the camera turns; your player's real direction, which the
@@ -183,7 +207,9 @@ turn the Aqua title screen off in Settings.
    * The title and artist come from the file's tags, or from a file name like `Artist - Title.ogg`.
    * Optional synced lyrics: add `Artist - Title.lrc` next to the song, using the standard
      `[mm:ss.xx] line` format. `[offset:]` is supported.
-   * Optional cover art: add `Artist - Title.png` (or `.jpg`) or `cover.png` next to the song.
+   * Cover art: covers embedded in the song's tags are used automatically. You can also add
+     `Artist - Title.png` (or `.jpg`) or `cover.png` next to the song. Songs without one get a cover
+     looked up online (see below).
 2. Open Aqua > **Music**, press **Rescan**, then click a song. The Music page is a full player:
    seek bar, previous/play/next, shuffle, repeat, volume, a lyrics preview and your library. You can
    also use Quality of Life > Music Player and the play/pause and next keys.
@@ -203,6 +229,10 @@ so there is no Spotify login and nothing is sent to Spotify:
 Turn it off with the **Spotify** switch on the Music page or *Show music from Spotify* in the Music
 Player settings. Set *Apps* to *Any music app* to also show browsers and other players. While a
 song plays in Aqua's own player, that song is shown instead.
+
+**Automatic covers.** When a song (yours or Spotify's) has no cover, Aqua looks one up with
+Apple's public iTunes Search by artist and title and caches it in `config/aqua/cache/covers/`.
+Turn this off with *Find cover art online* in the Music Player settings.
 
 **Automatic lyrics.** When a song has no `.lrc` file, Aqua looks up synced lyrics on
 [LRCLIB](https://lrclib.net), a free public lyrics database, and saves them in
@@ -231,6 +261,7 @@ Everything is stored under `config/aqua/`:
 | `music/` | your music, lyrics and cover art |
 | `lyrics/` | lyrics found online, cached per song |
 | `cache/media/` | cover art of songs playing in Spotify, and the Windows media reader script |
+| `cache/covers/` | covers embedded in your songs and covers found online |
 
 Saves happen one second after a change and when the game closes. Each save goes to a temporary file
 first and is then moved into place. A damaged file is renamed to `*.corrupt-<time>`, defaults are
@@ -309,6 +340,7 @@ Aqua makes no network requests unless you use one of these features:
 |---|---|---|
 | Automatic lyrics | song title, artist and length (for your songs and Spotify's) | `lrclib.net` |
 | Spotify cover art (macOS, Linux) | nothing (downloads the cover image Spotify links to) | Spotify's image server (`i.scdn.co`) |
+| Automatic covers | song artist and title | Apple iTunes Search (`itunes.apple.com`, images from `mzstatic.com`) |
 | Skin Protect (player name) | the player name you typed | Mojang (`api.mojang.com`, `sessionserver.mojang.com`, `textures.minecraft.net`) |
 | Aqua Badge hello | the Aqua version | only the server you are connected to |
 

@@ -12,6 +12,10 @@ material attached to the build request, and records what Aqua does with it.
 | **R3** | `c3241b7e-snaptik_7707773251933506838_v3.mp4` | 22.5 s, 1024×576 @ 30 fps | "67" client (earlier build), pink theme, base hunting on DonutSMP | 2 fps frames, 1 fps sheets; crops at 0:02 (watermark, radar, staff list, music + lyrics, keystrokes), 0:02 (armour bar), 0:10 (module list) |
 | **R4** | `6ef26e0f-snaptik_7709502095828798723_v3.mp4` | 168.3 s, 1920×1080 @ 60 fps | "67 Client – The New Update" promotional machinima | 2 fps frames, 1 fps sheets for the whole 2:48; crops of the menu at 0:54 (Modules) and 0:55.6 (HUD tab), HUD at 0:44.5 |
 | **S1** | Attached screenshot (`1.png`) | 911×617 | "Clarity" client menu — **layout reference only** | Viewed in full |
+| **R5** | `889baa02-snaptik_7700726981586865430_v3.mp4` | 22.3 s, 576×576 @ 30 fps | "VC" knife showcase: emerald butterfly knife, karambit (grey, crimson), stiletto, M9 bayonet; shooting stars | 2 fps frames, contact sheets; close crops of each knife at 1.6–17 s |
+| **R6** | `79e6f85d-snaptik_7699223535742487809_v3.mp4` | 40.0 s, 1064×576 @ 30 fps | "Larp Client Visuals": red Voronoi sky, module list, freelook, red bayonet, target ring, PvP on mineman.club | 2 fps frames, sheets; crops of the module list, key binds, ping panel, target and knife |
+| **R7** | `2c6afefc-snaptik_7710395715519778062_v3.mp4` | 29.0 s, 720×1280 @ 30 fps | "Sober Client" glow-up: aurora sky, rain with splashes, fireflies, 3D skins, sparkle trail, jump circle, hand aura, menu | 2 fps frames, sheets; crops of every menu row at 21.5–28.5 s |
+| **R8** | `5c75471f-snaptik_7697885641656323350_v3.mp4` | 29.9 s, 576×1024 @ 30 fps | "Visual Client": nebula skies, ice footprints, afterimages, glass player, blob skin, pet cube, cherry petals, menu | 2 fps frames, sheets; crops of the Visuals menu and 3D Swords panel at 13.2 s |
 
 **Not attached:** the request says "use the attached Aqua logo", but no logo file was
 included with the message (only the screenshot and four videos arrived). Aqua therefore
@@ -70,8 +74,8 @@ Status column:
 | R4 | 0:55 | HUD tab: HUD scale slider, "Element backgrounds" toggle, Reset Layout, Edit Layout, grid of widget toggles with icons | Include | Same controls in Aqua's HUD page | HUD page of `gui/AquaMenuScreen` (`hudGlobalBar`) + `hud/editor/HudEditorScreen` | Done |
 | R4 | 0:55 | Widgets listed: Watermark, Module List, FPS, CPS, Coordinates, Keystrokes, Armor Status, Potion Effects, Inventory, Server Info, Direction, Clock, Ping, Speed, TPS | Include | All legitimate local information | `hud/widgets/*` | Done |
 | R4 | 0:55 | "Spotify" widget | Music service integration | Include (added on request) | Reads what the Spotify app is playing from the operating system's media controls (no Spotify account or Web API); shown on the music card, island and sky lyrics, with LRCLIB lyrics and play/pause/skip/seek | `music/external/*`, `MusicPlayer`, `MusicWidget` | Done |
-| R4 | 0:55 | Radar / Region Map / Staff Panel / Media Base Finder widgets | — | Exclude | Radar shows other entities; Region Map is a DonutSMP shard tool; Staff Panel is for evading moderators; Media Base Finder locates other players' bases | — | n/a |
-| R2 | 0:01 | Staff List panel | Eye icon, list of online staff | Exclude | Moderator-evasion tool | — | n/a |
+| R4 | 0:55 | Radar / Region Map / Staff Panel / Media Base Finder widgets | — | Exclude | Radar shows other entities; Region Map is a DonutSMP shard tool; Media Base Finder locates other players' bases (the Staff List was later added on request, see section 9) | — | n/a |
+| R2 | 0:01 | Staff List panel | Eye icon, list of online staff | Include (added on request) | First excluded as a moderator-evasion tool. Added when asked for: it lists only staff whose rank already shows in the tab list, and cannot find hidden or vanished staff | `hud/widgets/StaffListWidget` | Done |
 | R2 | 0:03 | Opponent tags with armour enchant levels ("P4", "U3 L3 S5") and health ring | Exclude | Reveals opponent data the vanilla client does not show | — | n/a |
 | R2 | 0:05 | Target card (head, name, health ring "10.0") | Exclude | Opponent health information | — | n/a |
 | R3 | 0:02 | Region grid "NA EAST 3" | Exclude | Server-specific shard map | — | n/a |
@@ -166,7 +170,8 @@ All of the following appeared in R1–R4 or S1 and are **not** implemented in an
   Sus Chunk Finder (v1/v2), Tunnel Base Finder, Media Base Finder, Cave Analyzer,
   Spawner Nametags, SpawnerBeam, Block Entity ESP, Radar with entities, FreeCam
   (R1 0:12, R3 0:06), Camera Clip, Fullbright, No Water Fog, Anti Vanish,
-  Staff List / Staff Panel, Target HUD with opponent health.
+  Target HUD with opponent health. (The Staff List was later added on request; it only
+  reads the tab list and cannot find hidden staff.)
 * **Server / anticheat tooling:** Anticheat Alerts (R4 0:46, 1:20), Goliath RTP, Region
   Map, Home Reset, Tp Directions, Schematic Builder (auto-build), Fake Player.
 * **External services:** Discord Presence, 67 Chat, community config server,
@@ -231,3 +236,61 @@ These were asked for after the first delivery. They are listed here so the audit
 | Automatically fetch lyrics | When a song has no `.lrc` file, synced lyrics are looked up on LRCLIB (title, artist and length only) and cached in `config/aqua/lyrics/` | `music/LyricsFetcher` | Done |
 | Show the music playing in Spotify | Read from the OS media controls (Windows media session, macOS AppleScript, Linux MPRIS); card, island, sky lyrics, Music page; LRCLIB lyrics; cover art; play/pause, next, previous, seek. Windows falls back to Spotify's window title where PowerShell is blocked | `music/external/*` | Done |
 | Freelook | Hold (or toggle) Left Alt to orbit the camera in third person; the player keeps facing and walking the same way | `module/qol/Freelook` | Done |
+
+## 9. Second set of videos (R5–R8)
+
+Requested together with: "add a staff list, replace the current knives with these, the music hud
+doesn't show the cover, sky lyrics don't work, add hit/damage fx, add every non cheating module in
+the videos".
+
+### Fixes asked for
+
+| Problem | Cause found | Fix | Status |
+|---|---|---|---|
+| Music card shows no cover | Song tags were read from the first 256 KB of the file only; a large embedded cover cut off the whole tag block (cover, title and artist lost). Windows' Spotify thumbnail was read with a stream conversion that is unreliable from Windows PowerShell 5.1 | Tags read page by page; embedded covers (METADATA_BLOCK_PICTURE/COVERART) shown; Windows thumbnail read with a WinRT DataReader; covers looked up online (iTunes Search) when a song has none | Done |
+| Sky Lyrics don't work | Each line stayed where you looked when it appeared, so turning or walking lost it; a single error disabled the module and saved it as off | New *Placement* setting, default *Follow your view*; world effects that fail are paused for the session only | Done |
+
+### Features in R5–R8
+
+| Ref | Feature | Decision | Aqua location | Status |
+|---|---|---|---|---|
+| R5, R6 | Knives: karambit, butterfly knife, stiletto, M9 bayonet (emerald, crimson, silver, urban finishes) | Include: replaces the old knife set | `cosmetic/knife/KnifeModels`, `module/cosmetic/Knives` | Done |
+| R8 | 3D Swords (Aether Fang, Solaris Greatblade, Void Reaver, Crimson Thorn …) | Adapt: four original fantasy swords (Frostbite, Sunforge, Voidrend, Thornheart) | `Knives` | Done |
+| R8 | Sword Inspect | Include (now works without the Animations module) | `module/visual/Animations` | Done |
+| R2, R7 | Staff List | Include (on request): reads staff ranks from the tab list only; cannot see hidden or vanished staff | `hud/widgets/StaffListWidget` | Done |
+| R6 | HitFX, Hit Sounds, Damage Markers, TargetAura | Include/Adapt: hit marker, slash/burst/star, ring at the target's feet that fades after the hit, floating HIT/CRIT markers (no damage numbers or health), hit sounds | `module/cosmetic/HitFx` | Done |
+| — | Damage FX (requested) | Include: red edge pulse when hurt, heartbeat glow at low health | `module/cosmetic/DamageFx` | Done |
+| R6 | Astral Weapon Trails | Include: glowing arc per swing | `module/cosmetic/SwingTrails` | Done |
+| R6, R7, R8 | Player Trail: ice footprints, afterimages, sparkles | Include | `module/cosmetic/PlayerTrail` | Done |
+| R7, R8 | Jump circles with tick marks / electric ring | Include: Rune and Electric styles | `module/cosmetic/JumpCircles` | Done |
+| R8 | Cherry Petals; R6 Halloween | Include: Ambience (petals, autumn leaves, snow, Halloween bats and embers) | `module/cosmetic/Ambience` | Done |
+| R8 | Floating cube companion | Include: Pet (cube, crystal, orb) | `module/cosmetic/Pet` | Done |
+| R7, R8 | Glass / crystal player | Include for your own player | `module/cosmetic/GlassSkin` | Done |
+| R7 | Hand Aura | Include: glowing pixel outline around the held item | `module/visual/HandAura`, `render/HandAuraRenderer` | Done |
+| R8 | Kawaii blob skin | Include: original Blob 3D skin | `cosmetic/character/Characters` | Done |
+| R7 | 3D skins Peely, Private, Shpioniro | Exclude: third-party characters (Fortnite, Madagascar, …); the original Penguin and Blob cover the style | — | n/a |
+| R8 | Nebula skies (violet, emerald, azure, crimson, silver); R7 aurora; R6 red Voronoi sky | Include: Nebula (5 colours), Aurora, Lava cells | `module/visual/CustomSky`, `render/world/SkyTextures` | Done |
+| R5, R6 | Shooting stars / "Celestial Weather" | Include: shooting stars option | `CustomSky` | Done |
+| R7 | Weather with splashes; R6 Wet Ground | Adapt: Rain Splashes (ripples and droplets). A wet ground sheen needs a shader and was not made | `module/visual/RainSplashes` | Done (splashes) |
+| R6 | SmoothCamera | Include: eases mouse movement; all movement is still applied (tested) | `module/visual/SmoothCamera` | Done |
+| R6 | No Block Rotation | Include | `module/visual/NoBlockRotation` | Done |
+| R6 | Realistic Water | Adapt: water colour only (underwater visibility unchanged) | `module/visual/WaterColour` | Done |
+| R6 | China Hat | Already included (Hats › Glow hat) | `module/cosmetic/Hats` | Done |
+| R6 | Block Overlay | Already included (Block Outline fill) | `module/visual/BlockOutline` | Done |
+| R6 | CustomCrosshair, TimeChanger, NoWeather, WorldColor, JumpFX, KillFX, Wings, HUD, Sky, Performance | Already included | various | Done |
+| R8 | Attack Indicator | Include: ring or bar | `module/visual/AttackIndicator` | Done |
+| R8 | Low Shield, Fire+ | Include: Low Fire & Shield | `module/visual/LowOverlays` | Done |
+| R8 | Halo, Skin Changer, Name Changer, Small Sword, Enchant Glint+ | Already included as Halo, Skin Protect, Name Protect, Animations hand scale, Item Glow | various | Done |
+| R7 | Creamy Keys | Include: generated key sounds | `module/qol/CreamyKeys` | Done |
+| R7 | Media Hider | Include: covers the hotbar (and optionally inventories) | `module/qol/MediaHider` | Done |
+| R7 | Color Sync | Include: Settings › Colour Sync | `config/UiSettings` | Done |
+| R7, R8 | Menu: key legend, middle-click to bind, starred modules | Include | `gui/AquaMenuScreen` | Done |
+| R7 | Main Menu greeting "Welcome back" | Include | `gui/AquaTitleScreen` | Done |
+| R6, R7 | Freelook | Already included | `module/qol/Freelook` | Done |
+| R8 | 3D Skin Layers | Not implemented in this update: it needs a voxel mesh built from every player's skin texture | — | not implemented |
+| R7 | Motion Blur | Not implemented: a frame-blending post effect could not be verified reliably | — | not implemented |
+| R7 | Animated Typing | Not implemented in this update (per-letter chat input animation) | — | not implemented |
+| R6 | Nametags (restyled) | Not implemented in this update | — | not implemented |
+| R8 | Font Changer, 3D Pickaxes (Beta), ArmorFX, Larp, Menu Buttons; R6 Player Model | Not implemented: not shown clearly enough to reproduce (only names in a menu) | — | not implemented |
+| R6 | Ping panel "Them: ? ms" | Exclude the opponent part; your own ping is in the Network widget | `hud/widgets/NetworkWidget` | n/a |
+| R5–R8 | Tracers, Freecam, Fullbright, Clear View (clear water), "Combat", "Donut" and "AC Off" categories | Exclude: cheats or advantages | — | n/a |

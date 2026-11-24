@@ -65,6 +65,9 @@ Exact versions:
 | Keystrokes | Real mouse movement moves the dot in the pad between LMB and RMB |
 | Spotify | A stand-in for Spotify (`tools/mock_mpris_player.py`) publishes songs on a private D-Bus session exactly as Spotify does on Linux, including Spotify's always-zero position. Checked: the song appears on the card, island and Music page; its time runs in step with real time; synced lyrics are found; the JPEG cover loads; play/pause and next reach the player; a title with an apostrophe is read correctly; the setting turns it off; closing the player clears it |
 | Freelook | Holding Left Alt with real mouse movement turns the camera 84° while the player's direction stays at 0°; W still walks the player's way; releasing returns to first person |
+| Covers and Sky Lyrics | A song whose tags carry a 1.2 MB embedded cover keeps its title and artist and shows the cover; a song with no cover gets one online; Sky Lyrics with curly quotes, dashes, accents and symbols, and the line follows your view after you turn around |
+| Knives and swords | Karambit, butterfly knife, bayonet, stiletto and the four fantasy swords each replace the held sword (draw calls counted); inspect works without the Animations module |
+| Second video set (R5–R8) | Staff list finds a `[Mod]` team prefix in the tab list; Hit FX and Swing Trails on a real hit; Damage FX on real damage; Hand Aura; Glass; Blob skin; footprints, afterimages, sparkles; pet follows you; rune jump circle; nebula, aurora and lava-cell skies generated and drawn; Ambience; Rain Splashes in real rain; Smooth Camera passes on all mouse movement (measured); Media Hider; Low Shield; Water Colour and No Block Rotation rebuild the world; Creamy Keys while typing; Colour Sync; Starred modules |
 | HUD and debug options | With hitboxes on (F3+B) the HUD stays visible; it hides only while the F3 screen is open |
 | HUD with other HUD mods | A simulated HUD-replacing mod stops Fabric's HUD layers: Aqua notices and draws its HUD directly (no false trigger during world loading); when the layer runs again Aqua goes back to it |
 | Aqua badge | The `aqua:hello` handshake makes a round trip through the integrated server; your tab-list name carries the badge (with a scoreboard list objective so singleplayer draws the tab list); own nametag with the badge in third person |
@@ -117,6 +120,11 @@ much lower than on a real GPU.
 * **Aqua badge between two players**: the handshake was tested with one Aqua client on its own
   integrated server. Two Aqua players on one LAN world were not tested, and nothing was tested on a
   public server (where the badge only appears next to your own name; see *Known limitations*).
+* **Smooth Camera and Freelook on a real mouse**: the virtual display delivers mouse movement to
+  Aqua but the test player does not turn from it, so Smooth Camera is checked by measuring the
+  movement it passes on (all of it, spread over a few frames) rather than by the camera angle.
+* **Windows cover art from Spotify**: the WinRT DataReader path was written and reviewed but not
+  run (the tests run on Linux).
 * **Spotify on Windows and macOS**: only the Linux reader was run, against a stand-in player. The
   Windows PowerShell reader and the macOS AppleScript reader were written against the documented
   Windows and Spotify interfaces and reviewed by hand, but **not executed**, because the tests run
