@@ -717,6 +717,40 @@ public enum Icon {
             g.draw(p);
         }
     },
+    KNIFE_BAYONET {
+        void draw(Graphics2D g) {
+            g.draw(new Line2D.Double(3, 21, 7, 17));
+            g.draw(new Line2D.Double(4.5, 14.5, 9.5, 19.5));
+            Path2D p = new Path2D.Double();
+            p.moveTo(7, 17);
+            p.lineTo(17.5, 6.5);
+            p.lineTo(21, 3);
+            p.lineTo(19.5, 7.5);
+            p.lineTo(9, 18);
+            g.draw(p);
+            for (int i = 0; i < 3; i++) {
+                double x = 10 + i * 1.6, y = 12.5 - i * 1.6;
+                g.draw(new Line2D.Double(x, y, x - 0.9, y - 0.9));
+            }
+        }
+    },
+    SWORD {
+        void draw(Graphics2D g) {
+            Path2D p = new Path2D.Double();
+            p.moveTo(8.5, 15.5);
+            p.lineTo(19, 5);
+            p.lineTo(21, 3);
+            p.lineTo(19, 5.5);
+            p.lineTo(8.5, 15.5);
+            p.lineTo(9.5, 16.5);
+            p.lineTo(20.5, 5.5);
+            p.lineTo(21, 3);
+            g.draw(p);
+            g.draw(new Line2D.Double(5.5, 13.5, 11, 19));
+            g.draw(new Line2D.Double(8.5, 16.5, 4, 21));
+            g.fill(new Ellipse2D.Double(2.5, 19.5, 3, 3));
+        }
+    },
     KNIFE_BUTTERFLY {
         void draw(Graphics2D g) {
             g.draw(new RoundRectangle2D.Double(3, 14, 3, 8, 1.5, 1.5));

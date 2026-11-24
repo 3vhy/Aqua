@@ -101,6 +101,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
                         case "freelook" -> freelook(context);
                         case "sky_lyrics" -> skyLyricsText(context);
                         case "music" -> music(context);
+                        case "knife_gallery" -> knifeGallery(context, sp);
                         case "identity" -> identity(context, sp);
                         default -> throw new IllegalArgumentException("unknown section " + section);
                     }
@@ -1151,6 +1152,51 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             Aqua.modules().byId("sky_lyrics").setEnabled(false, false);
             mc.player.setPitch(0f);
         });
+    }
+
+    /** Developer gallery: every knife/sword in first person, a few finishes, and third person. */
+    private void knifeGallery(ClientGameTestContext context, TestSingleplayerContext sp) {
+        sp.getServer().runCommand("time set noon");
+        sp.getServer().runCommand("item replace entity @a weapon.mainhand with minecraft:diamond_sword");
+        context.runOnClient(mc -> {
+            mc.player.getInventory().setSelectedSlot(0);
+            mc.player.setPitch(5f);
+            Aqua.modules().get(dev.aqua.client.module.cosmetic.Knives.class).setEnabled(true, false);
+            ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.cosmetic.Knives.Finish>) find("knives", "finish"))
+                    .set(dev.aqua.client.module.cosmetic.Knives.Finish.EMERALD);
+        });
+        context.waitTicks(30);
+        for (var type : dev.aqua.client.module.cosmetic.Knives.Type.values()) {
+            context.runOnClient(mc -> Aqua.modules().get(dev.aqua.client.module.cosmetic.Knives.class).select(type));
+            context.waitTicks(6);
+            context.takeScreenshot("kg_" + type.name().toLowerCase(Locale.ROOT));
+        }
+        for (var fin : dev.aqua.client.module.cosmetic.Knives.Finish.values()) {
+            context.runOnClient(mc -> {
+                Aqua.modules().get(dev.aqua.client.module.cosmetic.Knives.class).select(dev.aqua.client.module.cosmetic.Knives.Type.KARAMBIT);
+                ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.cosmetic.Knives.Finish>) find("knives", "finish")).set(fin);
+            });
+            context.waitTicks(4);
+            context.takeScreenshot("kf_" + fin.name().toLowerCase(Locale.ROOT));
+        }
+        context.runOnClient(mc -> {
+            Aqua.modules().get(dev.aqua.client.module.cosmetic.Knives.class).select(dev.aqua.client.module.cosmetic.Knives.Type.BUTTERFLY);
+            ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.cosmetic.Knives.Finish>) find("knives", "finish"))
+                    .set(dev.aqua.client.module.cosmetic.Knives.Finish.EMERALD);
+        });
+        context.getInput().pressKey(o -> Aqua.keybinds().inspect);
+        long w0 = System.currentTimeMillis();
+        context.waitFor(mc -> System.currentTimeMillis() - w0 > 650, 2000);
+        context.takeScreenshot("kg_butterfly_inspect");
+        context.waitTicks(40);
+        context.runOnClient(mc -> mc.options.setPerspective(Perspective.THIRD_PERSON_FRONT));
+        for (var type : new dev.aqua.client.module.cosmetic.Knives.Type[]{dev.aqua.client.module.cosmetic.Knives.Type.BAYONET,
+                dev.aqua.client.module.cosmetic.Knives.Type.SUN}) {
+            context.runOnClient(mc -> Aqua.modules().get(dev.aqua.client.module.cosmetic.Knives.class).select(type));
+            context.waitTicks(6);
+            context.takeScreenshot("kt_" + type.name().toLowerCase(Locale.ROOT));
+        }
+        context.runOnClient(mc -> mc.options.setPerspective(Perspective.FIRST_PERSON));
     }
 
     private static void setWardrobeTab(AquaMenuScreen menu, String tab) {

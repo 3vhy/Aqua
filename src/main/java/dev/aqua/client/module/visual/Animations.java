@@ -66,8 +66,11 @@ public final class Animations extends Module {
         return equip.on() ? p : 0f;
     }
 
-    @Override
-    public void onTick() {
+    /**
+     * The inspect key works whether or not this module is on (the module's other options, such as hand
+     * position and swing style, only apply while it is on). Called every client tick.
+     */
+    public void tickInspect() {
         if (mc.player == null) {
             return;
         }
@@ -88,6 +91,13 @@ public final class Animations extends Module {
     }
 
     /** Knife-specific inspect animations (visual only). */
+    private static float butterflyOpen;
+
+    /** How far the butterfly knife's free handle is swung open (0..1) during its inspect. */
+    public static float butterflyOpen() {
+        return butterflyOpen;
+    }
+
     private static void knifeInspect(MatrixStack m, dev.aqua.client.module.cosmetic.Knives.Type type, float t, float e) {
         switch (type) {
             case KARAMBIT -> {
@@ -100,19 +110,15 @@ public final class Animations extends Module {
                 m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-40f * e));
             }
             case BUTTERFLY -> {
-                // Three fast flips around the long axis.
-                float flips = Anim.easeInOutCubic(Anim.clamp01((t - 0.08f) / 0.7f)) * 1080f;
+                // Flip the handles open and shut twice while turning the knife, then close it.
+                float flip = Anim.clamp01((t - 0.08f) / 0.75f);
+                butterflyOpen = (float) Math.abs(Math.sin(flip * Math.PI * 2));
+                float turn = Anim.easeInOutCubic(flip) * 720f;
                 m.translate(-0.08f * e, 0.1f * e, 0.04f * e);
-                m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(flips));
+                m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(turn));
                 m.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(15f * e));
             }
-            case KATANA -> {
-                // Slowly turn the blade to show its length.
-                m.translate(-0.18f * e, 0.1f * e, 0.08f * e);
-                m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-70f * e + (float) Math.sin(t * Math.PI * 2) * 20f * e));
-                m.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(35f * e));
-            }
-            case DAGGER -> {
+            case BAYONET -> {
                 // Toss up, one full flip, catch.
                 float air = (float) Math.sin(Anim.clamp01((t - 0.15f) / 0.5f) * Math.PI);
                 float flip = Anim.easeInOutCubic(Anim.clamp01((t - 0.15f) / 0.5f)) * 360f;
@@ -120,15 +126,30 @@ public final class Animations extends Module {
                 m.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(flip));
                 m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-30f * e));
             }
+            case STILETTO -> {
+                // Twirl around the long axis.
+                float spin = Anim.easeInOutCubic(Anim.clamp01((t - 0.1f) / 0.6f)) * 540f;
+                m.translate(-0.12f * e, 0.12f * e, 0.04f * e);
+                m.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(25f * e));
+                m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(spin));
+            }
+            default -> {
+                // Swords: slowly turn the blade to show it off.
+                m.translate(-0.18f * e, 0.1f * e, 0.08f * e);
+                m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-70f * e + (float) Math.sin(t * Math.PI * 2) * 20f * e));
+                m.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(35f * e));
+            }
         }
     }
 
     /** Applies offsets, scale and the inspect pose to the first-person item transform. */
     public void apply(MatrixStack m, boolean mainHand) {
-        m.translate(x.f() * (mainHand ? 1 : -1), y.f(), z.f());
-        float s = scale.f();
-        if (s != 1f) {
-            m.scale(s, s, s);
+        if (isEnabled()) {
+            m.translate(x.f() * (mainHand ? 1 : -1), y.f(), z.f());
+            float s = scale.f();
+            if (s != 1f) {
+                m.scale(s, s, s);
+            }
         }
         if (mainHand && inspectStart >= 0) {
             dev.aqua.client.module.cosmetic.Knives knives = Aqua.modules().get(dev.aqua.client.module.cosmetic.Knives.class);
@@ -137,6 +158,7 @@ public final class Animations extends Module {
             float t = (System.currentTimeMillis() - inspectStart) / dur;
             if (t >= 1f) {
                 inspectStart = -1;
+                butterflyOpen = 0f;
                 return;
             }
             float env = Math.min(1f, Math.min(t * 5f, (1f - t) * 5f));

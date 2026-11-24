@@ -107,6 +107,7 @@ public final class AquaClient implements ClientModInitializer {
 
     private static void tick(MinecraftClient mc) {
         Aqua.modules.tick();
+        Aqua.modules.get(dev.aqua.client.module.visual.Animations.class).tickInspect();
         Aqua.config.tick();
         MusicPlayer.get().tick();
         KeybindManager k = Aqua.keybinds;

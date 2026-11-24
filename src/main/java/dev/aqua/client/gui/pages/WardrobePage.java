@@ -264,9 +264,16 @@ public final class WardrobePage implements Page {
             }
             case KNIVES -> {
                 Knives km = mod(Knives.class);
-                Icon[] icons = {Icon.KNIFE_KARAMBIT, Icon.KNIFE_KATANA, Icon.KNIFE_DAGGER, Icon.KNIFE_BUTTERFLY};
                 for (Knives.Type k : Knives.Type.values()) {
-                    out.add(new Card(k.displayName(), "Replaces how swords look in your hands; press Y to inspect", null, icons[k.ordinal()],
+                    Icon icon = switch (k) {
+                        case KARAMBIT -> Icon.KNIFE_KARAMBIT;
+                        case BUTTERFLY -> Icon.KNIFE_BUTTERFLY;
+                        case BAYONET -> Icon.KNIFE_BAYONET;
+                        case STILETTO -> Icon.KNIFE_DAGGER;
+                        default -> Icon.SWORD;
+                    };
+                    out.add(new Card(k.displayName(), k.sword ? "Fantasy sword in place of your sword; press Y to inspect"
+                            : "Replaces how swords look in your hands; press Y to inspect", null, icon,
                             km.isEnabled() && km.type() == k, () -> {
                         km.select(k);
                         km.setEnabled(true, false);

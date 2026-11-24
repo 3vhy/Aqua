@@ -40,7 +40,8 @@ public abstract class HeldItemRendererMixin {
                                 ItemStack item, float equipProgress, MatrixStack matrices, OrderedRenderCommandQueue queue, int light,
                                 CallbackInfo ci) {
         Animations a = Aqua.modules().get(Animations.class);
-        if (a != null && a.isEnabled()) {
+        if (a != null) {
+            // Offsets and scale only while Animations is on; the inspect pose always.
             a.apply(matrices, hand == Hand.MAIN_HAND);
         }
     }
