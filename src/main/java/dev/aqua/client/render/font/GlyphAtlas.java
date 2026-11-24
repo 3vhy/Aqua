@@ -123,6 +123,13 @@ public final class GlyphAtlas {
         return pages.get(index);
     }
 
+    /** Rasterises any characters of {@code text} that are not in the atlas yet (call outside rendering). */
+    public void prepare(String text) {
+        for (int i = 0; i < text.length(); i++) {
+            glyph(text.charAt(i));
+        }
+    }
+
     public Glyph glyph(char c) {
         Glyph g = glyphs.get(c);
         if (g != null) {

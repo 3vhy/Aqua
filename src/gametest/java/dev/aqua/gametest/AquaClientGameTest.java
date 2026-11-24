@@ -99,6 +99,8 @@ public final class AquaClientGameTest implements FabricClientGameTest {
                         case "debug_overlay" -> debugOverlay(context);
                         case "external_media" -> externalMedia(context);
                         case "freelook" -> freelook(context);
+                        case "sky_lyrics" -> skyLyricsText(context);
+                        case "music" -> music(context);
                         case "identity" -> identity(context, sp);
                         default -> throw new IllegalArgumentException("unknown section " + section);
                     }
@@ -224,6 +226,26 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             return;
         }
         check(info.equals("Generated Tone|Aqua Test|40|6|true"), "Music: Ogg metadata, duration and .lrc lyrics parsed (" + info + ")");
+        // A song whose tags hold a cover over 1 MB: its title/artist must survive and the cover must show.
+        String pic = context.computeOnClient(mc -> {
+            var lib = dev.aqua.client.music.MusicPlayer.get().library();
+            for (int i = 0; i < lib.size(); i++) {
+                if (lib.get(i).file().getFileName().toString().equals("Aqua Test - Picture.ogg")) {
+                    dev.aqua.client.music.MusicPlayer.get().play(i);
+                    return lib.get(i).title() + "|" + lib.get(i).artist() + "|" + (lib.get(i).cover() != null);
+                }
+            }
+            return "missing";
+        });
+        if (!pic.equals("missing")) {
+            check(pic.equals("Picture Test|Aqua Test|true"), "Music: tags with a large embedded cover keep title and artist (" + pic + ")");
+            context.runOnClient(mc -> Aqua.modules().byId("music_card").setEnabled(true, false));
+            context.waitFor(mc -> dev.aqua.client.music.MusicPlayer.get().cover() != null, 200);
+            context.waitTicks(10);
+            context.takeScreenshot("03a2_music_embedded_cover");
+            pass("Music: cover art embedded in the song shows on the music card");
+            context.runOnClient(mc -> dev.aqua.client.music.MusicPlayer.get().stop());
+        }
         context.runOnClient(mc -> {
             Aqua.modules().byId("music_card").setEnabled(true, false);
             Aqua.modules().byId("sky_lyrics").setEnabled(true, false);
@@ -273,6 +295,9 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         });
         check(found.startsWith("Lyrics from LRCLIB|") && !found.endsWith("|0"),
                 "Music: synced lyrics fetched automatically from LRCLIB for a song without a .lrc file (" + found + " lines)");
+        // This song has no cover file and none embedded: one is looked up online by artist and title.
+        context.waitFor(mc -> dev.aqua.client.music.MusicPlayer.get().cover() != null, 1200);
+        pass("Music: cover art found online for a song without one");
         context.runOnClient(mc -> dev.aqua.client.music.MusicPlayer.get().seek(15000));
         context.waitTicks(60);
         context.takeScreenshot("03c_music_online_lyrics");
@@ -1087,6 +1112,45 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         String off = context.computeOnClient(mc -> dev.aqua.client.module.qol.Freelook.on() + "|" + mc.options.getPerspective()
                 + "|" + String.format(Locale.ROOT, "%.1f", Math.abs(mc.player.getYaw() - mc.gameRenderer.getCamera().getYaw())));
         check(off.equals("false|FIRST_PERSON|0.0"), "Releasing the freelook key returns the camera to first person (" + off + ")");
+    }
+
+    /** Sky Lyrics with the kind of text online lyrics contain (curly quotes, dashes, accents, symbols). */
+    private void skyLyricsText(ClientGameTestContext context) {
+        context.runOnClient(mc -> {
+            ((dev.aqua.client.setting.EnumSetting<dev.aqua.client.module.cosmetic.SkyLyrics.Source>) find("sky_lyrics", "source"))
+                    .set(dev.aqua.client.module.cosmetic.SkyLyrics.Source.CUSTOM);
+            ((dev.aqua.client.setting.StringSetting) find("sky_lyrics", "text")).set("Don\u2019t stop \u2013 \u201cna\u00efve\u201d \u2665 \u00bfs\u00ed? \u266a");
+            Aqua.modules().byId("sky_lyrics").setEnabled(true, false);
+            mc.player.setPitch(-12f);
+        });
+        context.waitTicks(40);
+        boolean on = context.computeOnClient(mc -> Aqua.modules().byId("sky_lyrics").isEnabled());
+        context.takeScreenshot("56_sky_lyrics_unicode");
+        check(on, "Sky Lyrics keeps working with curly quotes, dashes, accents and symbols");
+        context.runOnClient(mc -> {
+            mc.player.setYaw(mc.player.getYaw() + 150f);
+        });
+        long w0 = System.currentTimeMillis();
+        context.waitFor(mc -> System.currentTimeMillis() - w0 > 2500, 2000);
+        context.takeScreenshot("57_sky_lyrics_after_turning");
+        double angle = context.computeOnClient(mc -> {
+            var sl = Aqua.modules().get(dev.aqua.client.module.cosmetic.SkyLyrics.class);
+            var a = sl.anchor();
+            if (a == null) {
+                return 999.0;
+            }
+            var cam = mc.gameRenderer.getCamera();
+            double yaw = Math.toRadians(cam.getYaw());
+            double lx = -Math.sin(yaw), lz = Math.cos(yaw);
+            double dx = a.x - cam.getCameraPos().x, dz = a.z - cam.getCameraPos().z;
+            double d = Math.sqrt(dx * dx + dz * dz);
+            return Math.toDegrees(Math.acos(Math.max(-1, Math.min(1, (lx * dx + lz * dz) / d))));
+        });
+        check(angle < 25, String.format(Locale.ROOT, "Sky Lyrics follows your view after you turn around (%.0f\u00b0 off centre)", angle));
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("sky_lyrics").setEnabled(false, false);
+            mc.player.setPitch(0f);
+        });
     }
 
     private static void setWardrobeTab(AquaMenuScreen menu, String tab) {

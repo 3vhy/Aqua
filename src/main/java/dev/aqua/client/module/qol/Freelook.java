@@ -43,6 +43,7 @@ public final class Freelook extends Module {
     public Freelook() {
         super("freelook", "Freelook", "Hold Left Alt to look around your player while you keep moving the same way.", Category.QOL, true,
                 "freelook", "free look", "perspective", "look around", "third person", "camera");
+        hideFromModuleList();
     }
 
     /** True while the camera is turned independently of the player. */

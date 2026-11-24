@@ -35,7 +35,22 @@ public final class SkyLyrics extends Module implements WorldEffect {
         }
     }
 
+    public enum Placement implements EnumSetting.Displayable {
+        FOLLOW("Follow your view"), FIXED("Fixed in the world");
+        final String l;
+
+        Placement(String l) {
+            this.l = l;
+        }
+
+        public String displayName() {
+            return l;
+        }
+    }
+
     private final EnumSetting<Source> source = add(new EnumSetting<>("source", "Source", Source.LYRICS));
+    private final EnumSetting<Placement> placement = add(new EnumSetting<>("placement", "Placement", Placement.FOLLOW)
+            .describe("Follow your view keeps the line in front of you when you turn or move"));
     private final StringSetting text = add(new StringSetting("text", "Custom text", "aqua", 48).visibleWhen(() -> isCustom()));
     private final ColorSetting color = add(new ColorSetting("color", "Text colour", 0xFFFFFFFF, false, false));
     private final ColorSetting glow = add(new ColorSetting("glow", "Glow colour", 0xFF52E4F2, false, true));
@@ -68,14 +83,32 @@ public final class SkyLyrics extends Module implements WorldEffect {
         return MusicPlayer.get().lyricsFor(t).get(idx).text();
     }
 
+    /** Where the current line is drawn (null when nothing is shown); used by the in-game tests. */
+    @org.jetbrains.annotations.Nullable
+    public Vec3d anchor() {
+        return shown.isEmpty() ? null : anchor;
+    }
+
+    /** A point ahead of the camera (horizontally), raised a little into the sky. */
     private Vec3d placeAhead() {
-        Vec3d look = mc.player.getRotationVec(1f);
-        Vec3d flat = new Vec3d(look.x, 0, look.z);
-        if (flat.lengthSquared() < 1.0e-4) {
-            flat = new Vec3d(0, 0, 1);
+        net.minecraft.client.render.Camera cam = mc.gameRenderer.getCamera();
+        double yaw = Math.toRadians(cam.getYaw());
+        Vec3d flat = new Vec3d(-Math.sin(yaw), 0, Math.cos(yaw));
+        Vec3d eye = cam.getCameraPos();
+        return eye.add(flat.multiply(distance.d())).add(0, distance.d() * 0.28, 0);
+    }
+
+    private long lastFrame;
+
+    @Override
+    public void onTick() {
+        // Prepare any new letters (curly quotes, accents, ...) outside of world rendering.
+        if (mc.player != null) {
+            String want = wanted();
+            if (!want.isEmpty()) {
+                AquaFont.worldAtlas(AquaFont.Weight.BOLD, 64).prepare(want);
+            }
         }
-        flat = flat.normalize();
-        return mc.player.getEyePos().add(flat.multiply(distance.d())).add(0, distance.d() * 0.28, 0);
     }
 
     @Override
@@ -100,7 +133,15 @@ public final class SkyLyrics extends Module implements WorldEffect {
         if (shown.isEmpty() || anchor == null) {
             return;
         }
-        if (isCustom() && anchor.squaredDistanceTo(mc.player.getEyePos()) > Math.pow(distance.d() * 2.2, 2)) {
+        long now = System.currentTimeMillis();
+        float dt = lastFrame == 0 ? 0f : Math.min(0.25f, (now - lastFrame) / 1000f);
+        lastFrame = now;
+        if (placement.is(Placement.FOLLOW)) {
+            // Glide after the view so the line stays in sight when you turn or walk.
+            Vec3d target = placeAhead();
+            double k = 1 - Math.exp(-dt * 2.5);
+            anchor = anchor.add(target.subtract(anchor).multiply(k));
+        } else if (anchor.squaredDistanceTo(mc.player.getEyePos()) > Math.pow(distance.d() * 2.2, 2)) {
             anchor = placeAhead();
         }
         float a = fade.get();

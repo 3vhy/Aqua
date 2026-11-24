@@ -47,6 +47,8 @@ public final class MusicModule extends Module {
     private final EnumSetting<Repeat> repeat = add(new EnumSetting<>("repeat", "Repeat", Repeat.ALL));
     private final BoolSetting lyrics = add(new BoolSetting("lyrics", "Lyrics", true)
             .describe("Turn off for a standalone player with no lyrics anywhere"));
+    private final BoolSetting fetchCovers = add(new BoolSetting("fetch_covers", "Find cover art online", true)
+            .describe("When a song has no cover, look one up with Apple's iTunes search (artist and title are sent)"));
     private final BoolSetting fetchOnline = add(new BoolSetting("fetch_online", "Find lyrics online (LRCLIB)", true)
             .describe("When a song has no .lrc file, look up synced lyrics on lrclib.net (title, artist and length are sent)")
             .visibleWhen(lyrics::on));
@@ -114,6 +116,10 @@ public final class MusicModule extends Module {
 
     public boolean fetchOnline() {
         return lyrics.on() && fetchOnline.on();
+    }
+
+    public boolean fetchCovers() {
+        return fetchCovers.on();
     }
 
     public boolean externalEnabled() {

@@ -23,6 +23,7 @@ function Emit($object) {
 
 $null = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control, ContentType = WindowsRuntime]
 $null = [Windows.Storage.Streams.IRandomAccessStreamWithContentType, Windows.Storage.Streams, ContentType = WindowsRuntime]
+$null = [Windows.Storage.Streams.DataReader, Windows.Storage.Streams, ContentType = WindowsRuntime]
 $managerType = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager]
 $propertiesType = [Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties]
 $streamType = [Windows.Storage.Streams.IRandomAccessStreamWithContentType]
@@ -84,15 +85,31 @@ while ($true) {
                 $lastKey = $key
                 $coverPath = ''
                 if ($null -ne $props.Thumbnail -and $coverDir) {
+                    $coverSlot = 1 - $coverSlot
+                    $file = Join-Path $coverDir ('windows_cover_' + $coverSlot + '.img')
                     try {
+                        # Read the thumbnail with a WinRT DataReader (works from Windows PowerShell 5.1).
                         $stream = Await ($props.Thumbnail.OpenReadAsync()) $streamType
-                        $coverSlot = 1 - $coverSlot
-                        $file = Join-Path $coverDir ('windows_cover_' + $coverSlot + '.img')
-                        $source = [System.IO.WindowsRuntimeStreamExtensions]::AsStreamForRead($stream)
-                        $target = [System.IO.File]::Create($file)
-                        try { $source.CopyTo($target) } finally { $target.Dispose(); $source.Dispose() }
-                        $coverPath = $file
-                    } catch { $coverPath = '' }
+                        $size = [uint32]$stream.Size
+                        if ($size -gt 0 -and $size -lt 8MB) {
+                            $reader = [Windows.Storage.Streams.DataReader]::new($stream.GetInputStreamAt(0))
+                            $null = Await ($reader.LoadAsync($size)) ([uint32])
+                            $bytes = New-Object byte[] $size
+                            $reader.ReadBytes($bytes)
+                            $reader.Dispose()
+                            [System.IO.File]::WriteAllBytes($file, $bytes)
+                            $coverPath = $file
+                        }
+                        $stream.Dispose()
+                    } catch {
+                        try {
+                            $stream = Await ($props.Thumbnail.OpenReadAsync()) $streamType
+                            $source = [System.IO.WindowsRuntimeStreamExtensions]::AsStreamForRead($stream)
+                            $target = [System.IO.File]::Create($file)
+                            try { $source.CopyTo($target) } finally { $target.Dispose(); $source.Dispose() }
+                            $coverPath = $file
+                        } catch { $coverPath = '' }
+                    }
                 }
             }
             $playing = $playback.PlaybackStatus.ToString() -eq 'Playing'

@@ -139,6 +139,8 @@ public final class Hooks {
         return new Fx(ms, mc.gameRenderer.getCamera(), mc.getRenderTickCounter().getTickProgress(true));
     }
 
+    private static final java.util.Set<Module> SUSPENDED = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+
     private static void renderPhase(WorldRenderContext ctx, WorldEffect.Phase phase) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.world == null || Aqua.modules() == null) {
@@ -154,13 +156,18 @@ public final class Hooks {
         fx.color = vcp.getBuffer(FxLayers.COLOR);
         for (Module m : Aqua.modules().all()) {
             if (m.isEnabled() && m instanceof WorldEffect e && e.phase() == phase) {
+                if (SUSPENDED.contains(m)) {
+                    continue;
+                }
                 try {
                     fx.glow = vcp.getBuffer(FxLayers.GLOW);
                     fx.sparks = null;
                     e.renderWorld(fx, vcp);
                 } catch (Throwable t) {
-                    AquaClient.LOGGER.error("World effect {} failed; disabling it", m.id(), t);
-                    m.setEnabled(false, false);
+                    // Paused for this session only: the saved on/off state is left alone.
+                    SUSPENDED.add(m);
+                    AquaClient.LOGGER.error("World effect {} failed; pausing it until restart", m.id(), t);
+                    Aqua.notifications().warn(m.name(), "Hit an error and is paused until restart");
                 }
             }
         }

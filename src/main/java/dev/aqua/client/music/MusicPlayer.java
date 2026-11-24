@@ -60,6 +60,8 @@ public final class MusicPlayer {
     private volatile NativeImage pendingCover;
     private String lastError = "";
     private final ConcurrentHashMap<Path, List<LyricLine>> onlineLyrics = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Path, Path> onlineCovers = new ConcurrentHashMap<>();
+    private final java.util.Set<Path> coverRequested = ConcurrentHashMap.newKeySet();
     private volatile String lyricStatus = "";
     private final Random random = new Random();
 
@@ -128,8 +130,10 @@ public final class MusicPlayer {
         long duration = -1;
         boolean ok = true;
         String problem = "";
+        byte[] embeddedPicture = null;
         try {
             OggInfo info = OggInfo.read(p);
+            embeddedPicture = info.picture;
             if (!info.vorbis) {
                 ok = false;
                 problem = "Not an Ogg Vorbis file";
@@ -158,14 +162,36 @@ public final class MusicPlayer {
             }
         }
         Path cover = null;
-        for (String c : new String[]{base + ".png", base + ".jpg", "cover.png", "cover.jpg", "folder.png"}) {
+        for (String c : new String[]{base + ".png", base + ".jpg", base + ".jpeg", "cover.png", "cover.jpg", "folder.png", "folder.jpg"}) {
             Path cp = p.resolveSibling(c);
             if (Files.exists(cp)) {
                 cover = cp;
                 break;
             }
         }
+        if (cover == null && embeddedPicture != null) {
+            cover = saveEmbeddedCover(p, embeddedPicture);
+        }
         return new Track(p, limit(title), limit(artist), duration, lyrics, cover, ok, problem);
+    }
+
+    /** Writes cover art embedded in a song to config/aqua/cache/covers so it loads like a cover file. */
+    @Nullable
+    private static Path saveEmbeddedCover(Path song, byte[] image) {
+        try {
+            Path dir = Aqua.config().dir().resolve("cache").resolve("covers");
+            Files.createDirectories(dir);
+            String key = java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-1")
+                    .digest((song.toAbsolutePath() + "|" + Files.getLastModifiedTime(song).toMillis()).getBytes(StandardCharsets.UTF_8)), 0, 10);
+            Path file = dir.resolve("embedded_" + key + ".img");
+            if (!Files.exists(file)) {
+                Files.write(file, image);
+            }
+            return file;
+        } catch (Exception e) {
+            AquaClient.LOGGER.warn("Could not save the cover art embedded in {}", song.getFileName());
+            return null;
+        }
     }
 
     private static String limit(String s) {
@@ -452,7 +478,9 @@ public final class MusicPlayer {
         if (ext != null) {
             if (!ext.file().equals(externalLyricsFor)) {
                 externalLyricsFor = ext.file();
+                externalCoverFor = null;
                 requestLyrics(ext);
+                requestCover(ext);
             }
             if (ext.cover() != null && !ext.cover().equals(externalCoverFor)) {
                 externalCoverFor = ext.cover();
@@ -520,16 +548,39 @@ public final class MusicPlayer {
         }
     }
 
+    /** Cover image for a track: its own file (or embedded / Spotify art), else one found online. */
+    @Nullable
+    private Path coverPath(@Nullable Track t) {
+        if (t == null) {
+            return null;
+        }
+        return t.cover() != null ? t.cover() : onlineCovers.get(t.file());
+    }
+
     private void requestCover(Track t) {
-        if (t.cover() == null) {
+        Path p = coverPath(t);
+        if (p == null) {
             coverFor = null;
+            MusicModule m = Aqua.modules().get(MusicModule.class);
+            if (m != null && m.fetchCovers() && coverRequested.add(t.file())) {
+                CoverFetcher.fetch(t).thenAccept(found -> {
+                    if (found != null) {
+                        onlineCovers.put(t.file(), found);
+                        MinecraftClient.getInstance().execute(() -> {
+                            Track cur = current();
+                            if (cur != null && cur.file().equals(t.file())) {
+                                requestCover(cur);
+                            }
+                        });
+                    }
+                });
+            }
             return;
         }
-        if (t.cover().equals(coverFor)) {
+        if (p.equals(coverFor)) {
             return;
         }
-        coverFor = t.cover();
-        Path p = t.cover();
+        coverFor = p;
         IO.execute(() -> {
             try {
                 if (Files.size(p) > 8L * 1024 * 1024) {
@@ -574,8 +625,8 @@ public final class MusicPlayer {
 
     @Nullable
     public Identifier cover() {
-        Track t = current();
-        return t != null && t.cover() != null && t.cover().equals(coverFor) ? coverId : null;
+        Path p = coverPath(current());
+        return p != null && p.equals(coverFor) ? coverId : null;
     }
 
     /** Opens the stream for a sound token (called by the SoundLoader mixin on the loader thread). */
