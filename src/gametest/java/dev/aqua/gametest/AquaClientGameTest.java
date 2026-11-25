@@ -1481,20 +1481,35 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         context.runOnClient(mc -> Aqua.ui().vanillaStyle.set(true));
         context.setScreen(() -> null);
 
-        // Item tooltip in the inventory.
+        // Item tooltip in the survival inventory (in creative, Minecraft swaps in the creative inventory).
+        String mode = context.computeOnClient(mc -> mc.interactionManager.getCurrentGameMode().getId());
+        sp.getServer().runCommand("gamemode survival @a");
         sp.getServer().runCommand("item replace entity @a hotbar.0 with minecraft:diamond_sword");
         context.waitTicks(4);
         context.setScreen(() -> new net.minecraft.client.gui.screen.ingame.InventoryScreen(MinecraftClient.getInstance().player));
         context.waitTicks(6);
-        int[] slot = context.computeOnClient(mc -> new int[]{(mc.getWindow().getScaledWidth() - 176) / 2 + 8 + 8,
-                (mc.getWindow().getScaledHeight() - 166) / 2 + 142 + 8});
+        // The slot's real position on screen (the recipe book, if open, moves the inventory).
+        int[] slot = context.computeOnClient(mc -> {
+            var hs = (net.minecraft.client.gui.screen.ingame.HandledScreen<?>) mc.currentScreen;
+            var acc = (dev.aqua.client.mixin.HandledScreenAccessor) hs;
+            for (var sl : hs.getScreenHandler().slots) {
+                if (sl.getStack().isOf(net.minecraft.item.Items.DIAMOND_SWORD)) {
+                    return new int[]{acc.aqua$x() + sl.x + 8, acc.aqua$y() + sl.y + 8, mc.getWindow().getScaleFactor()};
+                }
+            }
+            return new int[]{-1, -1, mc.getWindow().getScaleFactor()};
+        });
         long t0 = context.computeOnClient(mc -> dev.aqua.client.gui.VanillaStyle.drawn());
-        context.getInput().setCursorPos(slot[0] * scale, slot[1] * scale);
+        context.getInput().setCursorPos(slot[0] * (double) slot[2], slot[1] * (double) slot[2]);
         context.waitTicks(6);
         long t1 = context.computeOnClient(mc -> dev.aqua.client.gui.VanillaStyle.drawn());
-        check(t1 > t0, "Item tooltip drawn in Aqua's style");
+        String where = context.computeOnClient(mc -> "slot " + slot[0] + "," + slot[1] + " scale " + slot[2] + " mouse "
+                + Math.round(mc.mouse.getX()) + "," + Math.round(mc.mouse.getY()) + " window " + mc.getWindow().getWidth() + "x"
+                + mc.getWindow().getHeight() + " screen " + (mc.currentScreen == null ? "none" : mc.currentScreen.getClass().getSimpleName()));
+        check(slot[0] >= 0 && t1 > t0, "Item tooltip drawn in Aqua's style (" + where + ")");
         context.takeScreenshot("restyle_item_tooltip");
         context.setScreen(() -> null);
+        sp.getServer().runCommand("gamemode " + mode + " @a");
 
         // Frosted chat.
         context.runOnClient(mc -> {
