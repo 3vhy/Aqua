@@ -24,9 +24,9 @@ API (`src/gametest/java/dev/aqua/gametest/AquaClientGameTest.java`). Each run la
 
 | Mode | What runs | Result |
 |---|---|---|
-| `dev` | Loom development run (Yarn-named) with Aqua and Fabric API | **265 / 265 checks passed** |
-| `production` | **The release jar** `aqua-client-1.0.0+mc1.21.11.jar`, remapped, in the production (intermediary) game with the Fabric API release jar | **265 / 265 checks passed** |
-| `compat` | Same as production, plus the unmodified Modrinth jars of Sodium, Iris and Mod Menu | **265 / 265 checks passed** |
+| `dev` | Loom development run (Yarn-named) with Aqua and Fabric API | **278 / 278 checks passed** |
+| `production` | **The release jar** `aqua-client-1.0.0+mc1.21.11.jar`, remapped, in the production (intermediary) game with the Fabric API release jar | **278 / 278 checks passed** |
+| `compat` | Same as production, plus the unmodified Modrinth jars of Sodium, Iris and Mod Menu | **278 / 278 checks passed** |
 
 Exact versions:
 
@@ -89,11 +89,11 @@ and reduced-motion were all restored. A deliberately malformed profile is rename
 
 ## Final runs
 
-The final `production` and `compat` runs used the delivered jar, SHA-256 `4a56af66059e6228976cb954a101d5c230e2cf6df4813a2596c9d06d1407d049`.
-Launch 1 recorded 262 PASS lines and launch 2 recorded 3, with 0 failures and 0 skips in each mode.
-The 262 lines in launch 1 include one PASS per module for enabling it and one for disabling it (162
+The final `production` and `compat` runs used the delivered jar, SHA-256 `945be3682f9f8091f85a3c6a93d7a88eca197018d90efb9327f05bb570436251`.
+Launch 1 recorded 275 PASS lines and launch 2 recorded 3, with 0 failures and 0 skips in each mode.
+The 275 lines in launch 1 include one PASS per module for enabling it and one for disabling it (162
 lines for 81 modules). In the compat run, the log shows `Loading 58 mods` including `sodium 0.8.14+mc1.21.11`,
-`iris 1.10.8+mc1.21.11` and `modmenu 17.0.1`. No Aqua errors or mixin failures were logged with them.
+`iris 1.10.8+mc1.21.11` and `modmenu 17.0.1`. No Aqua errors or mixin failures were logged with them. With Mod Menu loaded, its *Mods* button appears in Aqua's pause menu (Mod Menu puts it where *Give Feedback* was, as it does in the vanilla pause menu).
 The only errors in that log come from the test environment: the offline test account (user
 properties, Realms), an anisotropic-filtering option value, and the virtual display's missing cursor
 shapes. Iris switched off one Sodium sky mixin by its own rule; this is Iris's normal behaviour and does not
@@ -101,7 +101,7 @@ affect Aqua.
 
 Screenshots from these runs are in `docs/screenshots/`, grouped by milestone:
 `1-menu_*`, `2-hud_*`, `3-cosmetics_*`, `4-final_*` (the `4-final_compat_*` files are from the
-Sodium + Iris + Mod Menu run) and `6-videos2_*` (knives, staff list, Hit FX, skies, trails and the other modules from the second set of videos), `5-update_*` (3D skins, knives, wings and hats, kill effects, Spotify, Freelook, the HUD with hitboxes on,
+Sodium + Iris + Mod Menu run) and `6-videos2_*` (knives, staff list, Hit FX, skies, trails and the other modules from the second set of videos), `7-glass_*` (the glass interface: menu, pause menu, title screen, HUD, Minecraft's own menus, tooltips, chat and tab list, from the release-jar run; `7-solid_style_menu` shows the Solid style), `5-update_*` (3D skins, knives, wings and hats, kill effects, Spotify, Freelook, the HUD with hitboxes on,
 wardrobe tabs, badge, Name and Skin Protect, Music page and online lyrics, from the release-jar run). They were rendered with software OpenGL, so the FPS values shown are
 much lower than on a real GPU.
 
