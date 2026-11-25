@@ -12,6 +12,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 JAR_NAME = "aqua-client-1.0.0+mc1.21.11.jar"
+# Screenshot shown on the page (from the release-jar test run).
+SHOT = "docs/screenshots/7-glass_menu_full.jpg"
 
 
 def main() -> None:
@@ -26,6 +28,7 @@ def main() -> None:
     page = (page.replace("@@JARDATA@@", wrapped)
                 .replace("@@LOGO@@", base64.b64encode((ROOT / "branding/icons/aqua_128.png").read_bytes()).decode())
                 .replace("@@FAVICON@@", base64.b64encode((ROOT / "branding/icons/aqua_32.png").read_bytes()).decode())
+                .replace("@@SHOT@@", base64.b64encode((ROOT / SHOT).read_bytes()).decode())
                 .replace("@@SHA256@@", sha)
                 .replace("@@SIZE@@", f"{len(jar) / 1_000_000:.1f} MB")
                 .replace("@@JAR@@", JAR_NAME))

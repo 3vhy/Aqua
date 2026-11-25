@@ -21,9 +21,11 @@ public final class ChatStyle extends Module {
     private final BoolSetting themeBg = add(new BoolSetting("theme_bg", "Use theme background", true));
     private final NumberSetting opacity = add(new NumberSetting("opacity", "Background opacity", 0.55, 0.0, 1.0, 0.05));
     private final BoolSetting timestamps = add(new BoolSetting("timestamps", "Timestamps", false));
+    private final BoolSetting glass = add(new BoolSetting("glass", "Frosted glass", true)
+            .describe("Chat lines sit on frosted glass that blurs the world behind them (Glass style only)"));
 
     public ChatStyle() {
-        super("chat_style", "Chat Style", "Changes how chat looks on your screen.", Category.QOL, false,
+        super("chat_style", "Chat Style", "Frosted glass chat, colours and timestamps.", Category.QOL, true,
                 "chat", "timestamps", "background");
     }
 
@@ -32,6 +34,30 @@ public final class ChatStyle extends Module {
         float fade = Colors.a(original) / 0.5f;
         int base = themeBg.on() ? Colors.darken(Aqua.theme().background(), 0.1f) : background.color();
         return Colors.withAlpha(base, Math.min(1f, fade) * opacity.f());
+    }
+
+    private static long glassLines;
+
+    /** Chat line backgrounds drawn as glass (used by the in-game tests). */
+    public static long glassLines() {
+        return glassLines;
+    }
+
+    /**
+     * Draws one chat line background as frosted glass. Lines touch, so together they form one
+     * seamless pane. Returns false when glass is off (the caller then draws the normal fill).
+     */
+    public boolean drawGlass(net.minecraft.client.gui.DrawContext ctx, int x1, int y1, int x2, int y2, int original) {
+        if (!glass.on() || !dev.aqua.client.render.Glass.on() || x2 <= x1 || y2 <= y1) {
+            return false;
+        }
+        glassLines++;
+        float fade = Math.min(1f, Colors.a(original) / 0.5f);
+        int tint = Colors.withAlpha(Colors.darken(Aqua.theme().background(), 0.1f), Math.min(1f, fade * opacity.f() * 0.75f));
+        dev.aqua.client.render.R2D.glass(ctx, x1, y1, x2 - x1, y2 - y1, 0, dev.aqua.client.render.R2D.ALL, 0.2f,
+                Colors.withAlpha(0xFFFFFF, Math.min(1f, fade * 1.2f)), tint);
+        dev.aqua.client.render.R2D.rect(ctx, x1, y1, x2 - x1, y2 - y1, tint);
+        return true;
     }
 
     public Text decorate(Text message) {

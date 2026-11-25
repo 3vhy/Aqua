@@ -116,6 +116,10 @@ public final class UiSettings {
     public final BoolSetting toggleNotifications = add(new BoolSetting("toggle_notifications", "Module toggle notifications", true));
     public final BoolSetting customTitle = add(new BoolSetting("custom_title", "Aqua title screen", true)
             .describe("Replace the vanilla title screen with Aqua's"));
+    public final BoolSetting customPause = add(new BoolSetting("custom_pause", "Aqua pause menu", true)
+            .describe("The pause menu on a glass card, with Aqua Settings, starred-module toggles and what is playing"));
+    public final BoolSetting vanillaStyle = add(new BoolSetting("vanilla_style", "Aqua-style Minecraft menus", true)
+            .describe("Buttons, sliders, text boxes and item tooltips in every Minecraft menu use Aqua's style"));
     public final EnumSetting<TitleBackground> titleBackground = add(new EnumSetting<>("title_background", "Title background",
             TitleBackground.AQUA).describe("What shows behind the glass on the Aqua title screen").visibleWhen(customTitle::on));
     public final NumberSetting menuScale = add(new NumberSetting("menu_scale", "Menu scale", 1.0, 0.75, 1.25, 0.05).unit("x"));

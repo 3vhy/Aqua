@@ -8,66 +8,110 @@
 <link rel="icon" type="image/png" href="data:image/png;base64,@@FAVICON@@">
 <style>
   :root {
-    --bg: #f3f7f9;
-    --card: #ffffff;
-    --text: #0f1b24;
-    --muted: #5b6b77;
-    --border: #dbe4ea;
-    --accent: #0fa9bd;
-    --accent-ink: #ffffff;
-    --code-bg: #eef3f6;
+    --bg: #0a1117;
+    --text: #eef7fa;
+    --muted: #9db2bd;
+    --accent: #52e4f2;
+    --accent-2: #a8f3ff;
+    --accent-ink: #062028;
+    --glass: rgba(20, 32, 41, 0.52);
+    --glass-strong: rgba(16, 26, 34, 0.7);
+    --rim: rgba(255, 255, 255, 0.16);
+    --rim-low: rgba(255, 255, 255, 0.05);
+    --line: rgba(255, 255, 255, 0.09);
+    --code-bg: rgba(0, 0, 0, 0.28);
+    --orb-a: rgba(82, 228, 242, 0.42);
+    --orb-b: rgba(70, 110, 255, 0.36);
+    --orb-c: rgba(170, 110, 255, 0.30);
   }
-  @media (prefers-color-scheme: dark) {
+  @media (prefers-color-scheme: light) {
     :root {
-      --bg: #0d151c;
-      --card: #142029;
-      --text: #e7f1f5;
-      --muted: #8fa3b0;
-      --border: #22323d;
-      --accent: #52e4f2;
-      --accent-ink: #062028;
-      --code-bg: #0f1a22;
+      --bg: #e9f3f6;
+      --text: #0d1a22;
+      --muted: #4d606b;
+      --accent: #0b9fb2;
+      --accent-2: #36c8da;
+      --accent-ink: #ffffff;
+      --glass: rgba(255, 255, 255, 0.55);
+      --glass-strong: rgba(255, 255, 255, 0.72);
+      --rim: rgba(255, 255, 255, 0.85);
+      --rim-low: rgba(255, 255, 255, 0.3);
+      --line: rgba(13, 26, 34, 0.09);
+      --code-bg: rgba(13, 26, 34, 0.06);
+      --orb-a: rgba(82, 228, 242, 0.45);
+      --orb-b: rgba(90, 130, 255, 0.28);
+      --orb-c: rgba(190, 130, 255, 0.26);
     }
   }
   * { box-sizing: border-box; }
+  html { background: var(--bg); }
   body {
     margin: 0;
+    min-height: 100vh;
     background: var(--bg);
     color: var(--text);
     font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+    overflow-x: hidden;
   }
-  main { max-width: 680px; margin: 0 auto; padding: 48px 16px 40px; }
-  header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
-  header img { width: 64px; height: 64px; }
-  h1 { margin: 0; font-size: 32px; line-height: 1.15; letter-spacing: -0.01em; }
-  .sub { margin: 4px 0 0; color: var(--muted); }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 24px;
-    margin-bottom: 16px;
+  /* Drifting lights behind the glass */
+  .lights { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .lights span { position: absolute; border-radius: 50%; filter: blur(60px); animation: drift 26s ease-in-out infinite alternate; }
+  .lights .a { width: 46vmax; height: 46vmax; left: -12vmax; top: -10vmax; background: var(--orb-a); }
+  .lights .b { width: 40vmax; height: 40vmax; right: -14vmax; top: 22vh; background: var(--orb-b); animation-delay: -8s; }
+  .lights .c { width: 34vmax; height: 34vmax; left: 18vw; bottom: -16vmax; background: var(--orb-c); animation-delay: -15s; }
+  @keyframes drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(4vmax, 3vmax) scale(1.08); } }
+  @media (prefers-reduced-motion: reduce) { .lights span { animation: none; } }
+
+  main { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 44px 16px 40px; }
+  .glass {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 45%), var(--glass);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    backdrop-filter: blur(22px) saturate(150%);
+    border: 1px solid var(--rim-low);
+    border-top-color: var(--rim);
+    border-radius: 18px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28), inset 0 1px 0 var(--rim);
   }
+  header { text-align: center; margin-bottom: 22px; }
+  header img { width: 84px; height: 84px; filter: drop-shadow(0 8px 26px rgba(82, 228, 242, 0.45)); }
+  h1 { margin: 10px 0 0; font-size: 40px; line-height: 1.1; letter-spacing: 0.12em; font-weight: 800; }
+  .tag { margin: 6px 0 0; color: var(--accent); font-weight: 700; letter-spacing: 0.32em; font-size: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
+  .chip { padding: 4px 12px; border-radius: 999px; font-size: 13px; color: var(--muted); }
+
+  .card { padding: 24px; margin-bottom: 16px; }
   .download {
     display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%; padding: 14px 20px;
-    background: var(--accent); color: var(--accent-ink);
-    border-radius: 10px; text-decoration: none; font-weight: 650; font-size: 17px;
+    width: 100%; padding: 15px 20px;
+    background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    color: var(--accent-ink);
+    border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 17px;
+    box-shadow: 0 8px 28px rgba(82, 228, 242, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
   }
-  .download:hover { filter: brightness(1.06); }
+  .download:hover { transform: translateY(-1px); box-shadow: 0 12px 34px rgba(82, 228, 242, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.6); }
   .download:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   #dl-status:empty { display: none; }
   .meta { margin: 12px 0 0; text-align: center; color: var(--muted); font-size: 14px; }
+
+  .shot { padding: 8px; margin-bottom: 16px; }
+  .shot img { display: block; width: 100%; height: auto; border-radius: 12px; }
+  .shot p { margin: 8px 6px 2px; color: var(--muted); font-size: 13px; text-align: center; }
+
   h2 { margin: 0 0 12px; font-size: 18px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } h1 { font-size: 32px; } }
+  .grid .card { margin-bottom: 0; }
   .hash { display: flex; gap: 8px; align-items: stretch; }
   code {
     font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px;
   }
   .hash code { flex: 1; min-width: 0; padding: 8px 10px; overflow-wrap: anywhere; }
   button {
-    flex: none; padding: 0 14px; border-radius: 8px; cursor: pointer;
-    background: transparent; color: var(--text); border: 1px solid var(--border); font: inherit; font-size: 14px;
+    flex: none; padding: 0 14px; border-radius: 9px; cursor: pointer;
+    background: rgba(255, 255, 255, 0.08); color: var(--text); border: 1px solid var(--rim-low); border-top-color: var(--rim);
+    font: inherit; font-size: 14px;
   }
   button:hover { border-color: var(--accent); }
   pre { margin: 10px 0 0; }
@@ -75,34 +119,90 @@
   ol, ul { margin: 0; padding-left: 22px; }
   li + li { margin-top: 6px; }
   table { width: 100%; border-collapse: collapse; font-size: 15px; }
-  td { padding: 7px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+  td { padding: 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
   tr:last-child td { border-bottom: 0; }
   td:last-child { text-align: right; color: var(--muted); padding-left: 12px; }
   a { color: var(--accent); }
   .note { color: var(--muted); font-size: 14px; margin: 12px 0 0; }
-  footer { color: var(--muted); font-size: 13px; text-align: center; margin-top: 24px; }
+  .ic { display: inline-block; padding: 1px 5px; }
+  footer { position: relative; z-index: 1; color: var(--muted); font-size: 13px; text-align: center; margin-top: 24px; }
 </style>
 </head>
 <body>
+<div class="lights" aria-hidden="true"><span class="a"></span><span class="b"></span><span class="c"></span></div>
 <main>
   <header>
     <img src="data:image/png;base64,@@LOGO@@" alt="">
-    <div>
-      <h1>Aqua Client</h1>
-      <p class="sub">Version 1.0.0 &middot; Minecraft Java Edition 1.21.11 &middot; Fabric</p>
+    <h1>AQUA</h1>
+    <p class="tag">CLIENT &middot; 1.21.11</p>
+    <div class="chips">
+      <span class="chip glass">Version 1.0.0</span>
+      <span class="chip glass">Minecraft Java 1.21.11</span>
+      <span class="chip glass">Fabric</span>
+      <span class="chip glass">No cheats</span>
     </div>
   </header>
 
-  <section class="card">
+  <section class="card glass">
     <a class="download" id="download" href="@@JAR@@" download="@@JAR@@">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
       Download Aqua Client
     </a>
-    <p class="meta"><code style="padding:1px 5px; overflow-wrap:anywhere">@@JAR@@</code><br><span style="white-space:nowrap">@@SIZE@@</span> &middot; a Fabric mod for your <code style="padding:1px 5px">mods</code> folder, not a launcher</p>
+    <p class="meta"><code class="ic" style="overflow-wrap:anywhere">@@JAR@@</code><br><span style="white-space:nowrap">@@SIZE@@</span> &middot; a Fabric mod for your <code class="ic">mods</code> folder, not a launcher</p>
     <p class="meta" id="dl-status" role="status" aria-live="polite"></p>
   </section>
 
-  <section class="card">
+  <figure class="shot glass" style="margin-left:0;margin-right:0">
+    <img src="data:image/jpeg;base64,@@SHOT@@" alt="The Aqua menu: a frosted glass window over the game, with a sidebar of sections and a list of HUD modules with switches." width="1600" height="900" loading="lazy">
+    <p>The new glass menu, in game. Everything Aqua draws is frosted glass, and so is the HUD.</p>
+  </figure>
+
+  <section class="card glass">
+    <h2>What&rsquo;s inside</h2>
+    <ul>
+      <li>A glass interface: the menu, HUD, pause menu, title screen, tooltips and even Minecraft&rsquo;s own buttons and chat</li>
+      <li>Fern-style HUD with a drag-and-drop editor</li>
+      <li>Wardrobe: original 3D skins, wings, hats, capes, knives and fantasy swords, emotes, kill effects and a pet</li>
+      <li>Hit and damage effects, swing and player trails, nebula and aurora skies, a staff list</li>
+      <li>Music player for your own <code class="ic">.ogg</code> files and the song playing in Spotify, with synced lyrics found automatically</li>
+      <li>Zoom, Freelook, Name Protect, Skin Protect, screenshot notifications, profiles and themes</li>
+    </ul>
+    <p class="note">No cheats: no combat, movement, x-ray, ESP or other unfair features. Cosmetics are only visible to you. Some servers do not allow freelook; check each server&rsquo;s rules before you play.</p>
+  </section>
+
+  <div class="grid">
+    <section class="card glass">
+      <h2>You also need</h2>
+      <table>
+        <tr><td>Minecraft Java Edition</td><td>1.21.11</td></tr>
+        <tr><td><a href="https://fabricmc.net/use/installer/">Fabric Loader</a></td><td>0.20.1+</td></tr>
+        <tr><td><a href="https://modrinth.com/mod/fabric-api">Fabric API</a></td><td>0.141.6+</td></tr>
+        <tr><td>Java</td><td>21 (in the launcher)</td></tr>
+      </table>
+      <p class="note">Sodium, Iris and Mod Menu are optional and were tested alongside Aqua.</p>
+    </section>
+
+    <section class="card glass">
+      <h2>Install</h2>
+      <ol>
+        <li>Install Fabric Loader for 1.21.11 with the <a href="https://fabricmc.net/use/installer/">Fabric installer</a>.</li>
+        <li>Start the <code class="ic">fabric-loader-1.21.11</code> profile once, then close the game.</li>
+        <li>Put Fabric API and the Aqua jar in your <code class="ic">mods</code> folder.</li>
+        <li>Start the Fabric profile and press <strong>Right Shift</strong>.</li>
+      </ol>
+    </section>
+  </div>
+
+  <section class="card glass" style="margin-top:16px">
+    <h2>Where is my mods folder?</h2>
+    <table>
+      <tr><td>Windows</td><td><code class="ic">%APPDATA%\.minecraft\mods</code></td></tr>
+      <tr><td>macOS</td><td><code class="ic">~/Library/Application Support/minecraft/mods</code></td></tr>
+      <tr><td>Linux</td><td><code class="ic">~/.minecraft/mods</code></td></tr>
+    </table>
+  </section>
+
+  <section class="card glass">
     <h2>Check the download</h2>
     <div class="hash">
       <code id="sha">@@SHA256@@</code>
@@ -112,46 +212,7 @@
     <pre><code>sha256sum @@JAR@@</code></pre>
   </section>
 
-  <section class="card">
-    <h2>You also need</h2>
-    <table>
-      <tr><td>Minecraft Java Edition</td><td>1.21.11</td></tr>
-      <tr><td><a href="https://fabricmc.net/use/installer/">Fabric Loader</a></td><td>0.20.1 or newer</td></tr>
-      <tr><td><a href="https://modrinth.com/mod/fabric-api">Fabric API</a></td><td>0.141.6+1.21.11 or newer</td></tr>
-      <tr><td>Java</td><td>21 (bundled with the launcher)</td></tr>
-    </table>
-    <p class="note">Sodium, Iris and Mod Menu are optional and were tested alongside Aqua.</p>
-  </section>
-
-  <section class="card">
-    <h2>Install</h2>
-    <ol>
-      <li>Install Fabric Loader for 1.21.11 with the <a href="https://fabricmc.net/use/installer/">Fabric installer</a>.</li>
-      <li>Start the <code style="padding:1px 5px">fabric-loader-1.21.11</code> profile once, then close the game.</li>
-      <li>Put Fabric API and the Aqua jar in your <code style="padding:1px 5px">mods</code> folder:
-        <ul>
-          <li>Windows: <code style="padding:1px 5px">%APPDATA%\.minecraft\mods</code></li>
-          <li>macOS: <code style="padding:1px 5px">~/Library/Application Support/minecraft/mods</code></li>
-          <li>Linux: <code style="padding:1px 5px">~/.minecraft/mods</code></li>
-        </ul>
-      </li>
-      <li>Start the Fabric profile and press <strong>Right Shift</strong> to open the Aqua menu.</li>
-    </ol>
-  </section>
-
-  <section class="card">
-    <h2>What&rsquo;s inside</h2>
-    <ul>
-      <li>Fern-style HUD with a drag-and-drop editor, and a new menu and title screen</li>
-      <li>Wardrobe: original 3D skins, wings, hats, capes, knives and fantasy swords, emotes, kill effects and a pet</li>
-      <li>Hit and damage effects, swing and player trails, nebula and aurora skies, a staff list</li>
-      <li>Music player for your own <code style="padding:1px 5px">.ogg</code> files, and the song playing in Spotify, with synced lyrics found automatically</li>
-      <li>Zoom, Freelook, Name Protect, Skin Protect, screenshot notifications, profiles and themes</li>
-    </ul>
-    <p class="note">No cheats: no combat, movement, x-ray, ESP or other unfair features. Cosmetics are only visible to you. Some servers do not allow freelook; check each server&rsquo;s rules before you play.</p>
-  </section>
-
-  <footer>Aqua Client is released under the MIT licence.</footer>
+  <footer>Aqua Client is released under the MIT licence. Not an official Minecraft product.</footer>
 </main>
 <script type="application/octet-stream" id="jar-data">@@JARDATA@@</script>
 <script>

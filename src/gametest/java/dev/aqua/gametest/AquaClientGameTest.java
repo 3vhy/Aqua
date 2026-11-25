@@ -108,6 +108,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
                         case "knife_gallery" -> knifeGallery(context, sp);
                         case "identity" -> identity(context, sp);
                         case "glass" -> glassTour(context, sp);
+                        case "restyle" -> restyle(context, sp);
                         default -> throw new IllegalArgumentException("unknown section " + section);
                     }
                 }
@@ -209,6 +210,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             skyLyricsText(context);
             videoModules(context, sp);
             glassTour(context, sp);
+            restyle(context, sp);
             profilesAndLayouts(context);
             resizeAndScale(context);
             reloadResources(context);
@@ -1377,9 +1379,150 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         context.runOnClient(mc -> Aqua.notifications().info("Glass", "Notifications are glass too"));
         context.waitTicks(12);
         context.takeScreenshot("glass_toast");
+        // Full-size pictures for the README and the download page (1600x900, GUI scale 3).
+        int[] size = context.computeOnClient(mc -> new int[]{mc.getWindow().getWidth(), mc.getWindow().getHeight(), mc.options.getGuiScale().getValue()});
+        context.getInput().resizeWindow(1600, 900);
+        context.waitTicks(5);
+        context.runOnClient(mc -> {
+            mc.options.getGuiScale().setValue(3);
+            mc.onResolutionChanged();
+        });
+        context.waitTicks(10);
+        context.takeScreenshot("glass_full_hud");
+        context.setScreen(() -> new AquaMenuScreen(null));
+        for (String nav : new String[]{"HUD", "COSMETICS", "SETTINGS"}) {
+            context.runOnClient(mc -> {
+                try {
+                    var f = AquaMenuScreen.class.getDeclaredField("nav");
+                    f.setAccessible(true);
+                    f.set(mc.currentScreen, AquaMenuScreen.Nav.valueOf(nav));
+                } catch (ReflectiveOperationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            context.waitTicks(12);
+            context.takeScreenshot("glass_full_menu_" + nav.toLowerCase(java.util.Locale.ROOT));
+        }
+        context.setScreen(() -> null);
+        context.runOnClient(mc -> mc.openGameMenu(false));
+        context.waitTicks(12);
+        context.takeScreenshot("glass_full_pause");
+        context.setScreen(() -> new dev.aqua.client.gui.AquaTitleScreen());
+        context.waitTicks(40);
+        context.takeScreenshot("glass_full_title");
+        context.setScreen(() -> null);
+        context.getInput().resizeWindow(size[0], size[1]);
+        context.waitTicks(5);
+        context.runOnClient(mc -> {
+            mc.options.getGuiScale().setValue(size[2]);
+            mc.onResolutionChanged();
+        });
+        context.waitTicks(10);
         int problems = context.computeOnClient(mc -> dev.aqua.client.util.Problems.count()) - problems0;
         check(problems == 0, "glass tour recorded no errors (" + problems + ")");
         context.runOnClient(mc -> before.forEach((id, on) -> Aqua.modules().byId(id).setEnabled(on, false)));
+    }
+
+    /** Aqua pause menu, Aqua-style Minecraft widgets, item tooltips and frosted chat. */
+    private void restyle(ClientGameTestContext context, TestSingleplayerContext sp) {
+        int problems0 = context.computeOnClient(mc -> dev.aqua.client.util.Problems.count());
+        double scale = context.computeOnClient(mc -> (double) mc.getWindow().getScaleFactor());
+        // Pause menu: it is Aqua's, it is still a vanilla GameMenuScreen, and its buttons still work.
+        context.runOnClient(mc -> mc.openGameMenu(false));
+        context.waitTicks(12);
+        boolean aqua = context.computeOnClient(mc -> mc.currentScreen instanceof dev.aqua.client.gui.AquaPauseScreen
+                && mc.currentScreen instanceof net.minecraft.client.gui.screen.GameMenuScreen);
+        check(aqua, "Esc opens Aqua's pause menu (still a GameMenuScreen)");
+        String labels = context.computeOnClient(mc -> {
+            StringBuilder b = new StringBuilder();
+            for (var w : ((dev.aqua.client.gui.AquaPauseScreen) mc.currentScreen).menuButtons()) {
+                b.append(w.getMessage().getString()).append('|');
+            }
+            return b.toString();
+        });
+        check(labels.contains("Back to Game") && labels.contains("Options") && labels.contains("Save and Quit to Title"),
+                "Pause menu keeps the vanilla buttons (" + labels + ")");
+        context.takeScreenshot("restyle_pause_menu");
+        int[] back = context.computeOnClient(mc -> {
+            var w = ((dev.aqua.client.gui.AquaPauseScreen) mc.currentScreen).menuButtons().get(0);
+            return new int[]{w.getX() + w.getWidth() / 2, w.getY() + w.getHeight() / 2};
+        });
+        context.getInput().setCursorPos(back[0] * scale, back[1] * scale);
+        context.waitTicks(3);
+        context.getInput().pressMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
+        context.waitTicks(5);
+        check(context.computeOnClient(mc -> mc.currentScreen == null), "Clicking Back to Game with the mouse closes the pause menu");
+        context.runOnClient(mc -> mc.openGameMenu(true));
+        context.waitTicks(8);
+        context.takeScreenshot("restyle_pause_only");
+        context.setScreen(() -> null);
+
+        // Minecraft's own screens with Aqua-style buttons, sliders and text boxes.
+        long w0 = context.computeOnClient(mc -> dev.aqua.client.gui.VanillaStyle.drawn());
+        context.setScreen(() -> new net.minecraft.client.gui.screen.option.OptionsScreen(null, MinecraftClient.getInstance().options));
+        context.waitTicks(8);
+        context.takeScreenshot("restyle_options");
+        context.setScreen(() -> new net.minecraft.client.gui.screen.option.VideoOptionsScreen(null, MinecraftClient.getInstance(),
+                MinecraftClient.getInstance().options));
+        context.waitTicks(8);
+        context.takeScreenshot("restyle_video_sliders");
+        context.setScreen(() -> new net.minecraft.client.gui.screen.world.SelectWorldScreen(null));
+        context.waitTicks(12);
+        context.takeScreenshot("restyle_world_list_search");
+        long w1 = context.computeOnClient(mc -> dev.aqua.client.gui.VanillaStyle.drawn());
+        check(w1 - w0 > 50, "Minecraft buttons, sliders and text boxes are drawn in Aqua's style (" + (w1 - w0) + ")");
+        context.runOnClient(mc -> Aqua.ui().vanillaStyle.set(false));
+        context.waitTicks(4);
+        long v0 = context.computeOnClient(mc -> dev.aqua.client.gui.VanillaStyle.drawn());
+        context.waitTicks(4);
+        long v1 = context.computeOnClient(mc -> dev.aqua.client.gui.VanillaStyle.drawn());
+        check(v1 == v0, "Turning the option off brings back vanilla widgets");
+        context.takeScreenshot("restyle_world_list_vanilla");
+        context.runOnClient(mc -> Aqua.ui().vanillaStyle.set(true));
+        context.setScreen(() -> null);
+
+        // Item tooltip in the inventory.
+        sp.getServer().runCommand("item replace entity @a hotbar.0 with minecraft:diamond_sword");
+        context.waitTicks(4);
+        context.setScreen(() -> new net.minecraft.client.gui.screen.ingame.InventoryScreen(MinecraftClient.getInstance().player));
+        context.waitTicks(6);
+        int[] slot = context.computeOnClient(mc -> new int[]{(mc.getWindow().getScaledWidth() - 176) / 2 + 8 + 8,
+                (mc.getWindow().getScaledHeight() - 166) / 2 + 142 + 8});
+        long t0 = context.computeOnClient(mc -> dev.aqua.client.gui.VanillaStyle.drawn());
+        context.getInput().setCursorPos(slot[0] * scale, slot[1] * scale);
+        context.waitTicks(6);
+        long t1 = context.computeOnClient(mc -> dev.aqua.client.gui.VanillaStyle.drawn());
+        check(t1 > t0, "Item tooltip drawn in Aqua's style");
+        context.takeScreenshot("restyle_item_tooltip");
+        context.setScreen(() -> null);
+
+        // Frosted chat.
+        context.runOnClient(mc -> {
+            Aqua.modules().byId("chat_style").setEnabled(true, false);
+            for (String m : new String[]{"Frosted chat sits on glass", "Every line blurs the world behind it", "and the lines join into one pane"}) {
+                mc.inGameHud.getChatHud().addMessage(net.minecraft.text.Text.literal(m));
+            }
+        });
+        long g0 = context.computeOnClient(mc -> dev.aqua.client.module.qol.ChatStyle.glassLines());
+        context.setScreen(() -> new net.minecraft.client.gui.screen.ChatScreen("", false));
+        context.waitTicks(8);
+        long g1 = context.computeOnClient(mc -> dev.aqua.client.module.qol.ChatStyle.glassLines());
+        check(g1 > g0, "Chat lines are frosted glass");
+        context.takeScreenshot("restyle_chat");
+        context.setScreen(() -> null);
+        // Frosted tab list (a list objective makes singleplayer draw the tab list).
+        sp.getServer().runCommand("scoreboard objectives add aqua_tab_glass dummy");
+        sp.getServer().runCommand("scoreboard objectives setdisplay list aqua_tab_glass");
+        long p0 = context.computeOnClient(mc -> dev.aqua.client.gui.VanillaStyle.tabPanes());
+        context.getInput().holdKey(o -> o.playerListKey);
+        context.waitTicks(8);
+        context.takeScreenshot("restyle_tab_list");
+        long p1 = context.computeOnClient(mc -> dev.aqua.client.gui.VanillaStyle.tabPanes());
+        context.getInput().releaseKey(o -> o.playerListKey);
+        sp.getServer().runCommand("scoreboard objectives remove aqua_tab_glass");
+        check(p1 > p0, "Tab list background is frosted glass");
+        int problems = context.computeOnClient(mc -> dev.aqua.client.util.Problems.count()) - problems0;
+        check(problems == 0, "restyled screens recorded no errors (" + problems + ")");
     }
 
     private static <T extends Module> T mod(Class<T> c) {
@@ -1983,7 +2126,8 @@ public final class AquaClientGameTest implements FabricClientGameTest {
     private void prepareRestart(ClientGameTestContext context, Path marker) {
         context.runOnClient(mc -> {
             ((NumberSetting) find("zoom", "factor")).set(7.5);
-            Aqua.modules().byId("chat_style").setEnabled(true, false);
+            // Chat Style is on by default, so switching it off is the change that must survive.
+            Aqua.modules().byId("chat_style").setEnabled(false, false);
             Aqua.themes().select("Mint");
             HudWidget wm = (HudWidget) Aqua.modules().byId("network");
             wm.setLayout(wm.anchor(), 123, 45);
@@ -2049,7 +2193,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             boolean rm = Aqua.ui().reducedMotion.on();
             return zoom + "|" + chat + "|" + theme + "|" + nw.offX() + "," + nw.offY() + "|" + kb.code() + "|" + rm;
         });
-        check(state.equals("7.5|true|Mint|123.0,45.0|" + GLFW.GLFW_KEY_J + "|true"), "Settings, theme, HUD layout and binds restored after restart (" + state + ")");
+        check(state.equals("7.5|false|Mint|123.0,45.0|" + GLFW.GLFW_KEY_J + "|true"), "Settings, theme, HUD layout and binds restored after restart (" + state + ")");
         context.takeScreenshot("29_title_after_restart_mint");
         try (TestSingleplayerContext sp = createWorld(context)) {
             // Fixed wait: this world only provides a backdrop for the screenshot.

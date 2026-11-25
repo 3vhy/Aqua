@@ -89,6 +89,19 @@ Under **Settings → Interface** you can change:
 The blur runs on the GPU at a quarter of the screen size and only in frames that show glass. If the
 graphics driver cannot run it, Aqua switches to solid panels by itself and logs the reason.
 
+The rest of the game follows the same style:
+* **Pause menu**: Minecraft's pause menu on a glass card. It keeps the vanilla buttons (and any
+  that other mods add, such as Mod Menu's), with their actions and keyboard navigation. It adds
+  an **Aqua Settings** button, your **starred modules as quick toggles**, the session time and
+  the song that is playing. Turn it off with *Settings → Aqua pause menu*.
+* **Minecraft's own menus**: buttons, sliders and text boxes in every menu use Aqua's style, in
+  the options, world list, server list and other mods' screens. Labels, layout and behaviour stay
+  vanilla. Turn it off with *Settings → Aqua-style Minecraft menus*.
+* **Item tooltips**: a dark card with a lit, accent-tinted rim. Tooltips that bring their own
+  style from a resource or data pack keep it.
+* **Chat**: chat lines sit on frosted glass that forms one seamless pane (*Chat Style → Frosted
+  glass*; Chat Style is now on by default). This works with chat open and closed.
+
 ### Menu
 A floating window based on the attached menu screenshot. It has a narrow sidebar with the Aqua emblem,
 a module search (by name, description, keywords and setting names), and these sections: **HUD,
@@ -186,7 +199,7 @@ title), Emotes (wheel plus wardrobe preview).
 
 ### Quality of life
 Smooth Zoom, Freelook, Toggle Sprint (holds the vanilla sprint key, so there is no omni-sprint), Music Player (with Spotify),
-Screenshot notifications with a thumbnail, Chat Style (background and timestamps), Death Waypoints
+Screenshot notifications with a thumbnail, Chat Style (frosted glass or a colour background, and timestamps), Death Waypoints
 (your own deaths only), Streamer Mode (hides coordinates and the server address on your own screen),
 **Creamy Keys** (soft keyboard sounds while you type), **Media Hider** (covers your hotbar, and
 optionally inventory screens, with an Aqua banner for videos).

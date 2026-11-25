@@ -91,14 +91,15 @@ public final class AquaTitleScreen extends TitleScreen {
         } else {
             R2D.roundGradientV(ctx, 0, 0, width, height, 0, Colors.darken(t.background(), 0.2f), Colors.lerp(t.background(), t.panel(), 0.6f));
             // Slow drifting lights. With the Glass style they are brighter, so the glass has colour to frost.
-            int[] colors = {t.accent(), t.accent2(), Colors.lerp(t.accent(), 0xFFB36BFF, 0.55f), Colors.lerp(t.accent2(), 0xFFFF7FB0, 0.35f)};
+            int[] colors = {t.accent(), Colors.lerp(t.accent(), 0xFF3A6BFF, 0.6f), Colors.lerp(t.accent(), 0xFFB36BFF, 0.6f),
+                    Colors.lerp(t.accent(), 0xFF2BD4A0, 0.5f)};
             int n = glass ? 4 : 3;
             for (int i = 0; i < n; i++) {
                 float phase = time * 0.05f * motion + i * 2.1f;
                 float cx = width * (0.2f + 0.6f * (0.5f + 0.5f * (float) Math.sin(phase * 1.3f + i)));
                 float cy = height * (0.25f + 0.5f * (0.5f + 0.5f * (float) Math.cos(phase + i * 0.7f)));
                 float r = Math.min(width, height) * (glass ? 0.26f + 0.06f * (i % 2) : 0.18f + 0.05f * i);
-                R2D.shadow(ctx, cx - r / 2f, cy - r / 2f, r, r, r / 2f, glass ? 70 : 60, Colors.withAlpha(colors[i], glass ? 0.42f : 0.10f));
+                R2D.shadow(ctx, cx - r / 2f, cy - r / 2f, r, r, r / 2f, glass ? 70 : 60, Colors.withAlpha(colors[i], glass ? 0.36f : 0.10f));
             }
         }
         // Gentle wave lines along the bottom (matches the emblem's wave)

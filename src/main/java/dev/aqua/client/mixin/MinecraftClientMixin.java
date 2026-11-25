@@ -21,6 +21,11 @@ public abstract class MinecraftClientMixin {
             }
             return new AquaTitleScreen();
         }
+        // The vanilla pause menu (exactly that class, never a mod's own subclass) becomes Aqua's.
+        if (screen != null && screen.getClass() == net.minecraft.client.gui.screen.GameMenuScreen.class && Aqua.ui() != null
+                && Aqua.ui().customPause.on()) {
+            return new dev.aqua.client.gui.AquaPauseScreen(((net.minecraft.client.gui.screen.GameMenuScreen) screen).shouldShowMenu());
+        }
         return screen;
     }
 }
