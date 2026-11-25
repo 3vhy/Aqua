@@ -75,6 +75,10 @@ Exact versions:
 | Skin Protect | Steve skin applied; the skin of the public player `jeb_` is looked up from Mojang and shown as yours |
 | Lyrics | A song with no `.lrc` file gets synced lyrics from LRCLIB automatically (the test song is the public-domain hymn "Amazing Grace"; the audio is a generated tone); the Music page; the **Lyrics** switch turns lyrics off while the song keeps playing |
 | Profiles | Create, duplicate, rename, switch; per-profile HUD layout restored; share-code export, import and rejection of an invalid code |
+| Settings sweep | Every module switched on and each of its settings driven through its values (every enum value; minimum, maximum and default numbers; booleans both ways; colours with theme sync, transparency and black; empty, Unicode/emoji and maximum-length text) with frames rendered in between, in third and then first person; then every Settings-page option the same way. No recovered errors allowed |
+| Error registry | Errors Aqua recovers from (a HUD widget, world effect, module tick or switch that throws) are recorded; the settings sweep, glass and restyle sections each require zero |
+| Glass interface | Glass HUD backgrounds make a blur capture every frame; the Solid style makes none; every menu page, the HUD editor, emote wheel, title screen and toasts draw in glass without errors; full-size (1600×900) pictures of the HUD, menu, pause menu and title |
+| Restyled Minecraft screens | Esc opens Aqua's pause menu, which is still a `GameMenuScreen` and keeps the vanilla buttons; a real mouse click on *Back to Game* closes it; pause-only (F3+Esc) view. Options, Video Settings (sliders) and the world list (search box) draw their widgets in Aqua's style, and turning the option off brings vanilla widgets back; an item tooltip in the inventory; chat lines as frosted glass with chat open; the tab list as frosted glass |
 | Resolution | 854×480 at GUI scale 2 and 1920×1080 at GUI scale 4: every visible widget stays on screen; the menu fits |
 | Resources | Full resource reload (F3+T path) and Aqua still renders afterwards |
 | Shutdown | Leaves the world without crashing and ends on the title screen |
@@ -104,7 +108,9 @@ much lower than on a real GPU.
 ## Not covered by automated tests
 
 * **Real GPU hardware**: all runs used software OpenGL. Shader compile/link was exercised by Mesa
-  (llvmpipe), not by NVIDIA, AMD or Intel drivers.
+  (llvmpipe), not by NVIDIA, AMD or Intel drivers. This includes the glass blur. If a driver cannot
+  run it, Aqua is written to switch to solid panels and log why. No failing driver was available,
+  so that fallback was not exercised.
 * **Iris with a shader pack enabled.** Iris was loaded without a shader pack. Aqua's world effects use
   Fabric world-render events, and Iris may draw them differently or not at all while a pack is active.
   This was not tested.
