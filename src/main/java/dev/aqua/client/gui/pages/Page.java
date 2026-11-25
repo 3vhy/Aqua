@@ -3,6 +3,7 @@ package dev.aqua.client.gui.pages;
 import dev.aqua.client.gui.AquaMenuScreen;
 import dev.aqua.client.gui.Ui;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
 import dev.aqua.client.theme.Theme;
@@ -15,8 +16,7 @@ public interface Page {
 
     /** Card container used by pages. */
     static void card(DrawContext ctx, Theme t, float x, float y, float w, float h, float a) {
-        R2D.round(ctx, x, y, w, h, 6.5f, Colors.fade(Colors.withAlpha(t.panel(), 0.92f), a));
-        R2D.outline(ctx, x, y, w, h, 6.5f, 0.6f, Colors.fade(Colors.withAlpha(t.border(), 0.4f), a));
+        Glass.card(ctx, x, y, w, h, 7, a, 0f, 0f);
     }
 
     static float heading(DrawContext ctx, Theme t, String title, String sub, float x, float y, float a) {

@@ -14,6 +14,7 @@ import dev.aqua.client.module.Category;
 import dev.aqua.client.module.Module;
 import dev.aqua.client.render.Anim;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -71,7 +72,6 @@ public final class AquaMenuScreen extends Screen {
     private float scrollTarget;
     private float contentHeight;
     private boolean closing;
-    private final Anim navIndicator = new Anim(0f, 160f);
     private final Anim pageFade = new Anim(1f, 160f);
 
     private final Page wardrobe = new WardrobePage();
@@ -89,7 +89,6 @@ public final class AquaMenuScreen extends Screen {
         super(Text.literal("Aqua"));
         this.parent = parent;
         open.target(1f);
-        navIndicator.snap(nav.ordinal());
     }
 
     @Override
@@ -124,24 +123,23 @@ public final class AquaMenuScreen extends Screen {
         ui.setText("search", "");
         scrollTarget = 0;
         scroll.snap(0);
-        navIndicator.target(n.ordinal());
         pageFade.snap(0f).target(1f);
         UiSounds.click(1.05f);
     }
 
     @Override
     public void renderBackground(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        if (client.world == null) {
-            super.renderBackground(ctx, mouseX, mouseY, delta);
-            return;
-        }
         float a = open.get();
-        if (Aqua.ui().blur.on() && client.options.getMenuBackgroundBlurrinessValue() > 0) {
-            ctx.applyBlur();
+        boolean glass = Glass.on();
+        if (client.world == null) {
+            renderPanoramaBackground(ctx, delta);
         }
-        if (Aqua.ui().menuDim.on()) {
-            ctx.fill(0, 0, width, height, Colors.withAlpha(0x05080B, Math.round(110 * a)));
+        if (Aqua.ui().menuDim.on() || client.world == null) {
+            // Dim first so the glass shows the dimmed world (keeps text readable on bright scenes).
+            ctx.fill(0, 0, width, height, Colors.withAlpha(0x05080B, Math.round((glass ? 70 : 110) * a)));
         }
+        boolean fullBlur = glass ? Aqua.ui().blur.on() : client.options.getMenuBackgroundBlurrinessValue() > 0;
+        Glass.backdrop(ctx, fullBlur);
     }
 
     @Override
@@ -171,9 +169,7 @@ public final class AquaMenuScreen extends Screen {
         ui.begin(ctx, lmx, lmy);
 
         // Window
-        R2D.shadow(ctx, wx, wy, ww, wh, 10, 22, Colors.withAlpha(0x000000, Math.round(150 * a)));
-        R2D.round(ctx, wx, wy, ww, wh, 10, Colors.fade(t.windowBg(0.9f), a));
-        R2D.outline(ctx, wx, wy, ww, wh, 10, 0.7f, Colors.fade(t.border(), a));
+        Glass.window(ctx, wx, wy, ww, wh, 12, a);
 
         float sideW = 96;
         sidebar(ctx, t, wx, wy, sideW, wh, a);
@@ -188,9 +184,15 @@ public final class AquaMenuScreen extends Screen {
     // ------------------------------------------------------------------ sidebar
 
     private void sidebar(DrawContext ctx, Theme t, float x, float y, float w, float h, float a) {
-        R2D.roundCorners(ctx, x, y, w, h, 10, R2D.LEFT, Colors.fade(Colors.withAlpha(t.panel(), 0.55f), a));
-        R2D.rect(ctx, x + w - 0.5f, y + 8, 0.5f, h - 16, Colors.fade(t.divider(), a));
+        if (Glass.on()) {
+            R2D.roundCorners(ctx, x, y, w, h, 12, R2D.LEFT, Colors.withAlpha(0x000000, 0.13f * a));
+            R2D.roundGradientV(ctx, x + w - 0.5f, y + 10, 0.5f, h - 20, 0, Colors.withAlpha(0xFFFFFF, 0.02f * a), Colors.withAlpha(0xFFFFFF, 0.12f * a));
+        } else {
+            R2D.roundCorners(ctx, x, y, w, h, 12, R2D.LEFT, Colors.fade(Colors.withAlpha(t.panel(), 0.55f), a));
+            R2D.rect(ctx, x + w - 0.5f, y + 8, 0.5f, h - 16, Colors.fade(t.divider(), a));
+        }
         // Brand
+        R2D.shadow(ctx, x + 10, y + 10, 13, 13, 6.5f, 10, Colors.withAlpha(t.accent(), 0.30f * a));
         R2D.texture(ctx, WatermarkWidget.EMBLEM, x + 10, y + 10, 13, 13, Colors.withAlpha(0xFFFFFF, Math.round(255 * a)));
         R2D.textMid(ctx, Aqua.NAME, x + 27, y + 16.5f, 9.5f, AquaFont.Weight.SEMIBOLD, Colors.fade(t.text(), a));
         // Search
@@ -210,6 +212,13 @@ public final class AquaMenuScreen extends Screen {
             avail -= footer;
         }
         itemH = Math.max(10f, Math.min(14f, (avail - 22) / 12f - 1.5f));
+        // Selection highlight slides between items (positions from the previous frame).
+        if (navKnown && query.isEmpty()) {
+            float hy = navSlide.target(navYs[nav.ordinal()]).get();
+            navHighlight(ctx, t, x + 6, hy, w - 12, itemH, a);
+        } else if (!query.isEmpty()) {
+            navSlide.snap(navYs[nav.ordinal()]);
+        }
         iy = sectionLabel(ctx, t, "MODULES", x + 10, iy, a);
         for (Nav n : new Nav[]{Nav.HUD, Nav.VISUALS, Nav.COSMETICS, Nav.QOL, Nav.PERFORMANCE}) {
             iy = navItem(ctx, t, n, n.category.title, n.category.icon, x, iy, w, a);
@@ -223,6 +232,10 @@ public final class AquaMenuScreen extends Screen {
         iy = navItem(ctx, t, Nav.PROFILES, "Profiles", Icon.FOLDER, x, iy, w, a);
         iy = navItem(ctx, t, Nav.KEYBINDS, "Keybinds", Icon.KEYBOARD, x, iy, w, a);
         navItem(ctx, t, Nav.SETTINGS, "Settings", Icon.GEAR, x, iy, w, a);
+        if (!navKnown) {
+            navKnown = true;
+            navSlide.snap(navYs[nav.ordinal()]);
+        }
         if (showFooter) {
             R2D.textMid(ctx, AquaFont.ellipsize(Aqua.config().activeProfile(), w - 20, 4.8f, AquaFont.Weight.MEDIUM), x + 10, y + h - 15,
                     4.8f, AquaFont.Weight.MEDIUM, Colors.fade(t.muted(), a));
@@ -237,24 +250,41 @@ public final class AquaMenuScreen extends Screen {
     }
 
     private float itemH = 14;
+    private final float[] navYs = new float[Nav.values().length];
+    private boolean navKnown;
+    private final Anim navSlide = new Anim(0f, 180f);
+
+    private void navHighlight(DrawContext ctx, Theme t, float x, float y, float w, float h, float a) {
+        if (Glass.on()) {
+            R2D.shadow(ctx, x, y, w, h, 5, 8, Colors.withAlpha(t.accent(), 0.16f * a));
+            R2D.roundGradientH(ctx, x, y, w, h, 5, Colors.withAlpha(t.accent(), 0.26f * a), Colors.withAlpha(t.accent(), 0.08f * a));
+            R2D.outlineGradientV(ctx, x, y, w, h, 5, 0.55f, R2D.ALL, Colors.withAlpha(Colors.lerp(0xFFFFFFFF, t.accent(), 0.4f), 0.45f * a),
+                    Colors.withAlpha(t.accent(), 0.15f * a));
+        } else {
+            R2D.round(ctx, x, y, w, h, 4.5f, Colors.fade(Colors.withAlpha(Colors.lerp(t.elevated(), t.accent(), 0.18f), 0.95f), a));
+            R2D.outline(ctx, x, y, w, h, 4.5f, 0.6f, Colors.fade(Colors.withAlpha(t.accent(), 0.45f), a));
+        }
+        R2D.round(ctx, x + 1.5f, y + h / 2f - 2.5f, 1.4f, 5, 0.7f, Colors.fade(t.accent(), a));
+    }
 
     private float navItem(DrawContext ctx, Theme t, Nav n, String label, Icon icon, float x, float y, float w, float a) {
         float ih = itemH;
         float ix = x + 6;
         float iw = w - 12;
+        navYs[n.ordinal()] = y;
         boolean sel = n == nav && query.isEmpty();
         boolean hov = ui.hover(ix, y, iw, ih);
-        float ha = ui.anim("nav" + n, 120, 0).target(hov).get();
+        float ha = ui.anim("nav" + n, 120, 0).target(hov && !sel).get();
         float sa = ui.anim("navsel" + n, 160, sel ? 1 : 0).target(sel).get();
-        if (sa > 0.01f || ha > 0.01f) {
-            int bg = Colors.lerp(Colors.withAlpha(t.elevated(), 0.55f * ha), Colors.withAlpha(Colors.lerp(t.elevated(), t.accent(), 0.18f), 0.95f), sa);
-            R2D.round(ctx, ix, y, iw, ih, 4.5f, Colors.fade(bg, a));
-            if (sa > 0.01f) {
-                R2D.outline(ctx, ix, y, iw, ih, 4.5f, 0.6f, Colors.fade(Colors.withAlpha(t.accent(), 0.45f * sa), a));
+        if (ha > 0.01f) {
+            if (Glass.on()) {
+                R2D.round(ctx, ix, y, iw, ih, 5, Colors.withAlpha(0xFFFFFF, 0.06f * ha * a));
+            } else {
+                R2D.round(ctx, ix, y, iw, ih, 4.5f, Colors.fade(Colors.withAlpha(t.elevated(), 0.55f * ha), a));
             }
         }
         int fg = Colors.lerp(t.muted(), t.text(), Math.max(sa, ha * 0.6f));
-        R2D.icon(ctx, icon, ix + 5, y + ih / 2f - 3.5f, 7, Colors.fade(sel ? t.accent() : fg, a));
+        R2D.icon(ctx, icon, ix + 5, y + ih / 2f - 3.5f, 7, Colors.fade(Colors.lerp(fg, t.accent(), sa), a));
         R2D.textMid(ctx, label, ix + 16, y + ih / 2f, 5.6f, sel ? AquaFont.Weight.SEMIBOLD : AquaFont.Weight.MEDIUM, Colors.fade(fg, a));
         if (ui.clickedIn(ix, y, iw, ih)) {
             setNav(n);
@@ -296,14 +326,32 @@ public final class AquaMenuScreen extends Screen {
                 default -> "Interface, motion and effect quality";
             };
         }
-        R2D.text(ctx, title, x + pad, y + 10, 11f, AquaFont.Weight.SEMIBOLD, Colors.fade(t.text(), pa));
-        R2D.text(ctx, subtitle, x + pad, y + 24, 5.2f, AquaFont.Weight.MEDIUM, Colors.fade(t.muted(), pa));
+        Icon headIcon = searching ? Icon.SEARCH : (nav.category != null ? nav.category.icon : switch (nav) {
+            case STARRED -> Icon.STAR;
+            case WARDROBE -> Icon.HANGER;
+            case MUSIC -> Icon.NOTE;
+            case THEMES -> Icon.PALETTE;
+            case PROFILES -> Icon.FOLDER;
+            case KEYBINDS -> Icon.KEYBOARD;
+            default -> Icon.GEAR;
+        });
+        float tile = 20;
+        if (Glass.on()) {
+            R2D.shadow(ctx, x + pad, y + 10, tile, tile, 6, 8, Colors.withAlpha(t.accent(), 0.22f * pa));
+        }
+        R2D.roundGradientV(ctx, x + pad, y + 10, tile, tile, 6, Colors.withAlpha(Colors.lerp(t.accent(), t.accent2(), 0.3f), 0.30f * pa),
+                Colors.withAlpha(t.accent(), 0.12f * pa));
+        R2D.outlineGradientV(ctx, x + pad, y + 10, tile, tile, 6, 0.55f, R2D.ALL, Colors.withAlpha(t.accent(), 0.6f * pa), Colors.withAlpha(t.accent(), 0.15f * pa));
+        R2D.icon(ctx, headIcon, x + pad + 5, y + 15, 10, Colors.fade(t.accent(), pa));
+        float tx0 = x + pad + tile + 7;
+        R2D.text(ctx, title, tx0, y + 10, 11f, AquaFont.Weight.SEMIBOLD, Colors.fade(t.text(), pa));
+        R2D.text(ctx, subtitle, tx0, y + 24, 5.2f, AquaFont.Weight.MEDIUM, Colors.fade(t.muted(), pa));
         if (ui.iconButton("close", x + w - 20, y + 8, 12, Icon.CLOSE, t.muted(), "Close (Esc)")) {
             close();
         }
 
-        float listY = y + 36;
-        float listH = h - 36 - 8 - (mods(searching) ? 12 : 0);
+        float listY = y + 38;
+        float listH = h - 38 - 8 - (mods(searching) ? 12 : 0);
         List<Module> mods = null;
         if (searching) {
             mods = Aqua.modules().search(query);
@@ -373,7 +421,7 @@ public final class AquaMenuScreen extends Screen {
             float trackH = listH;
             float thumbH = Math.max(14, trackH * listH / contentHeight);
             float ty = listY + (trackH - thumbH) * (scrolled / max);
-            R2D.round(ctx, x + w - 6, ty, 2, thumbH, 1, Colors.fade(Colors.withAlpha(t.text(), 0.25f), pa));
+            R2D.round(ctx, x + w - 6.5f, ty, 2.5f, thumbH, 1.25f, Colors.fade(Colors.withAlpha(t.text(), Glass.on() ? 0.32f : 0.25f), pa));
         }
     }
 
@@ -387,8 +435,7 @@ public final class AquaMenuScreen extends Screen {
         float cx = x;
         for (String[] it : items) {
             float kw = R2D.width(it[0], 4.4f, AquaFont.Weight.SEMIBOLD) + 6;
-            R2D.round(ctx, cx, y, kw, 8, 2.5f, Colors.fade(Colors.withAlpha(t.panel(), 0.9f), a));
-            R2D.outline(ctx, cx, y, kw, 8, 2.5f, 0.5f, Colors.fade(Colors.withAlpha(t.border(), 0.6f), a));
+            Glass.chip(ctx, cx, y, kw, 8, 2.5f, a, 0f);
             R2D.textMid(ctx, it[0], cx + 3, y + 4, 4.4f, AquaFont.Weight.SEMIBOLD, Colors.fade(t.text(), a));
             cx += kw + 3;
             R2D.textMid(ctx, it[1], cx, y + 4, 4.4f, AquaFont.Weight.MEDIUM, Colors.fade(t.muted(), a));
@@ -397,7 +444,7 @@ public final class AquaMenuScreen extends Screen {
     }
 
     private void hudGlobalBar(DrawContext ctx, Theme t, float x, float y, float w, float a) {
-        R2D.round(ctx, x, y, w, 16, 6, Colors.fade(Colors.withAlpha(t.panel(), 0.85f), a));
+        Glass.card(ctx, x, y, w, 16, 6, a, 0f, 0f);
         R2D.textMid(ctx, "HUD scale", x + 8, y + 8, 5.4f, AquaFont.Weight.MEDIUM, Colors.fade(t.text(), a));
         ui.slider("hud_scale", x + 50, y + 3.5f, w * 0.35f, Aqua.hud().scale);
         R2D.textMid(ctx, Aqua.hud().scale.format(), x + 56 + w * 0.35f, y + 8, 5f, AquaFont.Weight.MEDIUM, Colors.fade(t.muted(), a));
@@ -422,9 +469,12 @@ public final class AquaMenuScreen extends Screen {
         }
         boolean hov = ui.hover(x, y, w, rowH);
         float ha = ui.anim("row" + m.id(), 120, 0).target(hov).get();
-        int bg = Colors.lerp(Colors.withAlpha(t.panel(), 0.92f), Colors.withAlpha(Colors.brighten(t.panel(), 0.07f), 0.96f), ha);
-        R2D.round(ctx, x, y, w, totalH, 6.5f, Colors.fade(bg, a));
-        R2D.outline(ctx, x, y, w, totalH, 6.5f, 0.6f, Colors.fade(Colors.withAlpha(t.border(), 0.35f + ha * 0.25f), a));
+        float en = ui.anim("en" + m.id(), 180, m.isEnabled() ? 1 : 0).target(m.isEnabled()).get();
+        Glass.card(ctx, x, y, w, totalH, 7, a, ha, en * 0.85f);
+        if (en > 0.01f) {
+            R2D.shadow(ctx, x + 3, y + 8, 1.6f, rowH - 16, 0.8f, 4, Colors.withAlpha(t.accent(), 0.5f * en * a));
+            R2D.round(ctx, x + 3, y + 8, 1.6f, rowH - 16, 0.8f, Colors.fade(t.accent(), en * a));
+        }
 
         // Text
         R2D.text(ctx, m.name(), x + 9, y + 5.5f, 6.4f, AquaFont.Weight.SEMIBOLD, Colors.fade(t.text(), a));
@@ -509,7 +559,7 @@ public final class AquaMenuScreen extends Screen {
             float sy = y + rowH;
             float visibleH = settingsH * Anim.easeInOutCubic(ex);
             ui.pushClip(x, sy, w, visibleH);
-            R2D.rect(ctx, x + 9, sy, w - 18, 0.5f, Colors.fade(t.divider(), a));
+            Glass.divider(ctx, x + 9, sy, w - 18, a);
             float ry = sy + 4;
             for (Setting<?> s : m.settings()) {
                 if (!s.isVisible()) {

@@ -8,6 +8,7 @@ import dev.aqua.client.hud.HudManager;
 import dev.aqua.client.hud.HudWidget;
 import dev.aqua.client.render.Anim;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -72,10 +73,12 @@ public final class HudEditorScreen extends Screen {
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
         // Keep the world visible; only a light dim so widgets read clearly.
         if (client.world == null) {
-            super.renderBackground(context, mouseX, mouseY, deltaTicks);
+            renderPanoramaBackground(context, deltaTicks);
+            context.fill(0, 0, width, height, 0x60000000);
         } else {
             context.fill(0, 0, width, height, 0x40000000);
         }
+        Glass.backdrop(context, client.world == null && !Glass.on());
     }
 
     @Override
@@ -159,7 +162,7 @@ public final class HudEditorScreen extends Screen {
                 if (ly + 8 > sh) {
                     ly = w.sy - 10;
                 }
-                R2D.round(ctx, w.sx, ly, tw, 7.5f, 2.5f, Colors.withAlpha(t.background(), 0.9f));
+                Glass.popup(ctx, w.sx, ly, tw, 7.5f, 2.5f, 1f);
                 R2D.textMid(ctx, label, w.sx + 3, ly + 3.75f, 4.6f, AquaFont.Weight.SEMIBOLD, t.text());
             }
         }
@@ -220,9 +223,7 @@ public final class HudEditorScreen extends Screen {
         tbH = 18;
         tbX = (sw - tbW) / 2f;
         tbY = 4;
-        R2D.shadow(ctx, tbX, tbY, tbW, tbH, 6, 8, 0x50000000);
-        R2D.round(ctx, tbX, tbY, tbW, tbH, 6, t.windowBg(0.94f));
-        R2D.outline(ctx, tbX, tbY, tbW, tbH, 6, 0.6f, t.border());
+        Glass.window(ctx, tbX, tbY, tbW, tbH, 7, 1f);
         float x = tbX + 4;
         float y = tbY + 3.5f;
         if (ui.button("he_done", x, y, 34, 11, "Done", Icon.CHECK, true)) {
@@ -263,9 +264,7 @@ public final class HudEditorScreen extends Screen {
         if (w.sx + w.sw > inX - 4 && w.sy + w.sh > inY - 4) {
             inX = 6;
         }
-        R2D.shadow(ctx, inX, inY, inW, inH, 6, 8, 0x50000000);
-        R2D.round(ctx, inX, inY, inW, inH, 6, t.windowBg(0.95f));
-        R2D.outline(ctx, inX, inY, inW, inH, 6, 0.6f, t.border());
+        Glass.window(ctx, inX, inY, inW, inH, 8, 1f);
         float x = inX + 7;
         float y = inY + 6;
         R2D.icon(ctx, w.icon(), x, y, 7, t.accent());
@@ -463,6 +462,14 @@ public final class HudEditorScreen extends Screen {
             }
             if (rowH > 0) {
                 y += rowH + 3;
+            }
+        }
+        // On small screens the cluster can reach the keystrokes on the left; move them below it.
+        if (Aqua.modules().byId("keystrokes") instanceof HudWidget k && k.isEnabled()) {
+            k.layout(sw, sh, true);
+            if (k.sx < 5 + 120 && k.sy < y + 2 && k.sy + k.sh > 5) {
+                float ky = Math.min(y + 4, sh - k.sh - 44);
+                k.setLayout(Anchor.TOP_LEFT, 5, Math.max(y, ky));
             }
         }
         Aqua.hud().needsArrange = false;

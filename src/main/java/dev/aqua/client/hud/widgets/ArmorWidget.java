@@ -4,6 +4,7 @@ import dev.aqua.client.Aqua;
 import dev.aqua.client.hud.Anchor;
 import dev.aqua.client.hud.HudWidget;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -136,7 +137,7 @@ public final class ArmorWidget extends HudWidget {
             float x = row ? i * (BOX + GAP) : 0;
             float y = row ? 0 : i * (BOX + GAP);
             if (showBackground()) {
-                R2D.round(ctx, x, y, BOX, BOX, 3.5f, bg(alpha));
+                Glass.hud(ctx, x, y, BOX, BOX, 3.5f, bg(alpha));
             }
             if (!st.isEmpty()) {
                 ctx.getMatrices().pushMatrix();

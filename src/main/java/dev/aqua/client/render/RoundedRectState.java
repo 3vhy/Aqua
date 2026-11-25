@@ -13,7 +13,7 @@ import org.joml.Matrix3x2f;
  * Coordinates are GUI units (floats); the shader derives its anti-aliasing width from
  * screen-space derivatives so edges stay one physical pixel wide at every GUI scale.
  */
-public final class RoundedRectState implements SimpleGuiElementRenderState {
+public class RoundedRectState implements SimpleGuiElementRenderState {
     private final Matrix3x2f pose;
     private final float x;
     private final float y;

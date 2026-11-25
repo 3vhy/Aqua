@@ -4,6 +4,7 @@ import dev.aqua.client.Aqua;
 import dev.aqua.client.cosmetic.Emotes;
 import dev.aqua.client.render.Anim;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -31,7 +32,8 @@ public final class EmoteWheelScreen extends Screen {
 
     @Override
     public void renderBackground(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        ctx.fill(0, 0, width, height, Colors.withAlpha(0x000000, Math.round(70 * open.get())));
+        ctx.fill(0, 0, width, height, Colors.withAlpha(0x000000, Math.round(55 * open.get())));
+        Glass.backdrop(ctx, false);
     }
 
     private int hovered(double mx, double my) {
@@ -52,10 +54,8 @@ public final class EmoteWheelScreen extends Screen {
         float a = Anim.easeOutCubic(open.get());
         float cx = width / 2f, cy = height / 2f;
         float r = 62 * (0.9f + 0.1f * a);
-        R2D.shadow(ctx, cx - r, cy - r, r * 2, r * 2, r, 18, Colors.withAlpha(0x000000, 0.4f * a));
-        R2D.circle(ctx, cx, cy, r, Colors.fade(t.windowBg(0.9f), a));
-        R2D.ring(ctx, cx, cy, r, 0.7f, Colors.fade(t.border(), a));
-        R2D.circle(ctx, cx, cy, 17, Colors.fade(Colors.withAlpha(t.panel(), 0.95f), a));
+        Glass.window(ctx, cx - r, cy - r, r * 2, r * 2, r, a);
+        Glass.chip(ctx, cx - 17, cy - 17, 34, 34, 17, a, 0f);
         Emotes.Emote[] all = Emotes.Emote.values();
         int hov = hovered(mouseX, mouseY);
         for (int i = 0; i < all.length; i++) {
@@ -64,7 +64,9 @@ public final class EmoteWheelScreen extends Screen {
             float ey = cy + (float) Math.sin(ang) * r * 0.66f;
             boolean h = i == hov;
             if (h) {
+                R2D.shadow(ctx, ex - 17, ey - 17, 34, 34, 17, 8, Colors.fade(Colors.withAlpha(t.accent(), 0.3f), a));
                 R2D.circle(ctx, ex, ey, 17, Colors.fade(Colors.withAlpha(t.accent(), 0.25f), a));
+                R2D.ring(ctx, ex, ey, 17, 0.6f, Colors.fade(Colors.withAlpha(t.accent(), 0.6f), a));
             }
             R2D.textCentered(ctx, all[i].label, ex, ey - 2, 6f, AquaFont.Weight.SEMIBOLD, Colors.fade(h ? t.accent() : t.text(), a));
             R2D.textCentered(ctx, String.valueOf(i + 1), ex, ey + 6, 4.6f, AquaFont.Weight.MEDIUM, Colors.fade(t.muted(), a));

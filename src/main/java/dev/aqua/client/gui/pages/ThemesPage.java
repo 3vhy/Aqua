@@ -5,6 +5,7 @@ import dev.aqua.client.gui.AquaMenuScreen;
 import dev.aqua.client.gui.Ui;
 import dev.aqua.client.gui.UiSounds;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -33,9 +34,14 @@ public final class ThemesPage implements Page {
             boolean sel = Aqua.themes().presetName().equals(th.name());
             boolean hov = ui.hover(cx, cy, cw, ch);
             float ha = ui.anim("th" + i, 120, 0).target(hov).get();
-            R2D.round(ctx, cx, cy, cw, ch, 6.5f, Colors.fade(Colors.withAlpha(th.background(), 0.95f), a));
-            R2D.outline(ctx, cx, cy, cw, ch, 6.5f, sel ? 1f : 0.6f,
-                    Colors.fade(sel ? cur.accent() : Colors.withAlpha(th.elevated(), 0.9f + ha * 0.1f), a));
+            if (sel) {
+                R2D.shadow(ctx, cx, cy, cw, ch, 7, 9, Colors.fade(Colors.withAlpha(th.accent(), 0.3f), a));
+            }
+            R2D.roundGradientV(ctx, cx, cy, cw, ch, 7, Colors.fade(Colors.withAlpha(Colors.lerp(th.background(), th.accent(), 0.08f), 0.92f), a),
+                    Colors.fade(Colors.withAlpha(th.background(), 0.96f), a));
+            R2D.outlineGradientV(ctx, cx, cy, cw, ch, 7, sel ? 1f : 0.6f, R2D.ALL,
+                    Colors.fade(sel ? th.accent() : Colors.withAlpha(0xFFFFFF, 0.16f + ha * 0.12f), a),
+                    Colors.fade(sel ? Colors.withAlpha(th.accent(), 0.5f) : Colors.withAlpha(0xFFFFFF, 0.05f + ha * 0.05f), a));
             // Mini preview: panel, accent pill, text lines
             R2D.round(ctx, cx + 6, cy + 6, cw * 0.42f, ch - 12, 4, Colors.fade(th.panel(), a));
             R2D.round(ctx, cx + 10, cy + 11, cw * 0.3f, 3, 1.5f, Colors.fade(th.text(), a));

@@ -61,7 +61,7 @@ public final class ModuleManager {
                 try {
                     m.onTick();
                 } catch (Throwable t) {
-                    dev.aqua.client.AquaClient.LOGGER.error("Module {} tick failed; disabling it", m.id(), t);
+                    dev.aqua.client.util.Problems.report("Module " + m.id() + " tick failed; disabling it", t);
                     m.setEnabled(false, false);
                 }
             }

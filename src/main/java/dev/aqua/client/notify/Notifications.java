@@ -128,10 +128,10 @@ public final class Notifications {
             if (alpha < 4) {
                 continue;
             }
-            R2D.shadow(ctx, x, y, w, h, 7, 10, Colors.withAlpha(0x000000, Math.round(a * 90)));
-            R2D.round(ctx, x, y, w, h, 7, Colors.fade(t.windowBg(0.92f), a));
-            R2D.outline(ctx, x, y, w, h, 7, 0.75f, Colors.fade(t.border(), a));
-            R2D.circle(ctx, x + 14, y + 15, 8, Colors.fade(Colors.withAlpha(dotColor(n, t), 0.18f), a));
+            dev.aqua.client.render.Glass.toast(ctx, x, y, w, h, 8, a);
+            R2D.shadow(ctx, x + 6, y + 7, 16, 16, 8, 6, Colors.fade(Colors.withAlpha(dotColor(n, t), 0.35f), a));
+            R2D.circle(ctx, x + 14, y + 15, 8, Colors.fade(Colors.withAlpha(dotColor(n, t), 0.2f), a));
+            R2D.ring(ctx, x + 14, y + 15, 8, 0.5f, Colors.fade(Colors.withAlpha(dotColor(n, t), 0.45f), a));
             R2D.icon(ctx, n.icon, x + 9, y + 10, 10, Colors.fade(dotColor(n, t), a));
             R2D.text(ctx, AquaFont.ellipsize(n.title, w - 36, 6.5f, AquaFont.Weight.SEMIBOLD), x + 27, y + 7, 6.5f,
                     AquaFont.Weight.SEMIBOLD, Colors.fade(t.text(), a));

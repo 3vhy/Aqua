@@ -6,6 +6,7 @@ import dev.aqua.client.gui.AquaMenuScreen;
 import dev.aqua.client.gui.Ui;
 import dev.aqua.client.gui.UiSounds;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -53,8 +54,10 @@ public final class ProfilesPage implements Page {
             float h = 24;
             boolean hov = ui.hover(x, y, w, h);
             float ha = ui.anim("pf" + p, 120, 0).target(hov).get();
-            R2D.round(ctx, x, y, w, h, 6.5f, Colors.fade(Colors.lerp(Colors.withAlpha(t.panel(), 0.92f), Colors.brighten(t.panel(), 0.06f), ha), a));
-            R2D.outline(ctx, x, y, w, h, 6.5f, active ? 0.9f : 0.6f, Colors.fade(active ? Colors.withAlpha(t.accent(), 0.7f) : Colors.withAlpha(t.border(), 0.4f), a));
+            Glass.card(ctx, x, y, w, h, 7, a, ha, active ? 1f : 0f);
+            if (active) {
+                R2D.outline(ctx, x, y, w, h, 7, 0.7f, Colors.fade(Colors.withAlpha(t.accent(), 0.6f), a));
+            }
             R2D.icon(ctx, active ? Icon.CHECK : Icon.FOLDER, x + 8, y + h / 2f - 3.5f, 7, Colors.fade(active ? t.accent() : t.muted(), a));
             if (p.equals(renaming)) {
                 renameText = ui.textField("pf_rn", x + 20, y + 5.5f, 120, 13, renameText, "Name", 32, null, s -> renameText = s, s -> {

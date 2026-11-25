@@ -8,6 +8,7 @@ import dev.aqua.client.module.Category;
 import dev.aqua.client.module.Module;
 import dev.aqua.client.render.Anim;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -144,7 +145,7 @@ public final class ModuleListWidget extends HudWidget {
             float x = right ? w - rw + slide : -slide;
             float ra = alpha * a;
             if (showBackground()) {
-                R2D.round(ctx, x, y, rw, H, Pill.RADIUS * 0.85f, bg(ra));
+                Glass.hud(ctx, x, y, rw, H, Pill.RADIUS * 0.85f, bg(ra));
             }
             if (accentBar.on()) {
                 float bx = right ? x + rw - 1.4f : x;

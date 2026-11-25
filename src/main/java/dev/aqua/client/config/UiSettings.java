@@ -37,14 +37,49 @@ public final class UiSettings {
         }
     }
 
+    public enum Style implements EnumSetting.Displayable {
+        GLASS("Glass"), SOLID("Solid");
+        final String label;
+
+        Style(String l) {
+            label = l;
+        }
+
+        public String displayName() {
+            return label;
+        }
+    }
+
+    public enum TitleBackground implements EnumSetting.Displayable {
+        AQUA("Aqua lights"), PANORAMA("Minecraft panorama");
+        final String label;
+
+        TitleBackground(String l) {
+            label = l;
+        }
+
+        public String displayName() {
+            return label;
+        }
+    }
+
     private final List<Setting<?>> all = new ArrayList<>();
+
+    public final EnumSetting<Style> style = add(new EnumSetting<>("style", "Interface style", Style.GLASS)
+            .describe("Glass: frosted panels that blur what is behind them. Solid: plain dark panels"));
+    public final NumberSetting glassBlur = add(new NumberSetting("glass_blur", "Glass frost", 3, 1, 5, 1)
+            .describe("How strongly glass blurs what is behind it").visibleWhen(this::glassStyle));
+    public final NumberSetting glassTint = add(new NumberSetting("glass_tint", "Glass tint", 0.55, 0.15, 0.85, 0.05)
+            .describe("How dark and solid the glass is (higher is easier to read on bright scenes)").visibleWhen(this::glassStyle));
+    public final BoolSetting hudGlass = add(new BoolSetting("hud_glass", "Glass HUD", true)
+            .describe("HUD element backgrounds are frosted glass too").visibleWhen(this::glassStyle));
 
     public final BoolSetting reducedMotion = add(new BoolSetting("reduced_motion", "Reduced motion", false)
             .describe("Replaces menu and HUD transitions with instant changes"));
     public final NumberSetting animationSpeed = add(new NumberSetting("animation_speed", "Animation speed", 1.0, 0.5, 2.0, 0.05)
             .unit("x").describe("Scales the duration of interface transitions"));
-    public final BoolSetting blur = add(new BoolSetting("blur", "Background blur", true)
-            .describe("Blurs the world behind Aqua menus (uses vanilla blur)"));
+    public final BoolSetting blur = add(new BoolSetting("full_blur", "Blur whole background", false)
+            .describe("Blurs the entire world behind Aqua menus, not just behind the glass").visibleWhen(this::glassStyle));
     public final EnumSetting<Quality> quality = add(new EnumSetting<>("quality", "Effects quality", Quality.HIGH)
             .describe("Budget for shadows, particles and animation detail"));
     public final BoolSetting shadowsSetting = add(new BoolSetting("shadows", "Soft shadows", true)
@@ -81,8 +116,19 @@ public final class UiSettings {
     public final BoolSetting toggleNotifications = add(new BoolSetting("toggle_notifications", "Module toggle notifications", true));
     public final BoolSetting customTitle = add(new BoolSetting("custom_title", "Aqua title screen", true)
             .describe("Replace the vanilla title screen with Aqua's"));
+    public final EnumSetting<TitleBackground> titleBackground = add(new EnumSetting<>("title_background", "Title background",
+            TitleBackground.AQUA).describe("What shows behind the glass on the Aqua title screen").visibleWhen(customTitle::on));
     public final NumberSetting menuScale = add(new NumberSetting("menu_scale", "Menu scale", 1.0, 0.75, 1.25, 0.05).unit("x"));
     public final BoolSetting menuDim = add(new BoolSetting("menu_dim", "Dim world behind menu", true));
+
+    private boolean glassStyle() {
+        return style.get() == Style.GLASS;
+    }
+
+    /** True when glass surfaces should be drawn (Glass style, and the blur works on this system). */
+    public boolean glass() {
+        return style.get() == Style.GLASS && !dev.aqua.client.render.GlassBlur.broken();
+    }
 
     private boolean soundsOn() {
         return sounds.on();

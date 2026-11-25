@@ -102,9 +102,12 @@ public final class AquaClientGameTest implements FabricClientGameTest {
                         case "sky_lyrics" -> skyLyricsText(context);
                         case "preview_new" -> previewNew(context, sp);
                         case "video_modules" -> videoModules(context, sp);
+                        case "settings_sweep" -> settingsSweep(context, sp);
+                        case "menu_sweep" -> menuSweep(context);
                         case "music" -> music(context);
                         case "knife_gallery" -> knifeGallery(context, sp);
                         case "identity" -> identity(context, sp);
+                        case "glass" -> glassTour(context, sp);
                         default -> throw new IllegalArgumentException("unknown section " + section);
                     }
                 }
@@ -194,6 +197,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             airborneMenu(context);
             keybindCapture(context);
             toggleEveryModule(context);
+            settingsSweep(context, sp);
             hudEditor(context);
             cosmetics(context);
             skinsAndKnives(context, sp);
@@ -204,6 +208,7 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             freelook(context);
             skyLyricsText(context);
             videoModules(context, sp);
+            glassTour(context, sp);
             profilesAndLayouts(context);
             resizeAndScale(context);
             reloadResources(context);
@@ -1156,6 +1161,225 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             Aqua.modules().byId("sky_lyrics").setEnabled(false, false);
             mc.player.setPitch(0f);
         });
+    }
+
+    /**
+     * Bug sweep: every module is switched on and driven through every option it has (each choice of
+     * every list, the lowest and highest value of every slider, every switch, odd text and colours),
+     * with frames rendered in between, in first and third person. No error may be caught anywhere.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void settingsSweep(ClientGameTestContext context, TestSingleplayerContext sp) {
+        int p0 = context.computeOnClient(mc -> dev.aqua.client.util.Problems.count());
+        sp.getServer().runCommand("item replace entity @a weapon.mainhand with minecraft:diamond_sword");
+        context.runOnClient(mc -> mc.player.getInventory().setSelectedSlot(0));
+        List<String> ids = context.computeOnClient(mc -> {
+            List<String> l = new ArrayList<>();
+            for (Module m : Aqua.modules().all()) {
+                l.add(m.id());
+            }
+            return l;
+        });
+        int steps = 0;
+        for (int pass = 0; pass < 2; pass++) {
+            Perspective view = pass == 0 ? Perspective.THIRD_PERSON_BACK : Perspective.FIRST_PERSON;
+            context.runOnClient(mc -> mc.options.setPerspective(view));
+            for (String id : ids) {
+                boolean original = context.computeOnClient(mc -> Aqua.modules().byId(id).isEnabled());
+                context.runOnClient(mc -> Aqua.modules().byId(id).setEnabled(true, false));
+                context.waitTicks(1);
+                int count = context.computeOnClient(mc -> Aqua.modules().byId(id).settings().size());
+                for (int si = 0; si < count; si++) {
+                    int idx = si;
+                    int variants = context.computeOnClient(mc -> variants(Aqua.modules().byId(id).settings().get(idx)));
+                    for (int v = 0; v < variants; v++) {
+                        int vi = v;
+                        context.runOnClient(mc -> applyVariant(Aqua.modules().byId(id).settings().get(idx), vi));
+                        context.waitTicks(1);
+                        steps++;
+                    }
+                }
+                context.runOnClient(mc -> {
+                    Module m = Aqua.modules().byId(id);
+                    for (Setting<?> st : m.settings()) {
+                        st.reset();
+                    }
+                    m.setEnabled(original, false);
+                });
+            }
+            if (pass == 0) {
+                context.takeScreenshot("80_sweep_third_person");
+            }
+        }
+        // Interface settings too (notification style, quality, colour sync, ...).
+        int uiCount = context.computeOnClient(mc -> Aqua.ui().all().size());
+        for (int si = 0; si < uiCount; si++) {
+            int idx = si;
+            String sid = context.computeOnClient(mc -> Aqua.ui().all().get(idx).id());
+            if (sid.equals("menu_scale") || sid.equals("starred")) {
+                continue;
+            }
+            int variants = context.computeOnClient(mc -> variants(Aqua.ui().all().get(idx)));
+            for (int v = 0; v < variants; v++) {
+                int vi = v;
+                context.runOnClient(mc -> applyVariant(Aqua.ui().all().get(idx), vi));
+                context.runOnClient(mc -> Aqua.notifications().info("Sweep", "Interface setting " + sid));
+                context.waitTicks(1);
+                steps++;
+            }
+            context.runOnClient(mc -> Aqua.ui().all().get(idx).reset());
+        }
+        context.runOnClient(mc -> mc.options.setPerspective(Perspective.FIRST_PERSON));
+        List<String> problems = context.computeOnClient(mc -> {
+            var all = dev.aqua.client.util.Problems.all();
+            return new ArrayList<>(all.subList(Math.min(p0, all.size()), all.size()));
+        });
+        check(problems.isEmpty(), "Every module driven through every option in first and third person with no errors ("
+                + steps + " steps" + (problems.isEmpty() ? "" : "; " + String.join(" | ", problems)) + ")");
+    }
+
+    /** How many values the sweep tries for a setting. */
+    @SuppressWarnings("rawtypes")
+    private static int variants(Setting<?> s) {
+        if (s instanceof dev.aqua.client.setting.EnumSetting e) {
+            return e.values().length;
+        }
+        if (s instanceof NumberSetting) {
+            return 3;
+        }
+        if (s instanceof BoolSetting) {
+            return 2;
+        }
+        if (s instanceof dev.aqua.client.setting.ColorSetting) {
+            return 3;
+        }
+        if (s instanceof dev.aqua.client.setting.StringSetting) {
+            return 3;
+        }
+        return 0;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static void applyVariant(Setting<?> s, int v) {
+        if (s instanceof dev.aqua.client.setting.EnumSetting e) {
+            e.set(e.values()[v]);
+        } else if (s instanceof NumberSetting n) {
+            n.set(v == 0 ? n.min() : v == 1 ? n.max() : n.defaultValue());
+        } else if (s instanceof BoolSetting b) {
+            b.toggle();
+        } else if (s instanceof dev.aqua.client.setting.ColorSetting c) {
+            switch (v) {
+                case 0 -> c.setSyncTheme(!c.syncTheme());
+                case 1 -> c.set(0x40FF00FF);
+                default -> c.set(0xFF000000);
+            }
+        } else if (s instanceof dev.aqua.client.setting.StringSetting t) {
+            String[] texts = {"", "\u201cna\u00efve\u201d \u2013 \u266a \u65e5\u672c \ud83d\ude00 <b>&amp;",
+                    "x".repeat(Math.max(1, t.maxLength()))};
+            t.set(texts[v]);
+        }
+    }
+
+    /** Developer audit: every module's settings opened in the menu, one screenshot each. */
+    private void menuSweep(ClientGameTestContext context) {
+        List<String[]> mods = context.computeOnClient(mc -> {
+            List<String[]> l = new ArrayList<>();
+            for (Module m : Aqua.modules().all()) {
+                l.add(new String[]{m.id(), m.name()});
+            }
+            return l;
+        });
+        context.setScreen(() -> new AquaMenuScreen(null));
+        context.waitTicks(10);
+        for (String[] m : mods) {
+            context.runOnClient(mc -> {
+                try {
+                    AquaMenuScreen menu = (AquaMenuScreen) mc.currentScreen;
+                    var exp = AquaMenuScreen.class.getDeclaredField("expanded");
+                    exp.setAccessible(true);
+                    java.util.Set<String> set = (java.util.Set<String>) exp.get(null);
+                    set.clear();
+                    set.add(m[0]);
+                    var q = AquaMenuScreen.class.getDeclaredField("query");
+                    q.setAccessible(true);
+                    q.set(menu, m[1]);
+                    var uiF = AquaMenuScreen.class.getDeclaredField("ui");
+                    uiF.setAccessible(true);
+                    ((Ui) uiF.get(menu)).setText("search", m[1]);
+                } catch (ReflectiveOperationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            context.waitTicks(8);
+            context.takeScreenshot("ms_" + m[0]);
+        }
+        context.setScreen(() -> null);
+    }
+
+    /** Glass style: the blur runs only when glass is on screen, every screen draws, no errors are recorded. */
+    private void glassTour(ClientGameTestContext context, TestSingleplayerContext sp) {
+        sp.getServer().runCommand("time set noon");
+        sp.getServer().runCommand("weather clear");
+        int problems0 = context.computeOnClient(mc -> dev.aqua.client.util.Problems.count());
+        String[] shown = {"watermark", "performance", "clock", "keystrokes", "music_card", "position", "module_list", "armor", "compass"};
+        java.util.Map<String, Boolean> before = context.computeOnClient(mc -> {
+            java.util.Map<String, Boolean> m0 = new java.util.HashMap<>();
+            Aqua.ui().style.set(dev.aqua.client.config.UiSettings.Style.GLASS);
+            for (String id : shown) {
+                Module m = Aqua.modules().byId(id);
+                if (m != null) {
+                    m0.put(id, m.isEnabled());
+                    m.setEnabled(true, false);
+                }
+            }
+            return m0;
+        });
+        context.waitTicks(10);
+        long c0 = context.computeOnClient(mc -> dev.aqua.client.render.GlassBlur.captures());
+        context.waitTicks(5);
+        long c1 = context.computeOnClient(mc -> dev.aqua.client.render.GlassBlur.captures());
+        check(c1 > c0, "glass HUD backgrounds blur the game view each frame");
+        context.takeScreenshot("glass_hud");
+
+        context.setScreen(() -> new AquaMenuScreen(null));
+        context.waitTicks(10);
+        for (String nav : new String[]{"HUD", "VISUALS", "COSMETICS", "WARDROBE", "MUSIC", "THEMES", "PROFILES", "KEYBINDS", "SETTINGS"}) {
+            context.runOnClient(mc -> {
+                try {
+                    var f = AquaMenuScreen.class.getDeclaredField("nav");
+                    f.setAccessible(true);
+                    f.set(mc.currentScreen, AquaMenuScreen.Nav.valueOf(nav));
+                } catch (ReflectiveOperationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            context.waitTicks(8);
+            context.takeScreenshot("glass_menu_" + nav.toLowerCase(java.util.Locale.ROOT));
+        }
+        context.runOnClient(mc -> Aqua.ui().style.set(dev.aqua.client.config.UiSettings.Style.SOLID));
+        context.waitTicks(6);
+        long s0 = context.computeOnClient(mc -> dev.aqua.client.render.GlassBlur.captures());
+        context.waitTicks(6);
+        long s1 = context.computeOnClient(mc -> dev.aqua.client.render.GlassBlur.captures());
+        check(s1 == s0, "solid style makes no glass blur");
+        context.takeScreenshot("solid_menu_settings");
+        context.runOnClient(mc -> Aqua.ui().style.set(dev.aqua.client.config.UiSettings.Style.GLASS));
+        context.setScreen(() -> new dev.aqua.client.hud.editor.HudEditorScreen(null));
+        context.waitTicks(10);
+        context.takeScreenshot("glass_hud_editor");
+        context.setScreen(() -> new dev.aqua.client.gui.EmoteWheelScreen());
+        context.waitTicks(10);
+        context.takeScreenshot("glass_emote_wheel");
+        context.setScreen(() -> new dev.aqua.client.gui.AquaTitleScreen());
+        context.waitTicks(30);
+        context.takeScreenshot("glass_title");
+        context.setScreen(() -> null);
+        context.runOnClient(mc -> Aqua.notifications().info("Glass", "Notifications are glass too"));
+        context.waitTicks(12);
+        context.takeScreenshot("glass_toast");
+        int problems = context.computeOnClient(mc -> dev.aqua.client.util.Problems.count()) - problems0;
+        check(problems == 0, "glass tour recorded no errors (" + problems + ")");
+        context.runOnClient(mc -> before.forEach((id, on) -> Aqua.modules().byId(id).setEnabled(on, false)));
     }
 
     private static <T extends Module> T mod(Class<T> c) {

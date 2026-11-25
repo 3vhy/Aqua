@@ -9,6 +9,7 @@ import dev.aqua.client.music.MusicModule;
 import dev.aqua.client.music.MusicPlayer;
 import dev.aqua.client.music.Track;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -147,8 +148,10 @@ public final class MusicPage implements Page {
         Page.card(ctx, t, x, y, w, 20, a);
         R2D.icon(ctx, Icon.NOTE, x + 9, y + 6.5f, 7, Colors.fade(t.muted(), a));
         R2D.textMid(ctx, "Volume", x + 19, y + 10, 5.4f, AquaFont.Weight.MEDIUM, Colors.fade(t.text(), a));
-        ui.slider("mp_volume", x + 52, y + 5.5f, w * 0.4f, mod.volumeSetting());
-        R2D.textMid(ctx, mod.volumeSetting().format(), x + 58 + w * 0.4f, y + 10, 5f, AquaFont.Weight.MEDIUM, Colors.fade(t.muted(), a));
+        // The slider fills the space left of the buttons, leaving room for the value.
+        float sliderW = Math.max(30, Math.min(w * 0.4f, (x + w - 9 - 52 - 52) - (x + 52) - 26));
+        ui.slider("mp_volume", x + 52, y + 5.5f, sliderW, mod.volumeSetting());
+        R2D.textMid(ctx, mod.volumeSetting().format(), x + 58 + sliderW, y + 10, 5f, AquaFont.Weight.MEDIUM, Colors.fade(t.muted(), a));
         if (ui.button("mp_folder", x + w - 9 - 52, y + 4.5f, 52, 11, "Open folder", Icon.FOLDER, false)) {
             Util.getOperatingSystem().open(mp.folder());
         }
@@ -172,7 +175,8 @@ public final class MusicPage implements Page {
             boolean cur = !mp.isExternal() && i == mp.index() && tr != null;
             boolean hov = ui.hover(x + 4, ry, w - 8, rowH - 1);
             if (cur || hov) {
-                R2D.round(ctx, x + 4, ry, w - 8, rowH - 1, 4, Colors.fade(cur ? Colors.withAlpha(t.accent(), 0.18f) : Colors.withAlpha(t.elevated(), 0.9f), a));
+                R2D.round(ctx, x + 4, ry, w - 8, rowH - 1, 4, Colors.fade(cur ? Colors.withAlpha(t.accent(), 0.18f)
+                        : (Glass.on() ? Colors.withAlpha(0xFFFFFF, 0.06f) : Colors.withAlpha(t.elevated(), 0.9f)), a));
             }
             R2D.icon(ctx, cur && mp.isPlaying() ? Icon.PLAY : Icon.NOTE, x + 10, ry + rowH / 2f - 3.5f, 7, Colors.fade(cur ? t.accent() : t.muted(), a));
             R2D.textMid(ctx, AquaFont.ellipsize(tk.title(), w * 0.45f, 5.6f, AquaFont.Weight.SEMIBOLD), x + 22, ry + rowH / 2f - 0.5f, 5.6f,

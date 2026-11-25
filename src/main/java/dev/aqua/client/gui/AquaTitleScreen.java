@@ -4,6 +4,7 @@ import dev.aqua.client.Aqua;
 import dev.aqua.client.hud.widgets.WatermarkWidget;
 import dev.aqua.client.render.Anim;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -82,16 +83,23 @@ public final class AquaTitleScreen extends TitleScreen {
     public void renderBackground(DrawContext ctx, int mouseX, int mouseY, float delta) {
         Theme t = Aqua.theme();
         float time = (System.currentTimeMillis() - openedAt) / 1000f;
-        R2D.roundGradientV(ctx, 0, 0, width, height, 0, Colors.darken(t.background(), 0.2f), Colors.lerp(t.background(), t.panel(), 0.6f));
-        // Slow drifting soft glows (cheap: three SDF shapes per frame).
+        boolean glass = Glass.on();
         float motion = Aqua.ui().reducedMotion.on() ? 0f : 1f;
-        for (int i = 0; i < 3; i++) {
-            float phase = time * 0.05f * motion + i * 2.1f;
-            float cx = width * (0.25f + 0.5f * (0.5f + 0.5f * (float) Math.sin(phase * 1.3f + i)));
-            float cy = height * (0.3f + 0.4f * (0.5f + 0.5f * (float) Math.cos(phase + i * 0.7f)));
-            float r = Math.min(width, height) * (0.18f + 0.05f * i);
-            int c = i == 1 ? t.accent2() : t.accent();
-            R2D.shadow(ctx, cx - r / 2f, cy - r / 2f, r, r, r / 2f, 60, Colors.withAlpha(c, 0.10f));
+        if (Aqua.ui().titleBackground.get() == dev.aqua.client.config.UiSettings.TitleBackground.PANORAMA) {
+            renderPanoramaBackground(ctx, delta);
+            R2D.roundGradientV(ctx, 0, 0, width, height, 0, Colors.withAlpha(t.background(), 0.15f), Colors.withAlpha(t.background(), 0.55f));
+        } else {
+            R2D.roundGradientV(ctx, 0, 0, width, height, 0, Colors.darken(t.background(), 0.2f), Colors.lerp(t.background(), t.panel(), 0.6f));
+            // Slow drifting lights. With the Glass style they are brighter, so the glass has colour to frost.
+            int[] colors = {t.accent(), t.accent2(), Colors.lerp(t.accent(), 0xFFB36BFF, 0.55f), Colors.lerp(t.accent2(), 0xFFFF7FB0, 0.35f)};
+            int n = glass ? 4 : 3;
+            for (int i = 0; i < n; i++) {
+                float phase = time * 0.05f * motion + i * 2.1f;
+                float cx = width * (0.2f + 0.6f * (0.5f + 0.5f * (float) Math.sin(phase * 1.3f + i)));
+                float cy = height * (0.25f + 0.5f * (0.5f + 0.5f * (float) Math.cos(phase + i * 0.7f)));
+                float r = Math.min(width, height) * (glass ? 0.26f + 0.06f * (i % 2) : 0.18f + 0.05f * i);
+                R2D.shadow(ctx, cx - r / 2f, cy - r / 2f, r, r, r / 2f, glass ? 70 : 60, Colors.withAlpha(colors[i], glass ? 0.42f : 0.10f));
+            }
         }
         // Gentle wave lines along the bottom (matches the emblem's wave)
         for (int k = 0; k < 2; k++) {
@@ -107,6 +115,7 @@ public final class AquaTitleScreen extends TitleScreen {
                 prevY = y;
             }
         }
+        Glass.backdrop(ctx, false);
     }
 
     @Override
@@ -143,17 +152,22 @@ public final class AquaTitleScreen extends TitleScreen {
         // R7: a short greeting (Name Protect's alias is used when it is on).
         String who = client != null && client.getSession() != null
                 ? dev.aqua.client.module.qol.NameProtect.filter(client.getSession().getUsername()) : "";
-        if (!who.isEmpty()) {
+        // Hidden when the window is too short for it to clear the button card.
+        float cardTop = Math.min(height - (15 + 4) * 5 - 30, wy + size * 1.25f + 34) - 8;
+        if (!who.isEmpty() && wy + size * 1.25f + 16 < cardTop) {
             R2D.textCentered(ctx, greeting() + ", " + who, cx, wy + size * 1.25f + 11, 5f, AquaFont.Weight.MEDIUM,
                     Colors.withAlpha(t.muted(), textA * 0.9f));
         }
 
-        // Buttons
+        // Buttons, on a glass card
         Entry[] es2 = entries();
         float bw = 130;
         float bh = 15;
         float gap = 4;
-        float by = Math.min(height - (bh + gap) * es2.length - 26, wy + size * 1.25f + 24);
+        float pad = 8;
+        float by = Math.min(height - (bh + gap) * es2.length - 30, wy + size * 1.25f + 34);
+        float cardH = es2.length * (bh + gap) - gap + pad * 2;
+        Glass.window(ctx, cx - bw / 2f - pad, by - pad + (1f - btnA) * 8f, bw + pad * 2, cardH, 12, btnA);
         for (int i = 0; i < es2.length; i++) {
             Entry e = es2[i];
             float bx = cx - bw / 2f;
@@ -161,12 +175,10 @@ public final class AquaTitleScreen extends TitleScreen {
             boolean hov = ui.hover(bx, yy, bw, bh) || focused == i;
             float ha = ui.anim("tb" + i, 140, 0).target(hov).get();
             boolean primary = i == 0;
-            int fill = primary ? Colors.lerp(t.accent(), t.accent2(), ha * 0.3f)
-                    : Colors.lerp(Colors.withAlpha(t.panel(), 0.85f), Colors.withAlpha(t.elevated(), 0.95f), ha);
-            R2D.shadow(ctx, bx, yy, bw, bh, 5, 6, Colors.withAlpha(0x000000, 0.25f * btnA));
-            R2D.round(ctx, bx, yy, bw, bh, 5, Colors.fade(fill, btnA));
-            if (!primary) {
-                R2D.outline(ctx, bx, yy, bw, bh, 5, 0.6f, Colors.fade(Colors.withAlpha(Colors.lerp(t.border(), t.accent(), ha), 0.8f), btnA));
+            if (primary) {
+                Glass.accent(ctx, bx, yy, bw, bh, 6, btnA, ha);
+            } else {
+                Glass.chip(ctx, bx, yy, bw, bh, 6, btnA, ha);
             }
             int fg = primary ? t.onAccent() : t.text();
             R2D.icon(ctx, e.icon(), bx + 9, yy + bh / 2f - 3.5f, 7, Colors.fade(fg, btnA));
@@ -179,9 +191,16 @@ public final class AquaTitleScreen extends TitleScreen {
             }
         }
 
-        // Small corner actions
+        // Small corner actions, on a glass bar
         float ix = 6;
         float iy = height - 18;
+        {
+            boolean mm = net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("modmenu");
+            float textX = ix + 48 + (mm ? 15 : 0);
+            String l1 = "Minecraft " + SharedConstants.getGameVersion().name() + " • Fabric";
+            float tw = Math.max(R2D.width(l1, 4.8f, AquaFont.Weight.MEDIUM), R2D.width("Not an official Minecraft product.", 4.4f, AquaFont.Weight.REGULAR));
+            Glass.toast(ctx, ix - 3, iy - 3, textX - ix + tw + 9, 19, 7, btnA);
+        }
         if (ui.iconButton("lang", ix, iy, 13, Icon.GLOBE, t.muted(), "Language")) {
             client.setScreen(new LanguageOptionsScreen(this, client.options, client.getLanguageManager()));
         }

@@ -132,7 +132,7 @@ public final class Hooks {
                 b.draw(fx, vcp, outline.pos(), outline.shape());
                 FxBuffers.flush();
             } catch (Throwable t) {
-                AquaClient.LOGGER.error("Block outline failed; disabling it", t);
+                dev.aqua.client.util.Problems.report("Block outline failed; disabling it", t);
                 b.setEnabled(false, false);
                 return true;
             }
@@ -195,7 +195,7 @@ public final class Hooks {
                 } catch (Throwable t) {
                     // Paused for this session only: the saved on/off state is left alone.
                     SUSPENDED.add(m);
-                    AquaClient.LOGGER.error("World effect {} failed; pausing it until restart", m.id(), t);
+                    dev.aqua.client.util.Problems.report("World effect " + m.id() + " failed; pausing it until restart", t);
                     Aqua.notifications().warn(m.name(), "Hit an error and is paused until restart");
                 }
             }

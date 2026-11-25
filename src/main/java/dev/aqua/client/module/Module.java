@@ -106,7 +106,7 @@ public abstract class Module {
                 onDisable();
             }
         } catch (Throwable t) {
-            dev.aqua.client.AquaClient.LOGGER.error("Module {} failed to {}", id, on ? "enable" : "disable", t);
+            dev.aqua.client.util.Problems.report("Module " + id + " failed to " + (on ? "enable" : "disable"), t);
         }
         Aqua.config().markDirty();
         if (notify) {

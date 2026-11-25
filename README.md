@@ -72,6 +72,23 @@ the arrow keys nudge the selected widget (hold Shift for bigger steps), **L** lo
 
 ## Features
 
+### Glass interface
+Every Aqua surface is **frosted glass**: the menu window, the sidebar, popups, tooltips, toasts, the
+HUD editor, the emote wheel, the title screen card and (optionally) every HUD element. Glass blurs
+whatever is behind it, the world, the title background or the HUD under a menu. It also adds a
+theme tint, a soft sheen across the top and a lit rim along the edges. Bright backdrops are toned
+down so text stays readable in daylight or snow.
+
+Under **Settings → Interface** you can change:
+* **Interface style**: Glass (default) or Solid (the earlier opaque look).
+* **Glass frost**: 1 to 5, how strongly the glass blurs.
+* **Glass tint**: how dark and solid the glass is.
+* **Glass HUD**: whether HUD backgrounds are glass too.
+* **Blur whole background**: also blurs the area around the menu window.
+
+The blur runs on the GPU at a quarter of the screen size and only in frames that show glass. If the
+graphics driver cannot run it, Aqua switches to solid panels by itself and logs the reason.
+
 ### Menu
 A floating window based on the attached menu screenshot. It has a narrow sidebar with the Aqua emblem,
 a module search (by name, description, keywords and setting names), and these sections: **HUD,
@@ -79,7 +96,10 @@ Visuals, Cosmetics, Quality of Life, Performance**, plus **Wardrobe, Themes, Pro
 Settings**. Each module row shows its name and description on the left. On the right are a settings
 chevron, a key-bind badge (with conflict warnings) and a switch. The settings open inline and include
 switches, sliders, dropdowns, an HSV colour picker with alpha and theme-sync, text fields and buttons.
-Every module has a **Reset module** button, and Settings has **Reset everything**.
+Every module has a **Reset module** button, and Settings has **Reset everything**. The selected
+section is marked by a highlight that slides between sidebar items. Each page header has an icon
+tile, and enabled modules get an accent strip and tint. Tooltips appear after a short pause above
+the cursor, so they never cover the control you are pointing at.
 
 ### HUD (Fern-style)
 Dark translucent capsules with an icon, bright values and small muted units separated by dots.
@@ -191,14 +211,15 @@ and turn on **Settings › Colour Sync** to make every module colour follow your
 
 ### Performance
 Effect Budget, Background FPS Limit and Particle Limiter. Under Settings you can also set **Effects
-quality** (Low/Medium/High), **Cosmetic intensity**, **Reduced motion**, **Background blur** on or
-off, and **Soft shadows**.
+quality** (Low/Medium/High), **Cosmetic intensity**, **Reduced motion**, the **Interface style**
+(Glass or Solid) and **Soft shadows**.
 
 ### Title screen
-The Aqua emblem and wordmark intro with a light animated background. The **Singleplayer,
-Multiplayer, Options, Aqua Settings and Quit** buttons open the real Minecraft screens. There are
-also language and accessibility shortcuts and a one-click switch to the vanilla title screen. You can
-turn the Aqua title screen off in Settings.
+The Aqua emblem and wordmark intro. Behind it are drifting coloured lights, or the Minecraft
+panorama if you pick that under *Settings → Title background*. The **Singleplayer, Multiplayer,
+Options, Aqua Settings and Quit** buttons sit on a glass card and open the real Minecraft screens. A
+glass bar in the corner holds the language and accessibility shortcuts and a one-click switch to the
+vanilla title screen. You can turn the Aqua title screen off in Settings.
 
 ---
 

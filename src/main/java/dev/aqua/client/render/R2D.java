@@ -53,6 +53,34 @@ public final class R2D {
                 top, top, bottom, bottom, ctx.scissorStack.peekLast()));
     }
 
+    public static void roundGradientVCorners(DrawContext ctx, float x, float y, float w, float h, float r, int mask, int top, int bottom) {
+        if (w <= 0 || h <= 0 || (Colors.alpha(top) == 0 && Colors.alpha(bottom) == 0)) {
+            return;
+        }
+        ctx.state.addSimpleElement(new RoundedRectState(pose(ctx), x, y, w, h, r, 0, 0, mask,
+                top, top, bottom, bottom, ctx.scissorStack.peekLast()));
+    }
+
+    /** Border whose colour fades from top to bottom (the lit rim of a glass panel). */
+    public static void outlineGradientV(DrawContext ctx, float x, float y, float w, float h, float r, float width, int mask, int top, int bottom) {
+        if (w <= 0 || h <= 0 || (Colors.alpha(top) == 0 && Colors.alpha(bottom) == 0)) {
+            return;
+        }
+        ctx.state.addSimpleElement(new RoundedRectState(pose(ctx), x, y, w, h, r, Math.max(0.05f, width), 0, mask,
+                top, top, bottom, bottom, ctx.scissorStack.peekLast()));
+    }
+
+    /** Frosted glass backdrop: the blurred frame behind this rectangle (see {@link Glass}). */
+    public static void glass(DrawContext ctx, float x, float y, float w, float h, float r, int mask, float vibrancy, int multiply, int fallback) {
+        if (w <= 0 || h <= 0) {
+            return;
+        }
+        GlassBlur.Slot slot = GlassBlur.currentSlot();
+        GlassBlur.request(slot);
+        ctx.state.addSimpleElement(new GlassRectState(pose(ctx), x, y, w, h, r, mask, vibrancy, multiply, fallback, slot,
+                ctx.scissorStack.peekLast()));
+    }
+
     public static void roundGradientH(DrawContext ctx, float x, float y, float w, float h, float r, int left, int right) {
         if (w <= 0 || h <= 0) {
             return;

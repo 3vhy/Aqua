@@ -4,6 +4,7 @@ import dev.aqua.client.Aqua;
 import dev.aqua.client.hud.Anchor;
 import dev.aqua.client.hud.HudWidget;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -97,7 +98,7 @@ public final class ItemCounterWidget extends HudWidget {
             float x = horizontal.on() ? i * 34 : 0;
             float y = horizontal.on() ? 0 : i * 18;
             if (showBackground()) {
-                R2D.round(ctx, x, y + 1, 32, 16, 4, bg(alpha));
+                Glass.hud(ctx, x, y + 1, 32, 16, 4, bg(alpha));
             }
             ctx.getMatrices().pushMatrix();
             ctx.getMatrices().translate(x + 1, y + 1);

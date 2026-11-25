@@ -4,6 +4,7 @@ import dev.aqua.client.Aqua;
 import dev.aqua.client.hud.Anchor;
 import dev.aqua.client.hud.HudWidget;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.setting.BoolSetting;
@@ -109,7 +110,7 @@ public final class ScoreboardWidget extends HudWidget {
         float w = width(preview);
         float h = height(preview);
         if (showBackground()) {
-            R2D.round(ctx, 0, 0, w, h, 5, bg(alpha));
+            Glass.hud(ctx, 0, 0, w, h, 5, bg(alpha));
         }
         int a = Math.round(alpha * 255);
         if (obj == null) {

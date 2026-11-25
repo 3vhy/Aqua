@@ -10,6 +10,7 @@ import dev.aqua.client.notify.Notification;
 import dev.aqua.client.notify.Notifications;
 import dev.aqua.client.render.Anim;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -88,7 +89,7 @@ public final class IslandWidget extends HudWidget {
         }
         float w = width(preview);
         if (showBackground()) {
-            R2D.round(ctx, 0, 0, w, Pill.HEIGHT, Pill.HEIGHT / 2f, bg(alpha));
+            Glass.hud(ctx, 0, 0, w, Pill.HEIGHT, Pill.HEIGHT / 2f, bg(alpha));
         }
         float ca = alpha * Anim.easeOutCubic(swap.get());
         float cw = contentWidth(m);

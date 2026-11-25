@@ -15,6 +15,7 @@ import dev.aqua.client.module.cosmetic.KillEffects;
 import dev.aqua.client.module.cosmetic.Knives;
 import dev.aqua.client.module.cosmetic.Wings;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -77,9 +78,12 @@ public final class WardrobePage implements Page {
             float tw = R2D.width(tb.label, 5.2f, AquaFont.Weight.SEMIBOLD) + 18;
             boolean sel = tb == tab;
             boolean hov = ui.hover(tx, y, tw, 13);
-            R2D.round(ctx, tx, y, tw, 13, 6.5f, Colors.fade(sel ? Colors.withAlpha(t.accent(), 0.22f)
-                    : Colors.withAlpha(t.panel(), hov ? 1f : 0.85f), a));
-            R2D.outline(ctx, tx, y, tw, 13, 6.5f, 0.6f, Colors.fade(sel ? Colors.withAlpha(t.accent(), 0.7f) : Colors.withAlpha(t.border(), 0.5f), a));
+            if (sel) {
+                R2D.roundGradientV(ctx, tx, y, tw, 13, 6.5f, Colors.fade(Colors.withAlpha(t.accent(), 0.30f), a), Colors.fade(Colors.withAlpha(t.accent(), 0.16f), a));
+                R2D.outline(ctx, tx, y, tw, 13, 6.5f, 0.6f, Colors.fade(Colors.withAlpha(t.accent(), 0.7f), a));
+            } else {
+                Glass.chip(ctx, tx, y, tw, 13, 6.5f, a, hov ? 1f : 0f);
+            }
             R2D.icon(ctx, tb.icon, tx + 5, y + 3, 7, Colors.fade(sel ? t.accent() : t.muted(), a));
             R2D.textMid(ctx, tb.label, tx + 14, y + 6.5f, 5.2f, AquaFont.Weight.SEMIBOLD, Colors.fade(sel ? t.text() : t.muted(), a));
             if (ui.clickedIn(tx, y, tw, 13)) {
@@ -126,10 +130,10 @@ public final class WardrobePage implements Page {
             float cy = gy + (i / cols) * (chh + gap);
             boolean hov = ui.hover(cx, cy, cw, chh);
             float ha = ui.anim("wdc" + tab + i, 120, 0).target(hov).get();
-            int bg = Colors.lerp(Colors.withAlpha(t.panel(), 0.92f), Colors.brighten(t.panel(), 0.08f), ha);
-            R2D.round(ctx, cx, cy, cw, chh, 6, Colors.fade(bg, a));
-            R2D.outline(ctx, cx, cy, cw, chh, 6, c.selected ? 1f : 0.6f,
-                    Colors.fade(c.selected ? t.accent() : Colors.withAlpha(t.border(), 0.4f + ha * 0.3f), a));
+            Glass.card(ctx, cx, cy, cw, chh, 6.5f, a, ha, c.selected ? 1f : 0f);
+            if (c.selected) {
+                R2D.outline(ctx, cx, cy, cw, chh, 6.5f, 0.9f, Colors.fade(t.accent(), a));
+            }
             if (c.selected) {
                 R2D.circle(ctx, cx + cw - 6, cy + 6, 2.2f, Colors.fade(t.accent(), a));
             }

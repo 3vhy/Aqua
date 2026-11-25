@@ -2,6 +2,7 @@ package dev.aqua.client.hud;
 
 import dev.aqua.client.Aqua;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -110,7 +111,7 @@ public final class Pill {
         Theme t = Aqua.theme();
         float w = width();
         if (bg) {
-            R2D.round(ctx, x, y, w, HEIGHT, RADIUS, bgColor);
+            Glass.hud(ctx, x, y, w, HEIGHT, RADIUS, bgColor);
         }
         float cx = x + PAD_X;
         float cy = y + HEIGHT / 2f;

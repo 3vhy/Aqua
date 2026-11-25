@@ -4,6 +4,7 @@ import dev.aqua.client.Aqua;
 import dev.aqua.client.module.Keybind;
 import dev.aqua.client.render.Anim;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -280,11 +281,11 @@ public final class Ui {
         Theme t = t();
         boolean hov = hover(x, y, w, h);
         float ha = anim(id + "#h", 120, 0).target(hov).get();
-        int base = primary ? t.accent() : t.elevated();
-        int fill = primary ? Colors.lerp(base, t.accent2(), ha * 0.35f) : Colors.lerp(Colors.withAlpha(base, 0.85f), Colors.brighten(base, 0.12f), ha);
-        R2D.round(ctx, x, y, w, h, Math.min(5, h / 2f), fill);
-        if (!primary) {
-            R2D.outline(ctx, x, y, w, h, Math.min(5, h / 2f), 0.6f, Colors.withAlpha(t.border(), 0.6f + ha * 0.4f));
+        float r = Math.min(5, h / 2f);
+        if (primary) {
+            Glass.accent(ctx, x, y, w, h, r, 1f, ha);
+        } else {
+            Glass.chip(ctx, x, y, w, h, r, 1f, ha);
         }
         int fg = primary ? t.onAccent() : t.text();
         float size = 5.6f;
@@ -307,7 +308,7 @@ public final class Ui {
         boolean hov = hover(x, y, size, size);
         float ha = anim(id + "#h", 120, 0).target(hov).get();
         if (ha > 0.01f) {
-            R2D.round(ctx, x, y, size, size, size / 3.2f, Colors.withAlpha(t.elevated(), 0.9f * ha));
+            Glass.chip(ctx, x, y, size, size, size / 3.2f, ha, 1f);
         }
         float is = size * 0.6f;
         R2D.icon(ctx, icon, x + (size - is) / 2f, y + (size - is) / 2f, is, Colors.lerp(color, t.text(), ha * 0.6f));
@@ -322,25 +323,53 @@ public final class Ui {
     }
 
     private String pendingTooltip;
+    private String shownTooltip;
+    private long tooltipSince;
+    private final Anim tooltipFade = new Anim(0f, 120f);
 
     public void tooltip(String text) {
         pendingTooltip = text;
     }
 
+    /**
+     * Draws the tooltip requested this frame. It waits a moment before appearing (so it does not
+     * flicker while the mouse moves over a list) and sits above the cursor, so it never hides the
+     * control the mouse is on; it only goes below when there is no room above.
+     */
     public void drawTooltip(float maxW, float maxH) {
-        if (pendingTooltip == null) {
-            return;
-        }
-        Theme t = t();
         String s = pendingTooltip;
         pendingTooltip = null;
-        float w = AquaFont.width(s, 5.2f, AquaFont.Weight.MEDIUM) + 8;
-        float x = Math.min(mx + 8, maxW - w - 2);
-        float y = Math.min(my + 10, maxH - 12);
-        R2D.round(ctx, x, y, w, 10, 3, Colors.withAlpha(t.background(), 0.96f));
-        R2D.outline(ctx, x, y, w, 10, 3, 0.5f, t.border());
-        R2D.textMid(ctx, s, x + 4, y + 5, 5.2f, AquaFont.Weight.MEDIUM, t.text());
+        if (s == null || popup != null || active != null || capturing != null) {
+            shownTooltip = null;
+            tooltipFade.snap(0f);
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (!s.equals(shownTooltip)) {
+            shownTooltip = s;
+            tooltipSince = now;
+            tooltipFade.snap(0f);
+        }
+        if (now - tooltipSince < TOOLTIP_DELAY_MS) {
+            return;
+        }
+        float a = tooltipFade.target(1f).get();
+        Theme t = t();
+        float size = 5.2f;
+        float w = AquaFont.width(s, size, AquaFont.Weight.MEDIUM) + 10;
+        float h = 11;
+        float x = Math.max(2, Math.min(mx - w / 2f, maxW - w - 2));
+        float y = my - h - 9;
+        if (y < 2) {
+            y = my + 12;
+        }
+        y = Math.min(y, maxH - h - 2);
+        Glass.popup(ctx, x, y, w, h, 3.5f, a);
+        R2D.textMid(ctx, s, x + 5, y + h / 2f, size, AquaFont.Weight.MEDIUM, Colors.fade(t.text(), a));
     }
+
+    /** How long the mouse rests on something before its tooltip shows. */
+    public static long TOOLTIP_DELAY_MS = 350;
 
     /** iOS-style switch; returns the (possibly toggled) value. */
     public boolean toggle(String id, float x, float y, boolean on) {
@@ -350,8 +379,19 @@ public final class Ui {
         boolean hov = hover(x - 2, y - 2, w + 4, h + 4);
         float p = anim(id + "#t", 160, on ? 1 : 0).target(on).get();
         float ha = anim(id + "#h", 120, 0).target(hov).get();
-        int track = Colors.lerp(Colors.brighten(t.elevated(), 0.12f + ha * 0.06f), t.accent(), p);
-        R2D.round(ctx, x, y, w, h, h / 2f, track);
+        if (Glass.on()) {
+            if (p > 0.01f) {
+                R2D.shadow(ctx, x, y, w, h, h / 2f, 5, Colors.withAlpha(t.accent(), 0.35f * p));
+            }
+            R2D.round(ctx, x, y, w, h, h / 2f, Colors.withAlpha(0x000000, 0.22f * (1 - p)));
+            R2D.roundGradientV(ctx, x, y, w, h, h / 2f, Colors.withAlpha(Colors.lerp(t.accent(), t.accent2(), 0.3f), p),
+                    Colors.withAlpha(t.accent(), p));
+            R2D.outlineGradientV(ctx, x, y, w, h, h / 2f, 0.55f, R2D.ALL, Colors.withAlpha(0x000000, 0.25f * (1 - p) + 0.1f),
+                    Colors.withAlpha(0xFFFFFF, 0.12f + ha * 0.08f + p * 0.15f));
+        } else {
+            int track = Colors.lerp(Colors.brighten(t.elevated(), 0.12f + ha * 0.06f), t.accent(), p);
+            R2D.round(ctx, x, y, w, h, h / 2f, track);
+        }
         float knob = h - 3;
         float kx = x + 1.5f + (w - knob - 3) * Anim.easeInOutCubic(p);
         R2D.shadow(ctx, kx, y + 1.5f, knob, knob, knob / 2f, 2.5f, 0x40000000);
@@ -383,9 +423,17 @@ public final class Ui {
         float ha = anim(id + "#h", 120, 0).target(hov || dragging).get();
         float p = anim(id + "#v", 90, (float) s.normalized()).target((float) s.normalized()).get();
         float cy = y + h / 2f;
-        R2D.round(ctx, x, cy - 1.25f, w, 2.5f, 1.25f, Colors.brighten(t.elevated(), 0.15f));
-        R2D.round(ctx, x, cy - 1.25f, Math.max(2.5f, w * p), 2.5f, 1.25f, t.accent());
+        if (Glass.on()) {
+            R2D.round(ctx, x, cy - 1.4f, w, 2.8f, 1.4f, Colors.withAlpha(0x000000, 0.28f));
+            R2D.outlineGradientV(ctx, x, cy - 1.4f, w, 2.8f, 1.4f, 0.4f, R2D.ALL, Colors.withAlpha(0x000000, 0.2f), Colors.withAlpha(0xFFFFFF, 0.14f));
+            R2D.shadow(ctx, x, cy - 1.4f, Math.max(2.8f, w * p), 2.8f, 1.4f, 4, Colors.withAlpha(t.accent(), 0.35f));
+            R2D.roundGradientH(ctx, x, cy - 1.4f, Math.max(2.8f, w * p), 2.8f, 1.4f, Colors.lerp(t.accent(), t.accent2(), 0.35f), t.accent());
+        } else {
+            R2D.round(ctx, x, cy - 1.25f, w, 2.5f, 1.25f, Colors.brighten(t.elevated(), 0.15f));
+            R2D.round(ctx, x, cy - 1.25f, Math.max(2.5f, w * p), 2.5f, 1.25f, t.accent());
+        }
         float kr = 3.2f + ha * 0.6f;
+        R2D.shadow(ctx, x + w * p - kr, cy - kr + 0.6f, kr * 2, kr * 2, kr, 3, 0x50000000);
         R2D.circle(ctx, x + w * p, cy, kr, 0xFFFFFFFF);
         R2D.ring(ctx, x + w * p, cy, kr, 0.8f, Colors.withAlpha(t.accent(), 0.9f));
         return dragging;
@@ -397,8 +445,8 @@ public final class Ui {
         float h = 11;
         boolean hov = hover(x, y, w, h);
         float ha = anim(id + "#h", 120, 0).target(hov).get();
-        R2D.round(ctx, x, y, w, h, 3.5f, Colors.lerp(t.elevated(), Colors.brighten(t.elevated(), 0.1f), ha));
-        R2D.outline(ctx, x, y, w, h, 3.5f, 0.6f, t.border());
+        boolean open = popup instanceof DropdownPopup<?> dp && dp.setting == s;
+        Glass.chip(ctx, x, y, w, h, 3.5f, 1f, Math.max(ha, open ? 1f : 0f));
         String label = AquaFont.ellipsize(EnumSetting.display(s.get()), w - 16, 5.4f, AquaFont.Weight.MEDIUM);
         R2D.textMid(ctx, label, x + 5, y + h / 2f, 5.4f, AquaFont.Weight.MEDIUM, t.text());
         R2D.icon(ctx, Icon.CHEVRON_DOWN, x + w - 10, y + h / 2f - 3, 6, t.muted());
@@ -414,7 +462,7 @@ public final class Ui {
         float w = 22;
         float h = 11;
         boolean hov = hover(x, y, w, h);
-        R2D.round(ctx, x, y, w, h, 3.5f, Colors.brighten(t.elevated(), hov ? 0.18f : 0.08f));
+        Glass.chip(ctx, x, y, w, h, 3.5f, 1f, hov ? 1f : 0f);
         // Checker for alpha preview
         R2D.round(ctx, x + 2, y + 2, w - 4, h - 4, 2.2f, 0xFF808080);
         R2D.roundCorners(ctx, x + 2, y + 2, (w - 4) / 2f, (h - 4) / 2f, 2.2f, 1, 0xFFC8C8C8);
@@ -435,7 +483,7 @@ public final class Ui {
         float w = 22;
         float h = 11;
         boolean hov = hover(x, y, w, h);
-        R2D.round(ctx, x, y, w, h, 3.5f, Colors.brighten(t.elevated(), hov ? 0.18f : 0.08f));
+        Glass.chip(ctx, x, y, w, h, 3.5f, 1f, hov ? 1f : 0f);
         R2D.round(ctx, x + 2, y + 2, w - 4, h - 4, 2.2f, color);
         if (clickedIn(x, y, w, h)) {
             UiSounds.click(1f);
@@ -451,10 +499,13 @@ public final class Ui {
         boolean cap = id.equals(capturing);
         boolean hov = hover(x, y, w, h);
         float ha = anim(id + "#h", 120, 0).target(hov || cap).get();
-        int fill = cap ? Colors.withAlpha(t.accent(), 0.25f) : Colors.lerp(t.elevated(), Colors.brighten(t.elevated(), 0.12f), ha);
-        R2D.round(ctx, x, y, w, h, 3, fill);
-        int border = conflict ? 0xFFFFB547 : (cap ? t.accent() : Colors.withAlpha(t.border(), 0.8f));
-        R2D.outline(ctx, x, y, w, h, 3, 0.6f, border);
+        Glass.chip(ctx, x, y, w, h, 3, 1f, ha);
+        if (cap || conflict) {
+            if (cap) {
+                R2D.round(ctx, x, y, w, h, 3, Colors.withAlpha(t.accent(), 0.22f));
+            }
+            R2D.outline(ctx, x, y, w, h, 3, 0.6f, conflict ? 0xFFFFB547 : t.accent());
+        }
         String text = cap ? "Press a key" : (bound ? label : "Bind");
         text = AquaFont.ellipsize(text, w - 6, 4.8f, AquaFont.Weight.SEMIBOLD);
         R2D.textCentered(ctx, text, x + w / 2f, y + h / 2f, 4.8f, AquaFont.Weight.SEMIBOLD,
@@ -493,8 +544,7 @@ public final class Ui {
             focusHitThisFrame = true;
         }
         float fa = anim(id + "#f", 140, 0).target(focused).get();
-        R2D.round(ctx, x, y, w, h, Math.min(4.5f, h / 2.4f), Colors.lerp(Colors.withAlpha(t.background(), 0.85f), Colors.darken(t.elevated(), 0.2f), fa));
-        R2D.outline(ctx, x, y, w, h, Math.min(4.5f, h / 2.4f), 0.6f, Colors.lerp(Colors.withAlpha(t.border(), 0.7f), t.accent(), fa));
+        Glass.well(ctx, x, y, w, h, Math.min(4.5f, h / 2.4f), 1f, hov ? 1f : 0f, fa);
         float tx = x + 5;
         if (icon != null) {
             R2D.icon(ctx, icon, x + 4.5f, y + h / 2f - 3.25f, 6.5f, t.muted());
@@ -551,14 +601,16 @@ public final class Ui {
             cursors.put(id, cur);
         }
         String text = sb.toString();
-        pushClip(x + 2, y, w - 4, h);
+        // Clip to the text area only, so long text never runs over the icon or the rounded edge.
+        pushClip(tx - 1, y, x + w - 3 - (tx - 1), h);
         float size = Math.min(6f, h * 0.48f);
         if (text.isEmpty() && !focused) {
             R2D.textMid(ctx, placeholder, tx, y + h / 2f, size, AquaFont.Weight.MEDIUM, t.muted());
         } else {
             int cur = Math.min(cursors.getOrDefault(id, text.length()), text.length());
             float before = AquaFont.width(text.substring(0, cur), size, AquaFont.Weight.MEDIUM);
-            float shift = Math.max(0, before - (w - (tx - x) - 8));
+            float room = x + w - 5 - tx;
+            float shift = Math.max(0, before - room + 1);
             R2D.textMid(ctx, text, tx - shift, y + h / 2f, size, AquaFont.Weight.MEDIUM, t.text());
             if (focused && (System.currentTimeMillis() / 530) % 2 == 0) {
                 R2D.rect(ctx, tx - shift + before, y + h / 2f - size * 0.55f, 0.6f, size * 1.1f, t.accent());
@@ -611,14 +663,12 @@ public final class Ui {
         void frame(Ui ui) {
             Theme t = ui.t();
             float a = appear.get();
-            R2D.shadow(ui.ctx, x, y, w, h, 5, 10, Colors.withAlpha(0x000000, Math.round(110 * a)));
-            R2D.round(ui.ctx, x, y, w, h, 5, Colors.withAlpha(t.panel(), Math.round(250 * a)));
-            R2D.outline(ui.ctx, x, y, w, h, 5, 0.6f, Colors.fade(t.border(), a));
+            Glass.popup(ui.ctx, x, y, w, h, 6, a);
         }
     }
 
     static final class DropdownPopup<E extends Enum<E>> extends Popup {
-        private final EnumSetting<E> setting;
+        final EnumSetting<E> setting;
 
         DropdownPopup(float x, float y, float w, EnumSetting<E> s, float ax, float ay, float aw, float ah) {
             super(x, y, w, 4 + s.values().length * 11, ax, ay, aw, ah);
@@ -636,7 +686,8 @@ public final class Ui {
                 boolean hov = ui.hover(x + 2, ry, w - 4, 11);
                 boolean sel = values[i] == setting.get();
                 if (hov || sel) {
-                    R2D.round(ui.ctx, x + 2, ry, w - 4, 11, 3, sel ? Colors.withAlpha(t.accent(), 0.22f) : Colors.withAlpha(t.elevated(), 0.9f));
+                    R2D.round(ui.ctx, x + 2, ry, w - 4, 11, 3.5f, sel ? Colors.withAlpha(t.accent(), 0.22f)
+                            : (Glass.on() ? Colors.withAlpha(0xFFFFFF, 0.08f) : Colors.withAlpha(t.elevated(), 0.9f)));
                 }
                 R2D.textMid(ui.ctx, EnumSetting.display(values[i]), x + 7, ry + 5.5f, 5.4f, AquaFont.Weight.MEDIUM, sel ? t.accent() : t.text());
                 if (sel) {

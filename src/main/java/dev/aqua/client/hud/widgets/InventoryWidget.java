@@ -3,6 +3,7 @@ package dev.aqua.client.hud.widgets;
 import dev.aqua.client.hud.Anchor;
 import dev.aqua.client.hud.HudWidget;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.setting.BoolSetting;
@@ -38,7 +39,7 @@ public final class InventoryWidget extends HudWidget {
     @Override
     public void draw(DrawContext ctx, boolean preview, float alpha) {
         if (showBackground()) {
-            R2D.round(ctx, 0, 0, width(preview), height(preview), 5, bg(alpha));
+            Glass.hud(ctx, 0, 0, width(preview), height(preview), 5, bg(alpha));
         }
         for (int i = 0; i < 27; i++) {
             float x = 3 + (i % 9) * S;

@@ -294,3 +294,16 @@ the videos".
 | R8 | Font Changer, 3D Pickaxes (Beta), ArmorFX, Larp, Menu Buttons; R6 Player Model | Not implemented: not shown clearly enough to reproduce (only names in a menu) | — | not implemented |
 | R6 | Ping panel "Them: ? ms" | Exclude the opponent part; your own ping is in the Network widget | `hud/widgets/NetworkWidget` | n/a |
 | R5–R8 | Tracers, Freecam, Fullbright, Clear View (clear water), "Combat", "Donut" and "AC Off" categories | Exclude: cheats or advantages | — | n/a |
+
+## 10. Bug test and glass revamp (follow-up request)
+
+"Bug test every thing and revamp the entire client. Add a glass menu and revamp."
+
+| Item | What was done | Where |
+|---|---|---|
+| Settings sweep | Every module is switched on and every one of its settings is driven through its values (each enum value, min/max/default numbers, toggles, colours, empty/unicode/max-length text) in third and first person, plus every Settings-page option. 1,527 steps; no errors recorded. | `AquaClientGameTest.settingsSweep` |
+| Error registry | Errors that Aqua recovers from (a HUD widget, world effect or module tick that throws) are now recorded, and every test section requires zero of them. | `util/Problems` |
+| Menu sweep | A screenshot of every module's expanded settings (81) was reviewed. Fixed: long search text ran over the search icon; tooltips covered the control under the cursor; keybind conflict notes ran into the reset button; the music volume value ran into the Rescan button; on small windows the title-screen greeting sat under the button card; on small windows the HUD auto-layout could place widgets over the keystrokes. | `gui/Ui`, `gui/pages/*`, `gui/AquaTitleScreen`, `hud/editor/HudEditorScreen` |
+| Glass interface | Real frosted glass: a quarter-size GPU blur of the frame behind each surface, with a theme tint, a top sheen and a lit rim. Used by the menu, popups, tooltips, toasts, HUD elements, HUD editor, emote wheel and title screen. Glass/Solid style, frost, tint and Glass HUD options. | `render/Glass`, `render/GlassBlur`, `mixin/GuiRendererMixin`, `shaders/core/glass*.fsh` |
+| Menu revamp | Sliding selection highlight, header icon tiles, glass module cards with an accent strip and tint when enabled, new switches, sliders, chips and wells. | `gui/AquaMenuScreen`, `gui/Ui` |
+| Title revamp | Glass button card, brighter drifting lights (or the Minecraft panorama), glass corner bar. | `gui/AquaTitleScreen` |

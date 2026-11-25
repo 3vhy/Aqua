@@ -10,7 +10,27 @@ public final class ThemeManager {
     private Theme custom = Theme.AQUA.withName("Custom");
     private Theme active = Theme.AQUA;
 
+    private Theme glassBase;
+    private Theme glassVariant;
+
+    /**
+     * The theme in use. With the Glass style, secondary text is a little brighter, because glass
+     * shows a lighter, busier backdrop than solid panels do.
+     */
     public Theme active() {
+        Theme a = active;
+        if (dev.aqua.client.Aqua.ui() == null || !dev.aqua.client.Aqua.ui().glass()) {
+            return a;
+        }
+        if (glassBase != a) {
+            glassBase = a;
+            glassVariant = a.with("muted", dev.aqua.client.render.Colors.lerp(a.muted(), a.text(), 0.3f));
+        }
+        return glassVariant;
+    }
+
+    /** The theme exactly as chosen (no Glass adjustment), for editors. */
+    public Theme chosen() {
         return active;
     }
 

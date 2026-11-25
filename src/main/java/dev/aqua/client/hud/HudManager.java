@@ -117,7 +117,7 @@ public final class HudManager {
             // Skip the widget for this session only; its saved on/off state is left alone, so one
             // error never makes the HUD disappear permanently.
             if (suspended.add(w)) {
-                dev.aqua.client.AquaClient.LOGGER.error("HUD widget {} failed to render; skipping it until restart", w.id(), t);
+                dev.aqua.client.util.Problems.report("HUD widget " + w.id() + " failed to render; skipping it until restart", t);
                 dev.aqua.client.Aqua.notifications().warn("HUD", w.name() + " hit an error and is hidden until restart");
             }
         }

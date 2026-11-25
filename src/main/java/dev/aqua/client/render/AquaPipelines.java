@@ -76,6 +76,35 @@ public final class AquaPipelines {
                     .withCull(false)
                     .build());
 
+    /** Frosted glass surface: the blurred frame (Sampler0) shown through a rounded rectangle. */
+    public static final RenderPipeline GLASS = RenderPipelines.register(
+            RenderPipeline.builder(RenderPipelines.TRANSFORMS_AND_PROJECTION_SNIPPET, RenderPipelines.GLOBALS_SNIPPET)
+                    .withLocation(Identifier.of("aqua", "pipeline/glass"))
+                    .withVertexShader(Identifier.of("aqua", "core/rounded"))
+                    .withFragmentShader(Identifier.of("aqua", "core/glass"))
+                    .withSampler("Sampler0")
+                    .withBlend(BlendFunction.TRANSLUCENT)
+                    .withVertexFormat(VertexFormats.POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL, VertexFormat.DrawMode.QUADS)
+                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+                    .build());
+
+    public static final RenderPipeline GLASS_DOWNSAMPLE = blurPass("glass_downsample", "DOWNSAMPLE");
+    public static final RenderPipeline GLASS_BLUR_H = blurPass("glass_blur_h", "BLUR_H");
+    public static final RenderPipeline GLASS_BLUR_V = blurPass("glass_blur_v", "BLUR_V");
+
+    private static RenderPipeline blurPass(String name, String define) {
+        return RenderPipelines.register(
+                RenderPipeline.builder(RenderPipelines.POST_EFFECT_PROCESSOR_SNIPPET)
+                        .withLocation(Identifier.of("aqua", "pipeline/" + name))
+                        .withVertexShader(Identifier.ofVanilla("core/screenquad"))
+                        .withFragmentShader(Identifier.of("aqua", "core/glass_blur"))
+                        .withShaderDefine(define)
+                        .withShaderDefine("SPREAD", 1.25f)
+                        .withSampler("InSampler")
+                        .withoutBlend()
+                        .build());
+    }
+
     /** Forces class loading so the static pipelines are registered before shaders compile. */
     public static void init() {
     }

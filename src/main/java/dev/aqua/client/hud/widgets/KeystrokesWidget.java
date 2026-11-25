@@ -5,6 +5,7 @@ import dev.aqua.client.hud.Anchor;
 import dev.aqua.client.hud.HudWidget;
 import dev.aqua.client.render.Anim;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -74,12 +75,16 @@ public final class KeystrokesWidget extends HudWidget {
         float r = style.is(Style.SOFT) ? Math.min(w, h) * 0.4f : 3.2f;
         if (style.is(Style.OUTLINE)) {
             if (showBackground()) {
-                R2D.round(ctx, x, y, w, h, r, Colors.fade(base, 0.6f));
+                Glass.hud(ctx, x, y, w, h, r, Colors.fade(base, 0.6f));
             }
             R2D.outline(ctx, x, y, w, h, r, 0.8f, Colors.fade(Colors.lerp(t.border(), t.accent(), p), alpha));
-        } else if (showBackground() || p > 0.01f) {
-            int fill = Colors.lerp(base, Colors.fade(style.is(Style.SOFT) ? t.accent2() : t.accent(), alpha), p);
-            R2D.round(ctx, x, y, w, h, r, fill);
+        } else {
+            if (showBackground()) {
+                Glass.hud(ctx, x, y, w, h, r, base);
+            }
+            if (p > 0.01f) {
+                R2D.round(ctx, x, y, w, h, r, Colors.fade(style.is(Style.SOFT) ? t.accent2() : t.accent(), alpha * p));
+            }
         }
         int tc = Colors.lerp(t.text(), t.onAccent(), style.is(Style.OUTLINE) ? 0 : p);
         float size = label.length() > 2 ? 4.6f : 5.6f;
@@ -90,7 +95,7 @@ public final class KeystrokesWidget extends HudWidget {
     private void drawMousePad(DrawContext ctx, float x, float y, float w, float h, float alpha) {
         Theme t = Aqua.theme();
         if (showBackground()) {
-            R2D.round(ctx, x, y, w, h, 3.2f, bg(alpha));
+            Glass.hud(ctx, x, y, w, h, 3.2f, bg(alpha));
         }
         float cx = x + w / 2f, cy = y + h / 2f;
         float range = Math.min(w, h) / 2f - 2.2f;
@@ -138,9 +143,11 @@ public final class KeystrokesWidget extends HudWidget {
             Theme t = Aqua.theme();
             float sh = spaceLabel.on() ? 10f : 7f;
             float p = press[6].target(o.jumpKey.isPressed()).get();
-            int fill = Colors.lerp(bg(alpha), Colors.fade(t.accent(), alpha), p);
-            if (showBackground() || p > 0.01f) {
-                R2D.round(ctx, 0, y, full, sh, 3, fill);
+            if (showBackground()) {
+                Glass.hud(ctx, 0, y, full, sh, 3, bg(alpha));
+            }
+            if (p > 0.01f) {
+                R2D.round(ctx, 0, y, full, sh, 3, Colors.fade(t.accent(), alpha * p));
             }
             int fg = Colors.fade(Colors.lerp(t.muted(), t.onAccent(), p), alpha);
             if (spaceLabel.on()) {

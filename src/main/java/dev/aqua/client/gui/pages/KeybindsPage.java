@@ -32,10 +32,10 @@ public final class KeybindsPage implements Page {
             InputUtil.Key bound = KeyBindingHelper.getBoundKeyOf(kb);
             boolean isBound = !kb.isUnbound();
             List<String> conf = Aqua.keybinds().conflicts(kb);
-            R2D.textMid(ctx, Text.translatable(kb.getId()).getString(), x + 9, ry + 6, 5.5f, AquaFont.Weight.MEDIUM, Colors.fade(t.text(), a));
+            String label = Text.translatable(kb.getId()).getString();
+            R2D.textMid(ctx, label, x + 9, ry + 6, 5.5f, AquaFont.Weight.MEDIUM, Colors.fade(t.text(), a));
             if (!conf.isEmpty()) {
-                R2D.textRight(ctx, "Also: " + AquaFont.ellipsize(String.join(", ", conf), w * 0.35f, 4.6f, AquaFont.Weight.MEDIUM),
-                        x + w - 66, ry + 6, 4.6f, AquaFont.Weight.MEDIUM, Colors.fade(0xFFFFB547, a));
+                conflictNote(ctx, conf, x + 9 + R2D.width(label, 5.5f, AquaFont.Weight.MEDIUM) + 8, x + w - 78, ry + 6, a);
             }
             ui.keybindBadge("kv" + kb.getId(), x + w - 9 - 50, ry + 1, 50, kb.getBoundKeyLocalizedText().getString(), isBound, !conf.isEmpty(),
                     c -> {
@@ -69,8 +69,7 @@ public final class KeybindsPage implements Page {
             R2D.icon(ctx, m.category().icon, x + 9, ry + 2.5f, 7, Colors.fade(t.muted(), a));
             R2D.textMid(ctx, m.name(), x + 20, ry + 6, 5.5f, AquaFont.Weight.MEDIUM, Colors.fade(t.text(), a));
             if (!conf.isEmpty()) {
-                R2D.textRight(ctx, "Also: " + AquaFont.ellipsize(String.join(", ", conf), w * 0.35f, 4.6f, AquaFont.Weight.MEDIUM),
-                        x + w - 66, ry + 6, 4.6f, AquaFont.Weight.MEDIUM, Colors.fade(0xFFFFB547, a));
+                conflictNote(ctx, conf, x + 20 + R2D.width(m.name(), 5.5f, AquaFont.Weight.MEDIUM) + 8, x + w - 66, ry + 6, a);
             }
             ui.keybindBadge("km" + m.id(), x + w - 9 - 50, ry + 1, 50, m.bind().display(), m.bind().isBound(), !conf.isEmpty(), c -> {
                 if (c.cancelled()) {
@@ -89,5 +88,17 @@ public final class KeybindsPage implements Page {
             ry += 15;
         }
         return y + mh + 4;
+    }
+
+    /** "Also: …" conflict note, right-aligned between the label and the controls, cut to fit. */
+    private static void conflictNote(DrawContext ctx, List<String> conf, float left, float right, float cy, float a) {
+        float room = right - left;
+        String prefix = "Also: ";
+        float pw = R2D.width(prefix, 4.6f, AquaFont.Weight.MEDIUM);
+        if (room < pw + 12) {
+            return;
+        }
+        String text = prefix + AquaFont.ellipsize(String.join(", ", conf), room - pw, 4.6f, AquaFont.Weight.MEDIUM);
+        R2D.textRight(ctx, text, right, cy, 4.6f, AquaFont.Weight.MEDIUM, Colors.fade(0xFFFFB547, a));
     }
 }

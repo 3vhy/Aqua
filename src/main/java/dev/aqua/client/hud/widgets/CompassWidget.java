@@ -4,6 +4,7 @@ import dev.aqua.client.Aqua;
 import dev.aqua.client.hud.Anchor;
 import dev.aqua.client.hud.HudWidget;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -58,7 +59,7 @@ public final class CompassWidget extends HudWidget {
         if (style.is(Style.DIAL)) {
             float r = 22;
             if (showBackground()) {
-                R2D.circle(ctx, r, r, r, bg(alpha));
+                Glass.hudCircle(ctx, r, r, r, bg(alpha));
             }
             R2D.ring(ctx, r, r, r - 7, 0.6f, Colors.fade(t.border(), alpha));
             String[] names = {"S", "W", "N", "E"};
@@ -75,7 +76,7 @@ public final class CompassWidget extends HudWidget {
         } else {
             float w = width(preview);
             if (showBackground()) {
-                R2D.round(ctx, 0, 0, w, 16, 5, bg(alpha));
+                Glass.hud(ctx, 0, 0, w, 16, 5, bg(alpha));
             }
             R2D.pushClip(ctx, 2, 0, w - 4, 16);
             float pxPerDeg = 1.1f;

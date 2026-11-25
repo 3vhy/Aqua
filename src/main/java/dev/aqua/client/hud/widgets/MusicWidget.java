@@ -8,6 +8,7 @@ import dev.aqua.client.music.MusicPlayer;
 import dev.aqua.client.music.Track;
 import dev.aqua.client.render.Anim;
 import dev.aqua.client.render.Colors;
+import dev.aqua.client.render.Glass;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.render.R2D;
 import dev.aqua.client.render.font.AquaFont;
@@ -82,7 +83,7 @@ public final class MusicWidget extends HudWidget {
         Track t = mp.current();
         float w = width(preview);
         if (showBackground()) {
-            R2D.round(ctx, 0, 0, w, 22, 6, bg(alpha));
+            Glass.hud(ctx, 0, 0, w, 22, 6, bg(alpha));
         }
         Identifier cover = mp.cover();
         if (cover != null) {
@@ -117,7 +118,7 @@ public final class MusicWidget extends HudWidget {
         Track t = mp.current();
         float h = height(preview);
         if (showBackground()) {
-            R2D.round(ctx, 0, 0, W, h, 6, bg(alpha));
+            Glass.hud(ctx, 0, 0, W, h, 6, bg(alpha));
         }
         // Cover art (or a themed placeholder)
         Identifier cover = mp.cover();
