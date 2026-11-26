@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 JAR_NAME = "aqua-client-1.0.0+mc1.21.11.jar"
 # Screenshot shown on the page (from the release-jar test run).
-SHOT = "docs/screenshots/7-glass_menu_full.jpg"
+SHOT = "docs/screenshots/8-panel_menu.jpg"
 
 
 def main() -> None:
