@@ -1,6 +1,6 @@
 package dev.aqua.client.gui.pages;
 
-import dev.aqua.client.gui.AquaMenuScreen;
+import dev.aqua.client.gui.PageHost;
 import dev.aqua.client.gui.Ui;
 import dev.aqua.client.render.Colors;
 import dev.aqua.client.render.Glass;
@@ -12,7 +12,7 @@ import net.minecraft.client.gui.DrawContext;
 /** A non-module content page of the Aqua menu. */
 public interface Page {
     /** Renders starting at (x, y) and returns the y coordinate below the content. */
-    float render(Ui ui, DrawContext ctx, float x, float y, float w, float alpha, AquaMenuScreen menu);
+    float render(Ui ui, DrawContext ctx, float x, float y, float w, float alpha, PageHost menu);
 
     /** Card container used by pages. */
     static void card(DrawContext ctx, Theme t, float x, float y, float w, float h, float a) {

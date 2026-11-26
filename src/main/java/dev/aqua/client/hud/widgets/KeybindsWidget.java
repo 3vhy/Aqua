@@ -21,8 +21,8 @@ public final class KeybindsWidget extends HudWidget {
     private final BoolSetting highlightEnabled = add(new BoolSetting("highlight", "Highlight enabled modules", true));
 
     public KeybindsWidget() {
-        super("keybinds", "Key Binds", "Lists your bound Aqua modules and their keys.", Icon.COMMAND, true, Anchor.TOP_LEFT, 5, 37,
-                "binds", "hotkeys");
+        super("keybinds", "Hotkeys", "Lists your bound Aqua modules and their keys.", Icon.COMMAND, true, Anchor.TOP_LEFT, 5, 37,
+                "binds", "hotkeys", "key binds");
     }
 
     private List<Module> rows(boolean preview) {

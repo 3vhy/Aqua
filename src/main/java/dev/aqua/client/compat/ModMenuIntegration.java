@@ -13,6 +13,6 @@ public final class ModMenuIntegration implements ModMenuApi {
 
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return AquaMenuScreen::new;
+        return dev.aqua.client.gui.Menus::create;
     }
 }

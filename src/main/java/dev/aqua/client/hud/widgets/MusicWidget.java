@@ -44,8 +44,8 @@ public final class MusicWidget extends HudWidget {
     private static final float W = 150;
 
     public MusicWidget() {
-        super("music_card", "Music", "Now playing with progress and synced lyrics.", Icon.NOTE, false, Anchor.BOTTOM_RIGHT, -6, -6,
-                "music", "song", "lyrics", "now playing", "spotify");
+        super("music_card", "Spotify HUD", "Now playing with progress and synced lyrics.", Icon.NOTE, false, Anchor.BOTTOM_RIGHT, -6, -6,
+                "music", "song", "lyrics", "now playing", "spotify", "music card");
     }
 
     @Override

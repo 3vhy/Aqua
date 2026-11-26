@@ -33,7 +33,7 @@ public final class CustomCrosshair extends Module {
     private final BoolSetting outline = add(new BoolSetting("outline", "Outline", true));
 
     public CustomCrosshair() {
-        super("crosshair", "Crosshair", "A crisp, fully customisable crosshair.", Category.HUD, false, "crosshair", "reticle", "aim");
+        super("crosshair", "Custom Crosshair", "A crisp, fully customisable crosshair.", Category.HUD, false, "crosshair", "reticle", "aim");
     }
 
     public void draw(DrawContext ctx) {

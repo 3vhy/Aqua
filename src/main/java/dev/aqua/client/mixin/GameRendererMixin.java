@@ -24,6 +24,17 @@ public abstract class GameRendererMixin {
         AquaClient.onFrame();
     }
 
+    /** Custom Fov: the base field of view instead of the options value. */
+    @WrapOperation(method = "getFov", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/SimpleOption;getValue()Ljava/lang/Object;", ordinal = 0))
+    private Object aqua$customFov(net.minecraft.client.option.SimpleOption<?> option, Operation<Object> original) {
+        Object v = original.call(option);
+        dev.aqua.client.module.visual.CustomFov cf = Aqua.modules() != null ? Aqua.modules().get(dev.aqua.client.module.visual.CustomFov.class) : null;
+        if (cf != null && cf.isEnabled() && v instanceof Integer) {
+            return cf.fov();
+        }
+        return v;
+    }
+
     @Inject(method = "getFov", at = @At("RETURN"), cancellable = true)
     private void aqua$zoom(Camera camera, float tickProgress, boolean changingFov, CallbackInfoReturnable<Float> cir) {
         Zoom zoom = Aqua.modules() != null ? Aqua.modules().get(Zoom.class) : null;

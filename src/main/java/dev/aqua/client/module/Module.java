@@ -50,6 +50,83 @@ public abstract class Module {
         this.showInModuleList = false;
     }
 
+    private boolean toggleMessage = true;
+    private boolean defaultShowInModuleList = true;
+    private boolean defaultsCaptured;
+
+    /** "Show in HUD": whether the module appears in the Module List widget. */
+    public void setShowInModuleList(boolean on) {
+        captureDefaults();
+        showInModuleList = on;
+        Aqua.config().markDirty();
+    }
+
+    /** "Toggle Message": whether switching the module shows a notification. */
+    public boolean toggleMessage() {
+        return toggleMessage;
+    }
+
+    public void setToggleMessage(boolean on) {
+        toggleMessage = on;
+        Aqua.config().markDirty();
+    }
+
+    public boolean defaultShowInModuleList() {
+        captureDefaults();
+        return defaultShowInModuleList;
+    }
+
+    private void captureDefaults() {
+        if (!defaultsCaptured) {
+            defaultsCaptured = true;
+            defaultShowInModuleList = showInModuleList;
+        }
+    }
+
+    /** This module's settings and key as text, for Copy Config. */
+    public String exportConfig() {
+        com.google.gson.JsonObject o = new com.google.gson.JsonObject();
+        o.addProperty("module", id);
+        o.add("bind", bind.toJson());
+        com.google.gson.JsonObject so = new com.google.gson.JsonObject();
+        for (Setting<?> s : settings) {
+            if (s.persistent()) {
+                so.add(s.id(), s.toJson());
+            }
+        }
+        o.add("settings", so);
+        return o.toString();
+    }
+
+    /** Applies text from {@link #exportConfig()}; returns false if it is not a config of this module. */
+    public boolean importConfig(String text) {
+        try {
+            com.google.gson.JsonElement e = com.google.gson.JsonParser.parseString(text.trim());
+            if (!e.isJsonObject()) {
+                return false;
+            }
+            com.google.gson.JsonObject o = e.getAsJsonObject();
+            if (!o.has("module") || !id.equals(o.get("module").getAsString())) {
+                return false;
+            }
+            if (o.has("settings") && o.get("settings").isJsonObject()) {
+                com.google.gson.JsonObject so = o.getAsJsonObject("settings");
+                for (Setting<?> s : settings) {
+                    if (s.persistent() && so.has(s.id())) {
+                        s.fromJson(so.get(s.id()));
+                    }
+                }
+            }
+            if (o.has("bind")) {
+                bind.fromJson(o.get("bind"));
+            }
+            Aqua.config().markDirty();
+            return true;
+        } catch (RuntimeException ex) {
+            return false;
+        }
+    }
+
     public boolean showInModuleList() {
         return showInModuleList;
     }
@@ -121,6 +198,8 @@ public abstract class Module {
         }
         bind.set(defaultBind);
         setEnabled(enabledByDefault, false);
+        showInModuleList = defaultShowInModuleList();
+        toggleMessage = true;
     }
 
     public boolean matches(String query) {
@@ -151,4 +230,7 @@ public abstract class Module {
 
     /** Called every client tick while enabled. */
     public void onTick() {}
+
+    /** Called when one of this module's key settings is pressed in game (module enabled, no screen open). */
+    public void onKeySetting(dev.aqua.client.setting.KeySetting key) {}
 }

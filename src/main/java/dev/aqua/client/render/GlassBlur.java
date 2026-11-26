@@ -43,6 +43,7 @@ public final class GlassBlur {
         int w;
         int h;
         boolean drawn;
+        boolean everDrawn;
 
         void close() {
             if (va != null) {
@@ -60,6 +61,7 @@ public final class GlassBlur {
             va = vb = null;
             a = b = null;
             setup = null;
+            everDrawn = false;
             w = h = 0;
         }
     }
@@ -71,6 +73,13 @@ public final class GlassBlur {
     private static int passes = 3;
     private static boolean broken;
     private static long captures;
+    private static long frame;
+
+    private static boolean lightMode() {
+        dev.aqua.client.module.perf.PerformanceMode pm = dev.aqua.client.Aqua.modules() != null
+                ? dev.aqua.client.Aqua.modules().get(dev.aqua.client.module.perf.PerformanceMode.class) : null;
+        return pm != null && pm.lightBlur();
+    }
 
     private GlassBlur() {}
 
@@ -125,8 +134,13 @@ public final class GlassBlur {
                     ensure(t, fb);
                 }
             }
+            frame++;
             if (REQUESTED[Slot.WORLD.ordinal()]) {
-                blur(TARGETS[Slot.WORLD.ordinal()], fb);
+                // Performance mode reuses last frame's blur every other frame.
+                Target wt = TARGETS[Slot.WORLD.ordinal()];
+                if (!(lightMode() && (frame & 1) == 1 && wt.everDrawn)) {
+                    blur(wt, fb);
+                }
             }
         } catch (Throwable e) {
             fail(e);
@@ -202,11 +216,13 @@ public final class GlassBlur {
         CommandEncoder enc = RenderSystem.getDevice().createCommandEncoder();
         GpuSampler s = sampler();
         pass(enc, AquaPipelines.GLASS_DOWNSAMPLE, fb.getColorAttachmentView(), t.va, s);
-        for (int i = 0; i < passes; i++) {
+        int n = lightMode() ? Math.min(2, passes) : passes;
+        for (int i = 0; i < n; i++) {
             pass(enc, AquaPipelines.GLASS_BLUR_H, t.va, t.vb, s);
             pass(enc, AquaPipelines.GLASS_BLUR_V, t.vb, t.va, s);
         }
         t.drawn = true;
+        t.everDrawn = true;
         captures++;
     }
 

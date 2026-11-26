@@ -15,7 +15,7 @@ public final class PerformanceWidget extends HudWidget {
     private final BoolSetting memory = add(new BoolSetting("memory", "Memory", true));
 
     public PerformanceWidget() {
-        super("performance", "Performance", "FPS, frame time and memory use.", Icon.MEMORY, true, Anchor.TOP_LEFT, 140, 5,
+        super("performance", "Performance HUD", "FPS, frame time and memory use.", Icon.MEMORY, true, Anchor.TOP_LEFT, 140, 5,
                 "fps", "frames", "ram", "memory", "frame time");
     }
 

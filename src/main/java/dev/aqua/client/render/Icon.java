@@ -350,6 +350,13 @@ public enum Icon {
             g.draw(p);
         }
     },
+    MONITOR {
+        void draw(Graphics2D g) {
+            g.draw(new RoundRectangle2D.Double(3, 4, 18, 12.5, 3, 3));
+            g.draw(new Line2D.Double(12, 16.5, 12, 20));
+            g.draw(new Line2D.Double(8, 20.5, 16, 20.5));
+        }
+    },
     LAYOUT {
         void draw(Graphics2D g) {
             g.draw(new RoundRectangle2D.Double(3, 4, 18, 16, 4, 4));

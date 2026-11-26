@@ -51,7 +51,7 @@ public final class Notifications {
     }
 
     public void moduleToggled(Module m) {
-        if (!Aqua.ui().toggleNotifications.on()) {
+        if (!Aqua.ui().toggleNotifications.on() || !m.toggleMessage()) {
             return;
         }
         // Collapse rapid toggles of the same module into the newest state.

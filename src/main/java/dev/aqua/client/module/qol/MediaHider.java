@@ -19,7 +19,7 @@ public final class MediaHider extends Module {
 
     public MediaHider() {
         super("media_hider", "Media Hider", "Covers your hotbar with an Aqua banner for videos and streams.", Category.QOL, false,
-                "media hider", "stream", "record", "hide hotbar", "hide inventory");
+                "media hider", "stream", "record", "hide hotbar", "hide inventory", "no inv leak");
         net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register((client, screen, w, h) -> {
             if (screen instanceof net.minecraft.client.gui.screen.ingame.HandledScreen<?>) {
                 net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.afterRender(screen).register((s, ctx, mx, my, delta) -> {

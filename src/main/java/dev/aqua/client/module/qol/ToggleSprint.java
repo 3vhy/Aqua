@@ -10,8 +10,8 @@ import dev.aqua.client.module.Module;
  */
 public final class ToggleSprint extends Module {
     public ToggleSprint() {
-        super("toggle_sprint", "Toggle Sprint", "Keeps the sprint key held so you do not have to.", Category.QOL, false,
-                "sprint", "auto sprint");
+        super("toggle_sprint", "Sprint", "Keeps the sprint key held so you do not have to.", Category.QOL, false,
+                "sprint", "auto sprint", "toggle sprint");
     }
 
     @Override

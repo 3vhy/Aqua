@@ -181,6 +181,12 @@ public final class ConfigManager {
                 if (mo.has("enabled") && mo.get("enabled").isJsonPrimitive()) {
                     m.setEnabled(mo.get("enabled").getAsBoolean(), false);
                 }
+                if (mo.has("show_in_hud") && mo.get("show_in_hud").isJsonPrimitive()) {
+                    m.setShowInModuleList(mo.get("show_in_hud").getAsBoolean());
+                }
+                if (mo.has("toggle_message") && mo.get("toggle_message").isJsonPrimitive()) {
+                    m.setToggleMessage(mo.get("toggle_message").getAsBoolean());
+                }
             }
         }
         if (o.has("hud") && o.get("hud").isJsonObject()) {
@@ -264,6 +270,8 @@ public final class ConfigManager {
             JsonObject mo = new JsonObject();
             mo.addProperty("enabled", m.isEnabled());
             mo.add("bind", m.bind().toJson());
+            mo.addProperty("show_in_hud", m.showInModuleList());
+            mo.addProperty("toggle_message", m.toggleMessage());
             mo.add("settings", writeSettings(m.settings()));
             mods.add(m.id(), mo);
         }

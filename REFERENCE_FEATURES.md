@@ -311,3 +311,74 @@ the videos".
 | Minecraft menus | Buttons, sliders and text boxes in every menu, and item tooltips, drawn in Aqua's style (backgrounds only; labels and behaviour stay vanilla). | `gui/VanillaStyle`, `mixin/PressableWidgetMixin`, `SliderWidgetMixin`, `TextFieldWidgetMixin`, `TooltipBackgroundRendererMixin` |
 | Chat | Frosted glass chat lines, with chat open and closed (the open-chat path was not recoloured before; fixed). Chat Style on by default. | `module/qol/ChatStyle`, `mixin/ChatHudBackendMixin` |
 | Download page | Glass design with drifting lights and a screenshot of the new menu; same embedded jar and checksum check. | `tools/download_page.template.html` |
+
+## 11. Anubis Client video (panel menu and modules)
+
+Source: "Anubis Client + FULLSHOWCASE" (1:49, supplied by the user as an MP4). Every frame where the
+menu is open was read at full resolution; tooltips were found by matching their "Right-click for
+settings" line and read for each module. The video shows a cheat client for one server, so
+everything that gives an advantage is left out. Its name, logo and server branding are not copied:
+the menu says Aqua.
+
+### Menu
+
+| In the video | In Aqua | Where |
+|---|---|---|
+| Floating category panels (dark, faint grid, alphabetical rows, enabled rows in blue, key on the right, fold arrow) | Same layout and positions, scaled from a 640×360 layout; panels can be dragged and folded, and long panels scroll | `gui/ClickGuiScreen`, `gui/click/MenuPanel`, `gui/click/ClickStyle` |
+| Search panel with "Search modules..." | Same; results are listed in the panel; typing anywhere starts a search | `ClickGuiScreen` |
+| Macro panel (folded) | Same; lists your Chat Macros, "New macro" adds one | `ClickGuiScreen`, `module/qol/ChatMacro` |
+| Hover tooltip: description + "Right-click for settings" | Same | `ClickGuiScreen` |
+| Blue settings card: back, name, switch, description; Settings (Show in HUD, Toggle Message, module settings, Reset all); Keybind (Key); Config (Copy Config, Paste Config) | Same, plus buttons to the Wardrobe, Music page or HUD editor where a module has one | `gui/SettingsCard` |
+| Tab bar: Modules, HUD, Friends, Theme, Config | Same: HUD opens the HUD editor; Friends is a friends list; Theme has themes and interface settings; Config has profiles and keybinds | `ClickGuiScreen`, `gui/pages/FriendsPage`, `social/Friends` |
+| (Aqua's earlier window menu) | Still there as Settings › Menu style › Classic window | `gui/AquaMenuScreen` |
+
+### Modules by panel
+
+Decision key as in section 2: **Done** (added in this update), **Have** (Aqua already had it; renamed
+to the video's name where it is the same thing), **Excluded** (cheat, exploit or unfair advantage).
+
+| Video panel | Module | Decision | Aqua module |
+|---|---|---|---|
+| Render | Block ESP, ESP, Glow ESP, Hole ESP, Item ESP, Storage ESP | Excluded: see through walls | — |
+| Render | Freelook | Have | Freelook |
+| Render | Fullbright, Xray, No Render | Excluded: remove darkness, terrain or overlays | — |
+| Render | Low Health Warning | **Done** | Low Health Warning |
+| Render | Nametags ("held items, armour, health, ping and distance") | **Done** without health and armour: bigger nametags with ping, distance and friends in green, normal visibility | Nametag Style |
+| Render | Pearl Trajectory, Trajectories | Excluded: aim help | — |
+| Render | Spawner Nametags, Tracers | Excluded: find hidden things | — |
+| Render | Time Changer | Have | Time Changer |
+| Render | Waypoints | **Done** | Waypoints |
+| Donut | Air Stuck, Anti Trap, Donut NoFall, Donut Speed Mine, Trident Util | Excluded: movement and mining cheats | — |
+| Donut | Anti Vanish, Player Detection, Netherite Finder, Spawner Notifier, Spawner Protect | Excluded: reveal hidden players or blocks | — |
+| Donut | Auto Relog | **Done** as Auto Reconnect (one reconnect after an unexpected disconnect) | Auto Reconnect |
+| Donut | Fake Stats | Excluded: fakes your stats in screenshots and videos | — |
+| Donut | Staff List | Have | Staff List |
+| Misc | Auto Clicker, Auto Eat, Auto Replenish, Legit Auto Tool, Fast Use | Excluded: automation | — |
+| Misc | Auto Reconnect | **Done** | Auto Reconnect |
+| Misc | Block Notifier | Excluded: reports blocks you cannot see | — |
+| Misc | Chat Macro | **Done** (one key press sends one message, with a cooldown) | Chat Macro |
+| Misc | Coord Snapper | **Done** (copies your coordinates) | Coord Snapper |
+| Misc | Freecam | Excluded | — |
+| Misc | Name Protect, Skin Change | Have | Name Protect, Skin Change |
+| Misc | No Inv Leak ("hides your items on screen for screen shares") | Have | Media Hider |
+| Misc | Slow Swing | **Done** (animation only) | Slow Swing |
+| Misc | Spam, Vehicle Log | Excluded: chat spam; packet logging | — |
+| Misc | Weather Notifier | **Done** | Weather Notifier |
+| Movement | Auto Jump | **Done** (Minecraft's own auto-jump option) | Auto Jump |
+| Movement | Sneak, Sprint | **Done** (toggle sneak via Minecraft's own option) / Have (toggle sprint) | Sneak, Sprint |
+| Movement | Auto Walk, Boat Fly, Boat Noclip, Click TP, Elytra Fly, Elytra Swap, Entity Control, Entity Speed, Fly, Jesus, No Jump Delay, Speed, Spider, Trident Boost | Excluded: movement cheats and automation | — |
+| Combat | Aim Assist, Anchor Aura, Anchor Macro, Auto City, Auto Inventory Totem, Auto Totem, Crystal Aura, Crystal Macro, Crystal Optimizer, FastXP, Friend Guard, Hover Totem, Jump Reset, Key Throw, Kill Aura, Mace, Shield Breaker, Spear Swap, Triggerbot, W Tap | Excluded: all are combat cheats or automation. Aqua's Combat panel holds legit combat visuals instead (Attack Indicator, Damage FX, Hit FX, Kill Effects, Swing Trails, Totem Pop Effect, Projectile Trails) | — |
+| Anubis Client | Discord Presence | **Done** (talks to the Discord app on your computer; needs your own application ID) | Discord Presence |
+| Anubis Client | Hotkeys | Have | Hotkeys (Key Binds widget) |
+| Anubis Client | HUD | **Done** as a switch for the whole Aqua HUD | HUD |
+| Anubis Client | Performance | **Done** (lighter glass blur, fewer particles) | Performance |
+| Anubis Client | Radar ("players around you") | Excluded: shows players you cannot see | — |
+| Anubis Client | Region Map ("DonutSMP region map") | Not implemented: needs that server's private region data | — |
+| Anubis Client | Spotify HUD | Have | Spotify HUD |
+| Base Finding | Amethyst Bypass, Better Sus Chunk, Block Entity Debug, Chunk Finder, Chunk Scanner, Home Meta, Light Debug, Player Bypass, Player Bypass 2, Quantum & Render, Render Distance Toggle, Sus Chunk Finder | Excluded: base-finding and anti-xray exploits. Aqua's Cosmetics panel sits in this place | — |
+| Visuals | 3D Character, Atmosphere, Block Overlay, CS Knife, Custom Crosshair, Hand Aura, Hit Particles, Jump Circles, Swing Animation, Zoom | Have (Hand Aura is called Hand Glow) | same names |
+| Visuals | 3D Hand | **Done** (your 3D Character's arm in first person) | 3D Hand |
+| Visuals | Color Grading | **Done** (brightness can only move a little, so it cannot light up dark places) | Color Grading |
+| Visuals | Custom Fov, Custom Glint, Hand Pose, Motion Blur, Particles, Pharaoh Headdress, Totem Spirit | **Done** | same names |
+| Visuals | Floating Relics | **Done** | Floating Relics |
+| Visuals | Target ESP | **Done** without seeing through walls | Target Marker |

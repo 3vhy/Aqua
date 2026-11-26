@@ -16,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class GuiRendererMixin {
     @Inject(method = "render", at = @At("HEAD"))
     private void aqua$glassStart(GpuBufferSlice fogBuffer, CallbackInfo ci) {
+        dev.aqua.client.render.PostFx.apply();
         GlassBlur.onGuiRenderStart();
     }
 

@@ -105,6 +105,30 @@ public final class AquaPipelines {
                         .build());
     }
 
+    public static final RenderPipeline POST_COPY = postPass("post_copy", null, false);
+    public static final RenderPipeline POST_GRADE = postPass("post_grade", "GRADE", false);
+    public static final RenderPipeline POST_MIX = postPass("post_mix", "MIX", true);
+
+    private static RenderPipeline postPass(String name, String define, boolean prev) {
+        RenderPipeline.Builder b = RenderPipeline.builder(RenderPipelines.POST_EFFECT_PROCESSOR_SNIPPET)
+                .withLocation(Identifier.of("aqua", "pipeline/" + name))
+                .withVertexShader(Identifier.ofVanilla("core/screenquad"))
+                .withFragmentShader(Identifier.of("aqua", "core/post_fx"))
+                .withSampler("InSampler")
+                .withoutBlend();
+        if (define != null) {
+            b.withShaderDefine(define);
+        }
+        if (prev) {
+            b.withSampler("PrevSampler");
+            b.withUniform("AquaMix", net.minecraft.client.gl.UniformType.UNIFORM_BUFFER);
+        }
+        if ("GRADE".equals(define)) {
+            b.withUniform("AquaGrade", net.minecraft.client.gl.UniformType.UNIFORM_BUFFER);
+        }
+        return RenderPipelines.register(b.build());
+    }
+
     /** Forces class loading so the static pipelines are registered before shaders compile. */
     public static void init() {
     }

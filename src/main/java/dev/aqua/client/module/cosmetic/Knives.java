@@ -74,9 +74,9 @@ public final class Knives extends Module {
     private final NumberSetting size = add(new NumberSetting("size", "Size", 1.0, 0.7, 1.3, 0.05).unit("x"));
 
     public Knives() {
-        super("knives", "Knife & Sword Skins", "Karambit, butterfly knife, bayonet, stiletto or a fantasy sword instead of your sword (looks only).",
+        super("knives", "CS Knife", "Karambit, butterfly knife, bayonet, stiletto or a fantasy sword instead of your sword (looks only).",
                 Category.COSMETICS, false, "knife", "karambit", "butterfly", "balisong", "bayonet", "stiletto", "sword skin", "3d swords",
-                "cs:go", "csgo");
+                "cs:go", "csgo", "knife skins");
     }
 
     public Type type() {

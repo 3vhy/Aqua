@@ -53,6 +53,14 @@ public final class KeybindManager {
                 m.toggle();
                 any = true;
             }
+            if (m.isEnabled()) {
+                for (dev.aqua.client.setting.Setting<?> s : m.settings()) {
+                    if (s instanceof dev.aqua.client.setting.KeySetting k && k.matches(type, code)) {
+                        m.onKeySetting(k);
+                        any = true;
+                    }
+                }
+            }
         }
         return any;
     }

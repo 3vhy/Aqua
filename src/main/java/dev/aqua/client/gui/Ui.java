@@ -523,6 +523,9 @@ public final class Ui {
         }
     }
 
+    /** When true, text fields draw only their text and caret (the caller draws the box). */
+    public boolean bareFields;
+
     /** Single-line text field. Returns the current text; calls onSubmit with Enter. */
     public String textField(String id, float x, float y, float w, float h, String value, String placeholder, int maxLen,
                             @Nullable Icon icon, @Nullable Consumer<String> onChange, @Nullable Consumer<String> onSubmit) {
@@ -544,7 +547,9 @@ public final class Ui {
             focusHitThisFrame = true;
         }
         float fa = anim(id + "#f", 140, 0).target(focused).get();
-        Glass.well(ctx, x, y, w, h, Math.min(4.5f, h / 2.4f), 1f, hov ? 1f : 0f, fa);
+        if (!bareFields) {
+            Glass.well(ctx, x, y, w, h, Math.min(4.5f, h / 2.4f), 1f, hov ? 1f : 0f, fa);
+        }
         float tx = x + 5;
         if (icon != null) {
             R2D.icon(ctx, icon, x + 4.5f, y + h / 2f - 3.25f, 6.5f, t.muted());

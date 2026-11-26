@@ -66,6 +66,10 @@ public final class HudManager {
         if (mc.currentScreen instanceof dev.aqua.client.hud.editor.HudEditorScreen) {
             return;
         }
+        HudModule master = dev.aqua.client.Aqua.modules().get(HudModule.class);
+        if (master != null && !master.isEnabled()) {
+            return;
+        }
         frames++;
         float sw = ctx.getScaledWindowWidth();
         float sh = ctx.getScaledWindowHeight();

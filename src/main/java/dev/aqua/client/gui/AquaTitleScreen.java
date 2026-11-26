@@ -60,7 +60,7 @@ public final class AquaTitleScreen extends TitleScreen {
                     client.setScreen(client.options.skipMultiplayerWarning ? new MultiplayerScreen(this) : new MultiplayerWarningScreen(this));
                 }),
                 new Entry("Options", Icon.GEAR, () -> client.setScreen(new OptionsScreen(this, client.options))),
-                new Entry("Aqua Settings", Icon.DROP, () -> client.setScreen(new AquaMenuScreen(this))),
+                new Entry("Aqua Settings", Icon.DROP, () -> client.setScreen(Menus.create(this))),
                 new Entry("Quit Game", Icon.POWER, () -> client.scheduleStop())
         };
     }

@@ -21,5 +21,9 @@ public abstract class LivingEntityMixin {
         if (a != null && a.isEnabled()) {
             cir.setReturnValue(a.swingDuration(cir.getReturnValueI()));
         }
+        dev.aqua.client.module.qol.SlowSwing ss = Aqua.modules().get(dev.aqua.client.module.qol.SlowSwing.class);
+        if (ss != null && ss.isEnabled()) {
+            cir.setReturnValue(ss.swingDuration(cir.getReturnValueI()));
+        }
     }
 }

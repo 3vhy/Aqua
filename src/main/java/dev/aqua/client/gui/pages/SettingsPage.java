@@ -1,7 +1,7 @@
 package dev.aqua.client.gui.pages;
 
 import dev.aqua.client.Aqua;
-import dev.aqua.client.gui.AquaMenuScreen;
+import dev.aqua.client.gui.PageHost;
 import dev.aqua.client.gui.Ui;
 import dev.aqua.client.render.Icon;
 import dev.aqua.client.setting.Setting;
@@ -13,7 +13,7 @@ public final class SettingsPage implements Page {
     private long confirmUntil;
 
     @Override
-    public float render(Ui ui, DrawContext ctx, float x, float y, float w, float a, AquaMenuScreen menu) {
+    public float render(Ui ui, DrawContext ctx, float x, float y, float w, float a, PageHost menu) {
         Theme t = Aqua.theme();
         y = section(ui, ctx, t, "Interface", "Motion, blur, sounds and notifications", Aqua.ui().all(), "ui", x, y, w, a, menu);
         y = section(ui, ctx, t, "HUD", "Applies to every widget", Aqua.hud().settings(), "hud", x, y, w, a, menu);
@@ -38,7 +38,7 @@ public final class SettingsPage implements Page {
     }
 
     private float section(Ui ui, DrawContext ctx, Theme t, String title, String sub, java.util.List<Setting<?>> settings, String owner,
-                          float x, float y, float w, float a, AquaMenuScreen menu) {
+                          float x, float y, float w, float a, PageHost menu) {
         int n = 0;
         for (Setting<?> s : settings) {
             if (s.isVisible()) {

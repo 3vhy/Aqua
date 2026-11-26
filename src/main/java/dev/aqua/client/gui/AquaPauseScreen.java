@@ -196,7 +196,7 @@ public final class AquaPauseScreen extends GameMenuScreen {
             R2D.textMid(ctx, "Aqua Settings", bx + bw / 2f - lw / 2f + 10, aquaY + bh / 2f, 6f, AquaFont.Weight.SEMIBOLD, Colors.fade(t.text(), a));
             if (ui.clickedIn(bx, aquaY, bw, bh)) {
                 UiSounds.click(1f);
-                client.setScreen(new AquaMenuScreen(this));
+                client.setScreen(Menus.create(this));
                 ui.end();
                 return;
             }

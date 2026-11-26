@@ -103,16 +103,71 @@ The rest of the game follows the same style:
   glass*; Chat Style is now on by default). This works with chat open and closed.
 
 ### Menu
-A floating window based on the attached menu screenshot. It has a narrow sidebar with the Aqua emblem,
-a module search (by name, description, keywords and setting names), and these sections: **HUD,
-Visuals, Cosmetics, Quality of Life, Performance**, plus **Wardrobe, Themes, Profiles, Keybinds and
-Settings**. Each module row shows its name and description on the left. On the right are a settings
-chevron, a key-bind badge (with conflict warnings) and a switch. The settings open inline and include
-switches, sliders, dropdowns, an HSV colour picker with alpha and theme-sync, text fields and buttons.
-Every module has a **Reset module** button, and Settings has **Reset everything**. The selected
-section is marked by a highlight that slides between sidebar items. Each page header has an icon
-tile, and enabled modules get an accent strip and tint. Tooltips appear after a short pause above
-the cursor, so they never cover the control you are pointing at.
+**Right Shift** opens the panel menu, laid out like the reference video:
+* **Panels.** There is one floating panel per category: Render, Server, Misc, Movement, Combat,
+  Aqua Client, Cosmetics and Visuals. Each is dark with a faint grid and lists its modules
+  alphabetically. Enabled modules are highlighted in blue, and a module's key shows on the right.
+  Drag a panel by its header, fold it with the arrow, and scroll long panels.
+* **Clicks.** Left-click a module to switch it, right-click it for its settings, or middle-click
+  it to bind a key. Rest the mouse on a module to see what it does.
+* **Search and Macro panels.** The Search panel at the top finds modules by name, description,
+  keywords and setting names; typing anywhere starts a search. The Macro panel lists your chat
+  macros.
+* **Settings card.** Right-clicking a module opens a blue card with:
+  * its switch and description
+  * **Show in HUD** (whether it appears in the Module List) and **Toggle Message**
+  * all its settings, with a dot on the ones you changed, and **Reset all**
+  * its **Key**
+  * **Copy Config** and **Paste Config**, which share a module's settings as text
+  * modules with a page of their own also get **Open Wardrobe**, **Open Music page** or
+    **Edit HUD layout**
+* **Tab bar.** At the bottom: **Modules**; **HUD** (the drag-and-drop HUD editor); **Friends**
+  (friends get a green name in the tab list and on nametags); **Theme** (colour themes and
+  interface settings, plus Reset panel layout); and **Config** (profiles and every key binding).
+
+The earlier window menu, with its sidebar, Wardrobe, Music and Keybinds pages, is still available
+under *Settings → Menu style → Classic window*.
+
+### Added from the panel-menu video
+* **Render:** **Low Health Warning** (red pulsing screen edges and a heartbeat when your own
+  health is low), **Waypoints** (mark places with a key or a button; they show a light beam, name
+  and distance and are kept per world and dimension) and **Nametag Style** (bigger player
+  nametags with ping and distance and friends in green; no health or armour, and normal
+  visibility).
+* **Server:** **Auto Reconnect** adds a Reconnect button, with an optional countdown, after an
+  unexpected disconnect.
+* **Misc:**
+  * **Chat Macro:** up to six macros, each a message or command on its own key; one press sends
+    one message.
+  * **Coord Snapper:** copies your coordinates to the clipboard.
+  * **Slow Swing:** slows the swing animation only.
+  * **Weather Notifier:** a toast when rain or a storm starts or stops.
+* **Aqua Client:**
+  * **Discord Presence** shows Aqua Client, and optionally the server, in your Discord status. It
+    talks to the Discord app on your computer, and you paste your own Discord application ID once.
+  * **HUD** switches the whole Aqua HUD on or off.
+  * **Performance** makes the glass blur lighter (every other frame, at most two passes) and caps
+    Aqua's particles at 75%.
+* **Visuals:**
+  * **3D Hand:** your 3D Character's arm in first person.
+  * **Color Grading:** looks (Cinematic, Warm, Cool, Vivid, Noir) or custom saturation, contrast,
+    tint and vignette. Brightness only moves a little, so it cannot light up dark places.
+  * **Custom Fov:** 30–140°.
+  * **Custom Glint:** enchantment glint colour, speed and pattern size.
+  * **Floating Relics:** glowing orbs or gems that float around you and leave trails.
+  * **Hand Pose:** move, turn and resize the first-person hand.
+  * **Motion Blur:** only while you turn.
+  * **Particles:** rising streaks, motes or embers around you.
+  * **Pharaoh Headdress:** a hat on your own model.
+  * **Target Marker:** a ring, orbs or a diamond on the mob or player you are fighting. It is hidden
+    behind blocks like everything else.
+  * **Totem Spirit:** a glowing spirit rises when a totem saves someone.
+
+Several modules now use the video's names: 3D Character (was 3D Skin), Atmosphere (Custom Sky),
+Block Overlay (Block Outline), CS Knife (Knife & Sword Skins), Custom Crosshair (Crosshair), Swing
+Animation (Animations), Hotkeys (Key Binds widget), Spotify HUD (Music card), Performance HUD
+(Performance widget), Sprint (Toggle Sprint) and Skin Change (Skin Protect). Your settings carry
+over, because the stored ids did not change. Searching for an old name still finds them.
 
 ### HUD (Fern-style)
 Dark translucent capsules with an icon, bright values and small muted units separated by dots.
@@ -124,7 +179,7 @@ The widgets are:
 * Position: coordinates, facing, biome, server and speed
 * Network: ping and TPS
 * Clock: local time and session length
-* Key Binds panel
+* Hotkeys panel (your module key binds)
 * Effects panel
 * Module List: enabled cosmetic modules only
 * Keystrokes: W A S D, LMB and RMB with a mouse-movement pad between them (as in the Fern
@@ -152,11 +207,11 @@ nothing to show display clearly marked **SAMPLE** data. Widgets stay on screen w
 window or change the GUI scale.
 
 ### Visuals
-**Custom Sky** (topographic contours, gradient, **Nebula** in violet, emerald, azure, crimson or
+**Atmosphere** (custom sky: topographic contours, gradient, **Nebula** in violet, emerald, azure, crimson or
 silver, **Aurora**, or glowing **Lava cells**, with optional **shooting stars**), Time Changer,
 Weather Changer, Custom Rain, **Rain Splashes**, Custom Fog (colour, and it can only make fog
-thicker), World Tint, Block Outline, **Water Colour** (colour only; underwater visibility is
-unchanged), **No Block Rotation**, Animations (visual swing length and style, equip animation, hand
+thicker), World Tint, Block Overlay, **Water Colour** (colour only; underwater visibility is
+unchanged), **No Block Rotation**, Swing Animation (visual swing length and style, equip animation, hand
 position and scale), Item Glow, **Hand Glow** (glowing outline around your held item; R7's "Hand aura"), Hand Shader,
 **Smooth Camera** (eases mouse movement; every bit of movement is still applied), **Attack
 Indicator** (ring or bar), **Low Fire & Shield**. The **inspect** key (Y) works on any held item.
@@ -198,7 +253,7 @@ title), Emotes (wheel plus wardrobe preview).
   health is low.
 
 ### Quality of life
-Smooth Zoom, Freelook, Toggle Sprint (holds the vanilla sprint key, so there is no omni-sprint), Music Player (with Spotify),
+Smooth Zoom, Freelook, Sprint (toggle sprint: holds the vanilla sprint key, so there is no omni-sprint), Sneak (Minecraft’s own toggle-sneak option), Auto Jump (Minecraft’s own option), Music Player (with Spotify),
 Screenshot notifications with a thumbnail, Chat Style (frosted glass or a colour background, and timestamps), Death Waypoints
 (your own deaths only), Streamer Mode (hides coordinates and the server address on your own screen),
 **Creamy Keys** (soft keyboard sounds while you type), **Media Hider** (covers your hotbar, and
@@ -214,7 +269,7 @@ and turn on **Settings › Colour Sync** to make every module colour follow your
   Hypixel, do not allow freelook mods**, so check the rules before using it.
 * **Name Protect** replaces your username with an alias of your choice in everything the game draws:
   chat, tab list, nametags, scoreboard and the HUD.
-* **Skin Protect** shows another skin as yours, on your screen only. Type a player's name and
+* **Skin Change** shows another skin as yours, on your screen only. Type a player's name and
   press **Apply** to load their skin from Mojang, or pick Steve or a default skin (no network).
 * **Aqua Badge** puts a small Aqua mark before the names of Aqua users in the tab list and on
   nametags. Aqua clients say hello on the `aqua:hello` channel, and a server that knows the channel
@@ -375,7 +430,8 @@ Aqua makes no network requests unless you use one of these features:
 | Automatic lyrics | song title, artist and length (for your songs and Spotify's) | `lrclib.net` |
 | Spotify cover art (macOS, Linux) | nothing (downloads the cover image Spotify links to) | Spotify's image server (`i.scdn.co`) |
 | Automatic covers | song artist and title | Apple iTunes Search (`itunes.apple.com`, images from `mzstatic.com`) |
-| Skin Protect (player name) | the player name you typed | Mojang (`api.mojang.com`, `sessionserver.mojang.com`, `textures.minecraft.net`) |
+| Skin Change (player name) | the player name you typed | Mojang (`api.mojang.com`, `sessionserver.mojang.com`, `textures.minecraft.net`) |
+| Discord Presence (only if you turn it on and enter an application ID) | "Aqua Client", play time, and the server address unless Streamer Mode hides it | Only the Discord app on your own computer, over its local IPC socket; Aqua sends nothing over the internet for this |
 | Aqua Badge hello | the Aqua version | only the server you are connected to |
 
 Your own account details are never sent by Aqua.

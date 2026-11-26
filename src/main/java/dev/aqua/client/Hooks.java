@@ -96,6 +96,18 @@ public final class Hooks {
                 vanilla.render(ctx, tick);
             }
         });
+        HudElementRegistry.addFirst(Identifier.of(AquaClient.MOD_ID, "overlays"), (ctx, tick) -> {
+            for (Module m : Aqua.modules().all()) {
+                if (m.isEnabled() && m instanceof dev.aqua.client.render.ScreenOverlay o) {
+                    try {
+                        o.renderOverlay(ctx, tick.getTickProgress(true));
+                    } catch (Throwable t) {
+                        dev.aqua.client.util.Problems.report("Overlay of " + m.id() + " failed", t);
+                        m.setEnabled(false, false);
+                    }
+                }
+            }
+        });
         HudElementRegistry.addLast(Identifier.of(AquaClient.MOD_ID, "join_effect"), (ctx, tick) -> {
             WorldJoinEffect j = Aqua.modules().get(WorldJoinEffect.class);
             if (j != null) {
@@ -157,6 +169,10 @@ public final class Hooks {
                 if (k != null) {
                     k.onAttack(entity);
                 }
+                dev.aqua.client.module.visual.TargetMarker tm = on(dev.aqua.client.module.visual.TargetMarker.class);
+                if (tm != null) {
+                    tm.onHit(entity);
+                }
             }
             return ActionResult.PASS;
         });
@@ -176,7 +192,7 @@ public final class Hooks {
             return;
         }
         EffectBudget budget = Aqua.modules().get(EffectBudget.class);
-        if (phase == WorldEffect.Phase.WORLD && budget != null && budget.pauseInMenus() && mc.currentScreen instanceof AquaMenuScreen) {
+        if (phase == WorldEffect.Phase.WORLD && budget != null && budget.pauseInMenus() && dev.aqua.client.gui.Menus.isMenu(mc.currentScreen)) {
             return;
         }
         VertexConsumerProvider vcp = FxBuffers.provider();
@@ -207,9 +223,38 @@ public final class Hooks {
         FxBuffers.flush();
     }
 
+    /** Auto Reconnect: a Reconnect button (with countdown) on the disconnect screen. */
+    static void registerDisconnectScreen() {
+        net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register((client, screen, w, h) -> {
+            if (!(screen instanceof net.minecraft.client.gui.screen.DisconnectedScreen)) {
+                return;
+            }
+            dev.aqua.client.module.qol.AutoReconnect ar = on(dev.aqua.client.module.qol.AutoReconnect.class);
+            if (ar == null || ar.lastServer() == null) {
+                return;
+            }
+            ar.onDisconnectedScreen();
+            int maxY = h / 2;
+            for (net.minecraft.client.gui.widget.ClickableWidget b : net.fabricmc.fabric.api.client.screen.v1.Screens.getButtons(screen)) {
+                maxY = Math.max(maxY, b.getY() + b.getHeight());
+            }
+            net.minecraft.client.gui.widget.ButtonWidget button = net.minecraft.client.gui.widget.ButtonWidget.builder(
+                    net.minecraft.text.Text.literal("Reconnect"), btn -> ar.reconnect()).dimensions(w / 2 - 100, maxY + 4, 200, 20).build();
+            net.fabricmc.fabric.api.client.screen.v1.Screens.getButtons(screen).add(button);
+            net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.afterTick(screen).register(sc -> {
+                int left = ar.secondsLeft();
+                button.setMessage(net.minecraft.text.Text.literal(left >= 0 ? "Reconnect (" + left + "s)" : "Reconnect"));
+            });
+        });
+    }
+
     // ------------------------------------------------------------------ events
 
     static void onJoin() {
+        dev.aqua.client.module.qol.AutoReconnect ar = Aqua.modules().get(dev.aqua.client.module.qol.AutoReconnect.class);
+        if (ar != null) {
+            MinecraftClient.getInstance().execute(ar::onJoin);
+        }
         WorldJoinEffect j = Aqua.modules().get(WorldJoinEffect.class);
         if (j != null) {
             MinecraftClient.getInstance().execute(j::trigger);
@@ -219,10 +264,14 @@ public final class Hooks {
     static void tick(MinecraftClient mc) {
     }
 
-    /** Adds the Aqua badge to player nametags. */
+    /** Adds the Aqua badge (and Nametags' ping and distance) to player nametags. */
     public static void decoratePlayerState(net.minecraft.entity.PlayerLikeEntity entity, net.minecraft.client.render.entity.state.PlayerEntityRenderState state) {
         if (state.displayName == null || Aqua.modules() == null) {
             return;
+        }
+        dev.aqua.client.module.qol.Nametags nt = on(dev.aqua.client.module.qol.Nametags.class);
+        if (nt != null && entity instanceof net.minecraft.entity.player.PlayerEntity pe) {
+            state.displayName = nt.decorate(state.displayName, pe);
         }
         dev.aqua.client.module.qol.AquaBadge b = Aqua.modules().get(dev.aqua.client.module.qol.AquaBadge.class);
         if (b != null && b.onNametags()) {
@@ -244,6 +293,10 @@ public final class Hooks {
             Entity e = packet.getEntity(mc.world);
             if (p != null && e != null) {
                 p.onPop(e);
+            }
+            dev.aqua.client.module.cosmetic.TotemSpirit ts = on(dev.aqua.client.module.cosmetic.TotemSpirit.class);
+            if (ts != null && e != null) {
+                ts.onPop(e);
             }
         }
     }

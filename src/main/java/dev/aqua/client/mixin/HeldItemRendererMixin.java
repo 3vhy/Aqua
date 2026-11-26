@@ -44,6 +44,10 @@ public abstract class HeldItemRendererMixin {
             // Offsets and scale only while Animations is on; the inspect pose always.
             a.apply(matrices, hand == Hand.MAIN_HAND);
         }
+        dev.aqua.client.module.visual.HandPose pose = Aqua.modules().get(dev.aqua.client.module.visual.HandPose.class);
+        if (pose != null) {
+            pose.apply(matrices, hand == Hand.MAIN_HAND);
+        }
         dev.aqua.client.module.visual.LowOverlays low = Aqua.modules().get(dev.aqua.client.module.visual.LowOverlays.class);
         if (low != null && item.isOf(net.minecraft.item.Items.SHIELD)) {
             float d = low.shieldOffset();

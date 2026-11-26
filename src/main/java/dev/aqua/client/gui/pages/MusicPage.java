@@ -1,7 +1,7 @@
 package dev.aqua.client.gui.pages;
 
 import dev.aqua.client.Aqua;
-import dev.aqua.client.gui.AquaMenuScreen;
+import dev.aqua.client.gui.PageHost;
 import dev.aqua.client.gui.Ui;
 import dev.aqua.client.gui.UiSounds;
 import dev.aqua.client.music.LyricLine;
@@ -24,7 +24,7 @@ import java.util.List;
 /** Standalone music player: now playing, seek bar, controls, lyrics switch and your library. */
 public final class MusicPage implements Page {
     @Override
-    public float render(Ui ui, DrawContext ctx, float x, float y, float w, float a, AquaMenuScreen menu) {
+    public float render(Ui ui, DrawContext ctx, float x, float y, float w, float a, PageHost menu) {
         Theme t = Aqua.theme();
         MusicPlayer mp = MusicPlayer.get();
         MusicModule mod = Aqua.modules().get(MusicModule.class);

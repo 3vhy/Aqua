@@ -50,6 +50,19 @@ public final class UiSettings {
         }
     }
 
+    public enum MenuStyle implements EnumSetting.Displayable {
+        PANELS("Panels"), CLASSIC("Classic window");
+        final String label;
+
+        MenuStyle(String l) {
+            label = l;
+        }
+
+        public String displayName() {
+            return label;
+        }
+    }
+
     public enum TitleBackground implements EnumSetting.Displayable {
         AQUA("Aqua lights"), PANORAMA("Minecraft panorama");
         final String label;
@@ -65,6 +78,14 @@ public final class UiSettings {
 
     private final List<Setting<?>> all = new ArrayList<>();
 
+    public final EnumSetting<MenuStyle> menuStyle = add(new EnumSetting<>("menu_style", "Menu style", MenuStyle.PANELS)
+            .describe("Panels: a floating panel per category. Classic window: one window with a sidebar"));
+    /** Panel positions and open state of the panel menu (managed by the menu). */
+    public final dev.aqua.client.setting.StringSetting panelLayout = add(new dev.aqua.client.setting.StringSetting("panel_layout", "Panel layout", "", 4000)
+            .visibleWhen(() -> false));
+    /** Friends (comma-separated names), managed on the Friends tab. */
+    public final dev.aqua.client.setting.StringSetting friends = add(new dev.aqua.client.setting.StringSetting("friends", "Friends", "", 4000)
+            .visibleWhen(() -> false));
     public final EnumSetting<Style> style = add(new EnumSetting<>("style", "Interface style", Style.GLASS)
             .describe("Glass: frosted panels that blur what is behind them. Solid: plain dark panels"));
     public final NumberSetting glassBlur = add(new NumberSetting("glass_blur", "Glass frost", 3, 1, 5, 1)
@@ -166,6 +187,7 @@ public final class UiSettings {
             case MEDIUM -> 0.7f;
             case HIGH -> 1f;
         };
-        return q * effectIntensity.f();
+        dev.aqua.client.module.perf.PerformanceMode pm = Aqua.modules() != null ? Aqua.modules().get(dev.aqua.client.module.perf.PerformanceMode.class) : null;
+        return q * effectIntensity.f() * (pm != null ? pm.particleFactor() : 1f);
     }
 }

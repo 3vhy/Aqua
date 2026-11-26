@@ -23,8 +23,8 @@ public final class BlockOutline extends Module {
     private final BoolSetting glow = add(new BoolSetting("glow", "Glow", false));
 
     public BlockOutline() {
-        super("block_outline", "Block Outline", "Restyles the outline of the block you are looking at.", Category.VISUALS, false,
-                "outline", "selection", "highlight block");
+        super("block_outline", "Block Overlay", "Restyles the outline of the block you are looking at.", Category.VISUALS, false,
+                "outline", "selection", "highlight block", "block outline");
     }
 
     public void draw(Fx fx, VertexConsumerProvider vcp, BlockPos pos, VoxelShape shape) {

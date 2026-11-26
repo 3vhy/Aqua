@@ -45,7 +45,7 @@ public final class SkinProtect extends Module {
     private String status = "";
 
     public SkinProtect() {
-        super("skin_protect", "Skin Protect", "Shows another player's skin (or a default skin) as yours, on your screen only.",
+        super("skin_protect", "Skin Change", "Shows another player's skin (or a default skin) as yours, on your screen only.",
                 Category.QOL, false, "skin protect", "skin changer", "hide skin", "privacy");
         add(new ActionSetting("apply", "Load skin", "Apply", this::apply));
         source.onChange(v -> apply());

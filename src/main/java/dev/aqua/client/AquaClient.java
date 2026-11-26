@@ -87,6 +87,7 @@ public final class AquaClient implements ClientModInitializer {
             Aqua.config.save();
         });
         Hooks.registerWorldRendering();
+        Hooks.registerDisconnectScreen();
         LOGGER.info("Aqua Client {} initialised with {} modules", Aqua.VERSION, Aqua.modules.all().size());
     }
 
@@ -114,7 +115,7 @@ public final class AquaClient implements ClientModInitializer {
         while (k.menu.wasPressed()) {
             if (mc.currentScreen == null) {
                 KeyBinding.unpressAll();
-                mc.setScreen(new dev.aqua.client.gui.AquaMenuScreen(null));
+                mc.setScreen(dev.aqua.client.gui.Menus.create(null));
             }
         }
         while (k.hudEditor.wasPressed()) {

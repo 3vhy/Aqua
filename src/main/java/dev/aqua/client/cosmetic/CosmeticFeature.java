@@ -59,6 +59,10 @@ public final class CosmeticFeature extends FeatureRenderer<PlayerEntityRenderSta
                 }
             });
         }
+        dev.aqua.client.module.cosmetic.PharaohHeaddress ph = Aqua.modules().get(dev.aqua.client.module.cosmetic.PharaohHeaddress.class);
+        if (ph != null && ph.isEnabled()) {
+            withPart(matrices, model.head, () -> queue.submitCustom(matrices, FxLayers.SOLID, (entry, vc) -> ph.draw(new Mesh(entry, vc, lf), t)));
+        }
         if (look.halo()) {
             Halo halo = Aqua.modules().get(Halo.class);
             matrices.push();

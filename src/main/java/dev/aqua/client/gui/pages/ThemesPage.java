@@ -1,7 +1,7 @@
 package dev.aqua.client.gui.pages;
 
 import dev.aqua.client.Aqua;
-import dev.aqua.client.gui.AquaMenuScreen;
+import dev.aqua.client.gui.PageHost;
 import dev.aqua.client.gui.Ui;
 import dev.aqua.client.gui.UiSounds;
 import dev.aqua.client.render.Colors;
@@ -18,7 +18,7 @@ public final class ThemesPage implements Page {
     private static final String[] LABELS = {"Background", "Panel", "Elevated panel", "Primary accent", "Secondary accent", "Primary text", "Muted text"};
 
     @Override
-    public float render(Ui ui, DrawContext ctx, float x, float y, float w, float a, AquaMenuScreen menu) {
+    public float render(Ui ui, DrawContext ctx, float x, float y, float w, float a, PageHost menu) {
         Theme cur = Aqua.theme();
         int cols = 3;
         float gap = 5;

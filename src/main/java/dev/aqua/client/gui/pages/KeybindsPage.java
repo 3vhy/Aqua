@@ -1,7 +1,7 @@
 package dev.aqua.client.gui.pages;
 
 import dev.aqua.client.Aqua;
-import dev.aqua.client.gui.AquaMenuScreen;
+import dev.aqua.client.gui.PageHost;
 import dev.aqua.client.gui.Ui;
 import dev.aqua.client.module.Module;
 import dev.aqua.client.render.Colors;
@@ -21,7 +21,7 @@ import java.util.List;
 /** All Aqua bindings with capture, clearing and conflict detection. */
 public final class KeybindsPage implements Page {
     @Override
-    public float render(Ui ui, DrawContext ctx, float x, float y, float w, float a, AquaMenuScreen menu) {
+    public float render(Ui ui, DrawContext ctx, float x, float y, float w, float a, PageHost menu) {
         Theme t = Aqua.theme();
         List<KeyBinding> binds = Aqua.keybinds().aquaVanillaBinds();
         float h = 26 + binds.size() * 15 + 4;

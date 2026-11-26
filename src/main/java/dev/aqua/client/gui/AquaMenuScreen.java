@@ -48,7 +48,7 @@ import java.util.Set;
  * category title above a scrollable list of wide rounded module rows (name + description left;
  * settings chevron, bind badge and switch right).
  */
-public final class AquaMenuScreen extends Screen {
+public final class AquaMenuScreen extends Screen implements PageHost {
     public enum Nav {
         HUD(Category.HUD), VISUALS(Category.VISUALS), COSMETICS(Category.COSMETICS), QOL(Category.QOL), PERFORMANCE(Category.PERFORMANCE),
         STARRED(null), WARDROBE(null), MUSIC(null), THEMES(null), PROFILES(null), KEYBINDS(null), SETTINGS(null);
@@ -89,6 +89,12 @@ public final class AquaMenuScreen extends Screen {
         super(Text.literal("Aqua"));
         this.parent = parent;
         open.target(1f);
+    }
+
+    /** Opens directly on a page (used by the panel menu for Wardrobe and Music). */
+    public void showPage(Nav n) {
+        nav = n;
+        lastNav = n;
     }
 
     @Override
@@ -593,40 +599,7 @@ public final class AquaMenuScreen extends Screen {
         return n == 0 && !(m instanceof HudWidget) ? 0 : 4 + n * 14 + 16;
     }
 
-    /** Draws one setting with the matching control. Public for pages that reuse it. */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public void settingRow(DrawContext ctx, Theme t, String owner, Setting<?> s, float x, float y, float w, float a) {
-        String id = owner + "." + s.id();
-        boolean hovLabel = ui.hover(x, y, w * 0.5f, 12);
-        R2D.textMid(ctx, s.name(), x, y + 6, 5.5f, AquaFont.Weight.MEDIUM, Colors.fade(t.text(), a));
-        if (hovLabel && !s.description().isEmpty()) {
-            ui.tooltip(s.description());
-        }
-        float right = x + w;
-        if (s instanceof BoolSetting b) {
-            boolean nv = ui.toggle(id, right - 17, y + 1.25f, b.on());
-            if (nv != b.on()) {
-                b.set(nv);
-            }
-        } else if (s instanceof NumberSetting n) {
-            float sw = Math.min(90, w * 0.38f);
-            R2D.textRight(ctx, n.format(), right, y + 6, 5f, AquaFont.Weight.MEDIUM, Colors.fade(t.muted(), a));
-            ui.slider(id, right - sw - 30, y + 1.5f, sw, n);
-        } else if (s instanceof EnumSetting e) {
-            ui.dropdown(id, right - 86, y + 0.5f, 86, e);
-        } else if (s instanceof ColorSetting c) {
-            ui.colorButton(id, right - 22, y + 0.5f, c);
-        } else if (s instanceof StringSetting str) {
-            float fw = Math.min(150, w * 0.55f);
-            ui.textField(id, right - fw, y, fw, 12, str.get(), "", str.maxLength(), null, str::set, str::set);
-        } else if (s instanceof ActionSetting act) {
-            float bw = Math.max(44, R2D.width(act.label(), 5.6f, AquaFont.Weight.SEMIBOLD) + 14);
-            if (ui.button(id, right - bw, y + 0.5f, bw, 11, act.label(), null, false)) {
-                act.run();
-            }
-        }
-    }
-
+    @Override
     public Ui ui() {
         return ui;
     }

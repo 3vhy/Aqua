@@ -21,6 +21,9 @@ public abstract class PlayerListHudMixin {
         if (badge != null && badge.inTab()) {
             cir.setReturnValue(AquaBadge.decorate(cir.getReturnValue(), entry.getProfile().id()));
         }
+        if (Aqua.ui() != null && dev.aqua.client.social.Friends.isFriend(entry.getProfile().name())) {
+            cir.setReturnValue(cir.getReturnValue().copy().styled(s -> s.withColor(dev.aqua.client.social.Friends.COLOR & 0xFFFFFF)));
+        }
     }
 
     /** The tab list's dark header, list and footer backgrounds become one frosted glass pane. */

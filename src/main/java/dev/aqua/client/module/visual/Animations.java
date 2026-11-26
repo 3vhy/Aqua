@@ -46,7 +46,7 @@ public final class Animations extends Module {
     private int inspectSlot = -1;
 
     public Animations() {
-        super("animations", "Animations", "Swing, equip, hand position and item inspect animations.", Category.VISUALS, false,
+        super("animations", "Swing Animation", "Swing, equip, hand position and item inspect animations.", Category.VISUALS, false,
                 "swing speed", "1.7 animations", "item position", "viewmodel", "inspect");
     }
 

@@ -4,7 +4,7 @@ import dev.aqua.client.Aqua;
 import dev.aqua.client.cosmetic.Emotes;
 import dev.aqua.client.cosmetic.Look;
 import dev.aqua.client.cosmetic.character.Characters;
-import dev.aqua.client.gui.AquaMenuScreen;
+import dev.aqua.client.gui.PageHost;
 import dev.aqua.client.gui.Ui;
 import dev.aqua.client.gui.UiSounds;
 import dev.aqua.client.module.Module;
@@ -69,7 +69,7 @@ public final class WardrobePage implements Page {
     }
 
     @Override
-    public float render(Ui ui, DrawContext ctx, float x, float y, float w, float a, AquaMenuScreen menu) {
+    public float render(Ui ui, DrawContext ctx, float x, float y, float w, float a, PageHost menu) {
         Theme t = Aqua.theme();
         MinecraftClient mc = MinecraftClient.getInstance();
         // ------------------------------------------------------------- tabs

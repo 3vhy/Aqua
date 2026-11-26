@@ -2,7 +2,7 @@ package dev.aqua.client.gui.pages;
 
 import dev.aqua.client.Aqua;
 import dev.aqua.client.config.ConfigManager;
-import dev.aqua.client.gui.AquaMenuScreen;
+import dev.aqua.client.gui.PageHost;
 import dev.aqua.client.gui.Ui;
 import dev.aqua.client.gui.UiSounds;
 import dev.aqua.client.render.Colors;
@@ -27,7 +27,7 @@ public final class ProfilesPage implements Page {
     private long confirmUntil;
 
     @Override
-    public float render(Ui ui, DrawContext ctx, float x, float y, float w, float a, AquaMenuScreen menu) {
+    public float render(Ui ui, DrawContext ctx, float x, float y, float w, float a, PageHost menu) {
         Theme t = Aqua.theme();
         ConfigManager cfg = Aqua.config();
         // Create bar

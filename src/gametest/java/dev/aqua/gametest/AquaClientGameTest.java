@@ -109,6 +109,8 @@ public final class AquaClientGameTest implements FabricClientGameTest {
                         case "identity" -> identity(context, sp);
                         case "glass" -> glassTour(context, sp);
                         case "restyle" -> restyle(context, sp);
+                        case "panels" -> panelMenu(context, sp);
+                        case "anubis" -> anubisModules(context, sp);
                         default -> throw new IllegalArgumentException("unknown section " + section);
                     }
                 }
@@ -211,6 +213,8 @@ public final class AquaClientGameTest implements FabricClientGameTest {
             videoModules(context, sp);
             glassTour(context, sp);
             restyle(context, sp);
+            panelMenu(context, sp);
+            anubisModules(context, sp);
             profilesAndLayouts(context);
             resizeAndScale(context);
             reloadResources(context);
@@ -477,8 +481,8 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         check(airborne, "Player is airborne while moving and jumping");
         context.getInput().pressKey(mc -> Aqua.keybinds().menu);
         context.waitTicks(2);
-        boolean opened = context.computeOnClient(mc -> mc.currentScreen instanceof AquaMenuScreen);
-        check(opened, "Right Shift opens the Aqua menu while airborne");
+        boolean opened = context.computeOnClient(mc -> mc.currentScreen instanceof dev.aqua.client.gui.ClickGuiScreen);
+        check(opened, "Right Shift opens the Aqua menu (panel style) while airborne");
         boolean released = context.computeOnClient(mc -> !mc.options.forwardKey.isPressed() && !mc.options.jumpKey.isPressed()
                 && !mc.options.sprintKey.isPressed());
         check(released, "Gameplay inputs are released when the menu opens");
@@ -1258,6 +1262,9 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         if (s instanceof dev.aqua.client.setting.StringSetting) {
             return 3;
         }
+        if (s instanceof dev.aqua.client.setting.KeySetting) {
+            return 2;
+        }
         return 0;
     }
 
@@ -1274,6 +1281,12 @@ public final class AquaClientGameTest implements FabricClientGameTest {
                 case 0 -> c.setSyncTheme(!c.syncTheme());
                 case 1 -> c.set(0x40FF00FF);
                 default -> c.set(0xFF000000);
+            }
+        } else if (s instanceof dev.aqua.client.setting.KeySetting k) {
+            if (v == 0) {
+                k.setKey(InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F9);
+            } else {
+                k.clear();
             }
         } else if (s instanceof dev.aqua.client.setting.StringSetting t) {
             String[] texts = {"", "\u201cna\u00efve\u201d \u2013 \u266a \u65e5\u672c \ud83d\ude00 <b>&amp;",
@@ -1538,6 +1551,483 @@ public final class AquaClientGameTest implements FabricClientGameTest {
         check(p1 > p0, "Tab list background is frosted glass");
         int problems = context.computeOnClient(mc -> dev.aqua.client.util.Problems.count()) - problems0;
         check(problems == 0, "restyled screens recorded no errors (" + problems + ")");
+    }
+
+    /** Every module added from the Anubis Client video, each with a real check. */
+    private void anubisModules(ClientGameTestContext context, TestSingleplayerContext sp) {
+        int problems0 = context.computeOnClient(mc -> dev.aqua.client.util.Problems.count());
+        sp.getServer().runCommand("time set noon");
+        sp.getServer().runCommand("weather clear");
+        sp.getServer().runCommand("gamemode creative @a");
+        context.runOnClient(mc -> mc.options.setPerspective(Perspective.FIRST_PERSON));
+
+        // Chat Macro: a real key press sends the macro's message.
+        context.runOnClient(mc -> {
+            var cm = mod(dev.aqua.client.module.qol.ChatMacro.class);
+            cm.text(0).set("Aqua macro test");
+            cm.key(0).setKey(InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_F7);
+            cm.setEnabled(true, false);
+        });
+        context.waitTicks(2);
+        context.getInput().pressKey(GLFW.GLFW_KEY_F7);
+        context.waitTicks(10);
+        boolean sent = context.computeOnClient(mc -> {
+            var cm = mod(dev.aqua.client.module.qol.ChatMacro.class);
+            return cm.sentCount() == 1 && cm.lastText().equals("Aqua macro test");
+        });
+        check(sent, "Chat Macro: its key sends the macro's message");
+        context.runOnClient(mc -> mod(dev.aqua.client.module.qol.ChatMacro.class).setEnabled(false, false));
+
+        // Coord Snapper copies your coordinates.
+        String coords = context.computeOnClient(mc -> {
+            var c = mod(dev.aqua.client.module.qol.CoordSnapper.class);
+            c.copy();
+            return mc.keyboard.getClipboard() + "|" + c.text();
+        });
+        String[] cp = coords.split("\\|");
+        check(cp.length == 2 && cp[0].equals(cp[1]) && cp[0].matches("-?\\d+ -?\\d+ -?\\d+"), "Coord Snapper copies \"" + coords + "\"");
+
+        // Weather Notifier: a toast when rain starts.
+        context.runOnClient(mc -> mod(dev.aqua.client.module.qol.WeatherNotifier.class).setEnabled(true, false));
+        context.waitTicks(3);
+        sp.getServer().runCommand("weather rain");
+        context.waitFor(mc -> mod(dev.aqua.client.module.qol.WeatherNotifier.class).shown() > 0, 400);
+        context.takeScreenshot("anubis_weather_notifier");
+        pass("Weather Notifier shows a toast when it starts raining");
+        sp.getServer().runCommand("weather clear");
+        context.runOnClient(mc -> mod(dev.aqua.client.module.qol.WeatherNotifier.class).setEnabled(false, false));
+
+        // Sneak and Auto Jump switch Minecraft's own options and put them back.
+        boolean opts = context.computeOnClient(mc -> {
+            boolean s0 = mc.options.getSneakToggled().getValue(), j0 = mc.options.getAutoJump().getValue();
+            mod(dev.aqua.client.module.qol.ToggleSneak.class).setEnabled(true, false);
+            mod(dev.aqua.client.module.qol.AutoJump.class).setEnabled(true, false);
+            boolean on = mc.options.getSneakToggled().getValue() && mc.options.getAutoJump().getValue();
+            mod(dev.aqua.client.module.qol.ToggleSneak.class).setEnabled(false, false);
+            mod(dev.aqua.client.module.qol.AutoJump.class).setEnabled(false, false);
+            return on && mc.options.getSneakToggled().getValue() == s0 && mc.options.getAutoJump().getValue() == j0;
+        });
+        check(opts, "Sneak and Auto Jump switch Minecraft's options on and restore them");
+
+        // Low Health Warning at low health.
+        sp.getServer().runCommand("gamemode survival @a");
+        context.runOnClient(mc -> mod(dev.aqua.client.module.visual.LowHealthWarning.class).setEnabled(true, false));
+        sp.getServer().runCommand("damage @p 15 minecraft:generic");
+        context.waitTicks(10);
+        long lh = context.computeOnClient(mc -> mod(dev.aqua.client.module.visual.LowHealthWarning.class).shown());
+        context.takeScreenshot("anubis_low_health_warning");
+        check(lh > 0, "Low Health Warning shows at " + context.computeOnClient(mc -> mc.player.getHealth()) + " health");
+        sp.getServer().runCommand("effect give @p minecraft:instant_health 1 4");
+        context.runOnClient(mc -> mod(dev.aqua.client.module.visual.LowHealthWarning.class).setEnabled(false, false));
+        sp.getServer().runCommand("gamemode creative @a");
+
+        // Waypoints: add, see, remove.
+        context.runOnClient(mc -> {
+            var w = mod(dev.aqua.client.module.qol.Waypoints.class);
+            w.clearWorld();
+            w.setEnabled(true, false);
+            w.addHere();
+        });
+        sp.getServer().runCommand("tp @p ~6 ~ ~12");
+        context.runOnClient(mc -> {
+            mc.player.setYaw(180f);
+            mc.player.setPitch(-5f);
+        });
+        context.waitTicks(10);
+        context.takeScreenshot("anubis_waypoint");
+        int wp = context.computeOnClient(mc -> mod(dev.aqua.client.module.qol.Waypoints.class).here().size());
+        context.runOnClient(mc -> mod(dev.aqua.client.module.qol.Waypoints.class).removeNearest());
+        int wp2 = context.computeOnClient(mc -> mod(dev.aqua.client.module.qol.Waypoints.class).here().size());
+        check(wp == 1 && wp2 == 0, "Waypoints: added one here, shown, then removed (" + wp + " → " + wp2 + ")");
+        context.runOnClient(mc -> mod(dev.aqua.client.module.qol.Waypoints.class).setEnabled(false, false));
+
+        // Auto Reconnect: the disconnect screen gets a Reconnect button.
+        context.runOnClient(mc -> {
+            var ar = mod(dev.aqua.client.module.qol.AutoReconnect.class);
+            ar.setEnabled(true, false);
+            ((dev.aqua.client.setting.BoolSetting) ar.settings().get(0)).set(false);
+            ar.setLastServer(new net.minecraft.client.network.ServerInfo("Test", "localhost", net.minecraft.client.network.ServerInfo.ServerType.OTHER));
+        });
+        context.setScreen(() -> new net.minecraft.client.gui.screen.DisconnectedScreen(null, net.minecraft.text.Text.literal("Connection Lost"),
+                net.minecraft.text.Text.literal("Test disconnect")));
+        context.waitTicks(5);
+        boolean reconnect = context.computeOnClient(mc -> {
+            for (var b : net.fabricmc.fabric.api.client.screen.v1.Screens.getButtons(mc.currentScreen)) {
+                if (b.getMessage().getString().startsWith("Reconnect")) {
+                    return true;
+                }
+            }
+            return false;
+        });
+        context.takeScreenshot("anubis_auto_reconnect");
+        check(reconnect, "Auto Reconnect adds a Reconnect button to the disconnect screen");
+        context.setScreen(() -> null);
+        context.runOnClient(mc -> {
+            var ar = mod(dev.aqua.client.module.qol.AutoReconnect.class);
+            ar.setLastServer(null);
+            ar.resetToDefaults();
+        });
+
+        // Discord Presence over a stand-in for Discord's local IPC socket.
+        discordPresence(context);
+
+        // HUD master switch.
+        long hf0 = context.computeOnClient(mc -> Aqua.hud().frames());
+        context.runOnClient(mc -> mod(dev.aqua.client.hud.HudModule.class).setEnabled(false, false));
+        context.waitTicks(5);
+        long hf1 = context.computeOnClient(mc -> Aqua.hud().frames());
+        context.waitTicks(5);
+        long hf2 = context.computeOnClient(mc -> Aqua.hud().frames());
+        context.runOnClient(mc -> mod(dev.aqua.client.hud.HudModule.class).setEnabled(true, false));
+        context.waitTicks(5);
+        long hf3 = context.computeOnClient(mc -> Aqua.hud().frames());
+        check(hf1 >= hf0 && hf2 == hf1 && hf3 > hf2, "HUD switch hides and shows the whole Aqua HUD");
+
+        // Performance mode keeps glass working.
+        context.runOnClient(mc -> mod(dev.aqua.client.module.perf.PerformanceMode.class).setEnabled(true, false));
+        long pc0 = context.computeOnClient(mc -> dev.aqua.client.render.GlassBlur.captures());
+        context.waitTicks(10);
+        long pc1 = context.computeOnClient(mc -> dev.aqua.client.render.GlassBlur.captures());
+        float budget = context.computeOnClient(mc -> Aqua.ui().particleBudget());
+        context.runOnClient(mc -> mod(dev.aqua.client.module.perf.PerformanceMode.class).setEnabled(false, false));
+        float budget2 = context.computeOnClient(mc -> Aqua.ui().particleBudget());
+        check(pc1 > pc0 && budget < budget2, "Performance: glass still drawn, particle budget lowered (" + budget + " < " + budget2 + ")");
+
+        // Color Grading and Motion Blur run as passes over the game image.
+        long pf0 = context.computeOnClient(mc -> dev.aqua.client.render.PostFx.frames());
+        context.runOnClient(mc -> {
+            mod(dev.aqua.client.module.visual.ColorGrading.class).setEnabled(true, false);
+            mod(dev.aqua.client.module.visual.MotionBlur.class).setEnabled(true, false);
+        });
+        for (int i = 0; i < 12; i++) {
+            context.runOnClient(mc -> mc.player.setYaw(mc.player.getYaw() + 9f));
+            context.waitTicks(1);
+        }
+        context.takeScreenshot("anubis_color_grading_motion_blur");
+        long pf1 = context.computeOnClient(mc -> dev.aqua.client.render.PostFx.frames());
+        context.runOnClient(mc -> {
+            mod(dev.aqua.client.module.visual.ColorGrading.class).setEnabled(false, false);
+            mod(dev.aqua.client.module.visual.MotionBlur.class).setEnabled(false, false);
+        });
+        check(pf1 > pf0 + 5, "Color Grading and Motion Blur processed " + (pf1 - pf0) + " frames");
+
+        // Custom Fov.
+        float[] fovs = context.computeOnClient(mc -> {
+            var acc = (dev.aqua.client.mixin.GameRendererAccessor) mc.gameRenderer;
+            float before = acc.aqua$getFov(mc.gameRenderer.getCamera(), 1f, true);
+            var cf = mod(dev.aqua.client.module.visual.CustomFov.class);
+            ((NumberSetting) cf.settings().get(0)).set(125.0);
+            cf.setEnabled(true, false);
+            float after = acc.aqua$getFov(mc.gameRenderer.getCamera(), 1f, true);
+            cf.setEnabled(false, false);
+            cf.resetToDefaults();
+            return new float[]{before, after};
+        });
+        check(fovs[1] > fovs[0] + 20, "Custom Fov widens the view (" + fovs[0] + " → " + fovs[1] + ")");
+
+        // Custom Glint on an enchanted sword, with Hand Pose and Target Marker.
+        sp.getServer().runCommand("item replace entity @a weapon.mainhand with minecraft:diamond_sword[enchantments={sharpness:5}]");
+        context.runOnClient(mc -> {
+            mc.player.getInventory().setSelectedSlot(0);
+            mod(dev.aqua.client.module.visual.CustomGlint.class).setEnabled(true, false);
+            var hp = mod(dev.aqua.client.module.visual.HandPose.class);
+            ((NumberSetting) hp.settings().get(4)).set(25.0);
+            hp.setEnabled(true, false);
+            mc.player.setPitch(15f);
+        });
+        context.waitTicks(10);
+        context.takeScreenshot("anubis_custom_glint_hand_pose");
+        int glint = context.computeOnClient(mc -> mod(dev.aqua.client.module.visual.CustomGlint.class).applied());
+        check(glint >= 2, "Custom Glint recolours the glint textures (" + glint + ")");
+        context.runOnClient(mc -> {
+            mod(dev.aqua.client.module.visual.CustomGlint.class).setEnabled(false, false);
+            mod(dev.aqua.client.module.visual.HandPose.class).setEnabled(false, false);
+            mod(dev.aqua.client.module.visual.HandPose.class).resetToDefaults();
+        });
+
+        // Target Marker on a mob you hit.
+        sp.getServer().runCommand("summon minecraft:husk ~ ~ ~3 {NoAI:1b,Silent:1b,attributes:[{id:\"minecraft:max_health\",base:200}],Health:200f}");
+        context.waitTicks(5);
+        context.runOnClient(mc -> {
+            mod(dev.aqua.client.module.visual.TargetMarker.class).setEnabled(true, false);
+            mc.player.setYaw(0f);
+            mc.player.setPitch(10f);
+        });
+        context.waitTicks(3);
+        context.runOnClient(mc -> {
+            net.minecraft.entity.Entity husk = null;
+            for (net.minecraft.entity.Entity e : mc.world.getEntities()) {
+                if (e.getType() == net.minecraft.entity.EntityType.HUSK) {
+                    husk = e;
+                }
+            }
+            if (husk != null) {
+                mc.interactionManager.attackEntity(mc.player, husk);
+            }
+        });
+        context.waitTicks(8);
+        context.takeScreenshot("anubis_target_marker");
+        long tmd = context.computeOnClient(mc -> mod(dev.aqua.client.module.visual.TargetMarker.class).drawn());
+        check(tmd > 0, "Target Marker marks the mob you hit");
+        sp.getServer().runCommand("kill @e[type=minecraft:husk]");
+        context.runOnClient(mc -> mod(dev.aqua.client.module.visual.TargetMarker.class).setEnabled(false, false));
+
+        // 3D Hand: the 3D Character's arm in first person.
+        long h0 = context.computeOnClient(mc -> dev.aqua.client.module.visual.ThreeDHand.drawn());
+        sp.getServer().runCommand("item replace entity @a weapon.mainhand with minecraft:air");
+        context.runOnClient(mc -> {
+            mod(dev.aqua.client.module.cosmetic.CharacterSkin.class).setEnabled(true, false);
+            mod(dev.aqua.client.module.visual.ThreeDHand.class).setEnabled(true, false);
+        });
+        context.waitTicks(10);
+        context.takeScreenshot("anubis_3d_hand");
+        long h1 = context.computeOnClient(mc -> dev.aqua.client.module.visual.ThreeDHand.drawn());
+        check(h1 > h0, "3D Hand draws the character's arm in first person");
+        context.runOnClient(mc -> mod(dev.aqua.client.module.visual.ThreeDHand.class).setEnabled(false, false));
+
+        // Cosmetics: Floating Relics, Particles, Pharaoh Headdress (third person).
+        context.runOnClient(mc -> {
+            mod(dev.aqua.client.module.cosmetic.CharacterSkin.class).setEnabled(false, false);
+            mod(dev.aqua.client.module.cosmetic.FloatingRelics.class).setEnabled(true, false);
+            mod(dev.aqua.client.module.cosmetic.AuraParticles.class).setEnabled(true, false);
+            mod(dev.aqua.client.module.cosmetic.PharaohHeaddress.class).setEnabled(true, false);
+            mc.options.setPerspective(Perspective.THIRD_PERSON_FRONT);
+            mc.player.setPitch(10f);
+        });
+        long fr0 = context.computeOnClient(mc -> mod(dev.aqua.client.module.cosmetic.FloatingRelics.class).drawn());
+        long ph0 = context.computeOnClient(mc -> dev.aqua.client.module.cosmetic.PharaohHeaddress.drawn());
+        context.waitTicks(25);
+        context.takeScreenshot("anubis_relics_particles_headdress");
+        long fr1 = context.computeOnClient(mc -> mod(dev.aqua.client.module.cosmetic.FloatingRelics.class).drawn());
+        long ph1 = context.computeOnClient(mc -> dev.aqua.client.module.cosmetic.PharaohHeaddress.drawn());
+        long sp1 = context.computeOnClient(mc -> mod(dev.aqua.client.module.cosmetic.AuraParticles.class).spawned());
+        check(fr1 > fr0 && ph1 > ph0 && sp1 > 10, "Floating Relics, Particles and Pharaoh Headdress are drawn");
+        context.runOnClient(mc -> {
+            mod(dev.aqua.client.module.cosmetic.FloatingRelics.class).setEnabled(false, false);
+            mod(dev.aqua.client.module.cosmetic.AuraParticles.class).setEnabled(false, false);
+            mod(dev.aqua.client.module.cosmetic.PharaohHeaddress.class).setEnabled(false, false);
+        });
+
+        // Totem Spirit on a real totem use.
+        context.runOnClient(mc -> mod(dev.aqua.client.module.cosmetic.TotemSpirit.class).setEnabled(true, false));
+        sp.getServer().runCommand("gamemode survival @a");
+        sp.getServer().runCommand("item replace entity @a weapon.offhand with minecraft:totem_of_undying");
+        context.waitTicks(3);
+        sp.getServer().runCommand("damage @p 100 minecraft:generic");
+        context.waitFor(mc -> mod(dev.aqua.client.module.cosmetic.TotemSpirit.class).popped() > 0, 200);
+        context.waitTicks(10);
+        context.takeScreenshot("anubis_totem_spirit");
+        pass("Totem Spirit rises on a real totem use");
+        sp.getServer().runCommand("gamemode creative @a");
+        sp.getServer().runCommand("effect clear @a");
+        context.runOnClient(mc -> {
+            mod(dev.aqua.client.module.cosmetic.TotemSpirit.class).setEnabled(false, false);
+            mc.options.setPerspective(Perspective.FIRST_PERSON);
+        });
+
+        // Nametag Style and Friends.
+        String tag = context.computeOnClient(mc -> {
+            var nt = mod(dev.aqua.client.module.qol.Nametags.class);
+            dev.aqua.client.social.Friends.add("Aqua_Friend");
+            var other = new net.minecraft.client.network.OtherClientPlayerEntity(mc.world,
+                    new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "Aqua_Friend"));
+            other.setPosition(mc.player.getX() + 5, mc.player.getY(), mc.player.getZ());
+            net.minecraft.text.Text t = nt.decorate(net.minecraft.text.Text.literal("Aqua_Friend"), other);
+            var c = t.getStyle().getColor();
+            dev.aqua.client.social.Friends.remove("Aqua_Friend");
+            return t.getString() + "|" + (c != null ? c.getRgb() : -1);
+        });
+        check(tag.contains("5m") && tag.endsWith("|" + (dev.aqua.client.social.Friends.COLOR & 0xFFFFFF)),
+                "Nametag Style adds distance and colours friends (" + tag + ")");
+
+        // Module config copy and paste.
+        boolean pasted = context.computeOnClient(mc -> {
+            var fr = mod(dev.aqua.client.module.cosmetic.FloatingRelics.class);
+            NumberSetting count = (NumberSetting) fr.settings().get(1);
+            count.set(7.0);
+            String cfg = fr.exportConfig();
+            count.set(2.0);
+            boolean ok = fr.importConfig(cfg) && count.d() == 7.0;
+            boolean rejects = !fr.importConfig("{\"module\":\"zoom\"}");
+            fr.resetToDefaults();
+            return ok && rejects;
+        });
+        check(pasted, "Copy Config and Paste Config restore a module's settings (and reject other modules' configs)");
+
+        int problems = context.computeOnClient(mc -> dev.aqua.client.util.Problems.count()) - problems0;
+        check(problems == 0, "new modules recorded no errors (" + problems + ")");
+    }
+
+    /** Discord Presence talks to a stand-in Discord IPC socket and sets an activity naming Aqua Client. */
+    private void discordPresence(ClientGameTestContext context) {
+        try {
+            java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("aqua-ipc");
+            java.nio.file.Path sock = dir.resolve("discord-ipc-0");
+            var server = java.nio.channels.ServerSocketChannel.open(java.net.StandardProtocolFamily.UNIX);
+            server.bind(java.net.UnixDomainSocketAddress.of(sock));
+            AtomicReference<String> activity = new AtomicReference<>("");
+            Thread t = new Thread(() -> {
+                try (var ch = server.accept()) {
+                    for (int i = 0; i < 2; i++) {
+                        java.nio.ByteBuffer head = java.nio.ByteBuffer.allocate(8).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+                        while (head.hasRemaining()) {
+                            ch.read(head);
+                        }
+                        head.flip();
+                        head.getInt();
+                        java.nio.ByteBuffer body = java.nio.ByteBuffer.allocate(head.getInt());
+                        while (body.hasRemaining()) {
+                            ch.read(body);
+                        }
+                        String json = new String(body.array(), java.nio.charset.StandardCharsets.UTF_8);
+                        if (i == 1) {
+                            activity.set(json);
+                        }
+                        byte[] reply = "{\"cmd\":\"DISPATCH\",\"evt\":\"READY\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                        java.nio.ByteBuffer r = java.nio.ByteBuffer.allocate(8 + reply.length).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+                        r.putInt(1).putInt(reply.length).put(reply).flip();
+                        while (r.hasRemaining()) {
+                            ch.write(r);
+                        }
+                    }
+                } catch (Exception ignored) {
+                    // the check below reports it
+                }
+            }, "fake discord");
+            t.setDaemon(true);
+            t.start();
+            context.runOnClient(mc -> {
+                System.setProperty("aqua.discord.ipc", dir.toString());
+                var dp = mod(dev.aqua.client.module.qol.DiscordPresence.class);
+                ((dev.aqua.client.setting.StringSetting) dp.settings().get(0)).set("123456789012345678");
+                dp.setEnabled(true, false);
+            });
+            long w0 = System.currentTimeMillis();
+            context.waitFor(mc -> !activity.get().isEmpty() || System.currentTimeMillis() - w0 > 8000, 400);
+            String act = activity.get();
+            check(act.contains("SET_ACTIVITY") && act.contains("Aqua Client"), "Discord Presence sets an activity naming Aqua Client");
+            context.runOnClient(mc -> {
+                var dp = mod(dev.aqua.client.module.qol.DiscordPresence.class);
+                dp.setEnabled(false, false);
+                dp.resetToDefaults();
+                System.clearProperty("aqua.discord.ipc");
+            });
+            server.close();
+        } catch (java.io.IOException e) {
+            skip("Discord Presence: could not create a local socket (" + e.getMessage() + ")");
+        }
+    }
+
+    /** The panel menu (layout of the reference video): panels, tooltip, settings card, tabs. */
+    private void panelMenu(ClientGameTestContext context, TestSingleplayerContext sp) {
+        int[] size = context.computeOnClient(mc -> new int[]{mc.getWindow().getWidth(), mc.getWindow().getHeight(), mc.options.getGuiScale().getValue()});
+        context.getInput().resizeWindow(1280, 720);
+        context.waitTicks(5);
+        context.runOnClient(mc -> {
+            mc.options.getGuiScale().setValue(2);
+            mc.onResolutionChanged();
+        });
+        context.waitTicks(10);
+        sp.getServer().runCommand("time set midnight");
+        context.runOnClient(mc -> {
+            for (String id : new String[]{"freelook", "time_changer", "staff_list", "name_protect", "chat_style", "hit_fx", "character_skin", "block_outline",
+                    "hit_particles", "jump_circles", "zoom", "performance"}) {
+                Module m = Aqua.modules().byId(id);
+                if (m != null) {
+                    m.setEnabled(true, false);
+                }
+            }
+        });
+        context.setScreen(() -> new dev.aqua.client.gui.ClickGuiScreen(null));
+        context.waitTicks(15);
+        context.takeScreenshot("panels_menu");
+        double s = context.computeOnClient(mc -> (double) mc.getWindow().getScaleFactor());
+        // Rest the mouse on the second row of the Render panel: the tooltip appears.
+        context.getInput().setCursorPos((25 + 20) * s, (62 + 12 + 10.65 * 1.5) * s);
+        wallWait(context, 700);
+        context.waitTicks(2);
+        context.takeScreenshot("panels_tooltip");
+        // Every module is in exactly one panel.
+        String missing = context.computeOnClient(mc -> {
+            java.util.Set<Module> seen = new java.util.HashSet<>();
+            for (dev.aqua.client.gui.click.MenuPanel p : dev.aqua.client.gui.click.MenuPanel.values()) {
+                seen.addAll(dev.aqua.client.gui.ClickGuiScreen.modulesOf(p));
+            }
+            StringBuilder b = new StringBuilder();
+            for (Module m : Aqua.modules().all()) {
+                if (!seen.contains(m)) {
+                    b.append(m.id()).append(' ');
+                }
+            }
+            return b.toString();
+        });
+        check(missing.isEmpty(), "Every module appears in a panel" + (missing.isEmpty() ? "" : " (missing " + missing + ")"));
+        // A real left click on a row switches the module; a real right click opens its settings card.
+        float[] row = context.computeOnClient(mc -> {
+            List<Module> l = dev.aqua.client.gui.ClickGuiScreen.modulesOf(dev.aqua.client.gui.click.MenuPanel.MISC);
+            int i = l.indexOf(Aqua.modules().byId("coord_snapper"));
+            return new float[]{164 + 20, (float) (61 + 11.5 + 0.5 + i * 10.65 + 5.3)};
+        });
+        boolean on0 = context.computeOnClient(mc -> Aqua.modules().byId("coord_snapper").isEnabled());
+        context.getInput().setCursorPos(row[0] * s, row[1] * s);
+        context.waitTicks(2);
+        context.getInput().pressMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
+        context.waitTicks(3);
+        boolean on1 = context.computeOnClient(mc -> Aqua.modules().byId("coord_snapper").isEnabled());
+        check(on0 != on1, "Left-click on a panel row switches the module");
+        context.getInput().pressMouse(GLFW.GLFW_MOUSE_BUTTON_RIGHT);
+        context.waitTicks(4);
+        String card = context.computeOnClient(mc -> {
+            Module m = ((dev.aqua.client.gui.ClickGuiScreen) mc.currentScreen).openCard();
+            return m == null ? "" : m.id();
+        });
+        check(card.equals("coord_snapper"), "Right-click opens the module's settings card (" + card + ")");
+        context.takeScreenshot("panels_card_coord_snapper");
+        context.getInput().pressKey(GLFW.GLFW_KEY_ESCAPE);
+        context.waitTicks(10);
+        boolean cardClosed = context.computeOnClient(mc -> mc.currentScreen instanceof dev.aqua.client.gui.ClickGuiScreen g && g.openCard() == null);
+        check(cardClosed, "Escape closes the settings card and keeps the menu open");
+        context.runOnClient(mc -> Aqua.modules().byId("coord_snapper").setEnabled(on0, false));
+        // Typing searches; the Search panel lists matches.
+        for (char ch : "slow".toCharArray()) {
+            context.getInput().typeChar(ch);
+        }
+        context.waitTicks(4);
+        context.takeScreenshot("panels_search");
+        boolean found = context.computeOnClient(mc -> Aqua.modules().search("slow").contains(Aqua.modules().byId("slow_swing")));
+        check(found, "Search finds Slow Swing");
+        context.getInput().pressKey(GLFW.GLFW_KEY_ESCAPE);
+        context.waitTicks(3);
+        // Drag the Render panel by its header.
+        context.getInput().setCursorPos((25 + 30) * s, (62 + 5) * s);
+        context.getInput().holdMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
+        context.waitTicks(2);
+        for (int i = 0; i < 6; i++) {
+            context.getInput().moveCursor(6 * s, 4 * s);
+            context.waitTicks(1);
+        }
+        context.getInput().releaseMouse(GLFW.GLFW_MOUSE_BUTTON_LEFT);
+        context.waitTicks(3);
+        String layout = context.computeOnClient(mc -> Aqua.ui().panelLayout.get());
+        check(layout.contains("RENDER:") && !layout.contains("RENDER:25.0,62.0"), "Dragging a panel header moves the panel (" +
+                layout.substring(0, Math.min(40, layout.length())) + ")");
+        context.runOnClient(mc -> ((dev.aqua.client.gui.ClickGuiScreen) mc.currentScreen).resetLayout());
+        context.runOnClient(mc -> ((dev.aqua.client.gui.ClickGuiScreen) mc.currentScreen).openSettings(Aqua.modules().byId("character_skin")));
+        context.waitTicks(12);
+        context.takeScreenshot("panels_card");
+        for (dev.aqua.client.gui.ClickGuiScreen.Tab t : new dev.aqua.client.gui.ClickGuiScreen.Tab[]{
+                dev.aqua.client.gui.ClickGuiScreen.Tab.FRIENDS, dev.aqua.client.gui.ClickGuiScreen.Tab.THEME, dev.aqua.client.gui.ClickGuiScreen.Tab.CONFIG}) {
+            context.runOnClient(mc -> ((dev.aqua.client.gui.ClickGuiScreen) mc.currentScreen).setTab(t));
+            context.waitTicks(10);
+            context.takeScreenshot("panels_tab_" + t.name().toLowerCase(java.util.Locale.ROOT));
+        }
+        context.setScreen(() -> null);
+        context.getInput().resizeWindow(size[0], size[1]);
+        context.runOnClient(mc -> {
+            mc.options.getGuiScale().setValue(size[2]);
+            mc.onResolutionChanged();
+        });
+        context.waitTicks(5);
     }
 
     private static <T extends Module> T mod(Class<T> c) {

@@ -28,7 +28,7 @@ public final class CharacterSkin extends Module {
     private final EnumSetting<Choice> choice = add(new EnumSetting<>("character", "Character", Choice.DROPLET));
 
     public CharacterSkin() {
-        super("character_skin", "3D Skin", "Turns your player into a 3D character (you only).", Category.COSMETICS, false,
+        super("character_skin", "3D Character", "Turns your player into a 3D character (you only).", Category.COSMETICS, false,
                 "3d skin", "character", "model", "wardrobe", "avatar", "morph");
     }
 

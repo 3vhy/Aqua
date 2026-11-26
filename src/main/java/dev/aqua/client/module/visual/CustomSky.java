@@ -66,9 +66,9 @@ public final class CustomSky extends Module implements WorldEffect {
     private final BoolSetting matchFog = add(new BoolSetting("match_fog", "Match fog to horizon", true));
 
     public CustomSky() {
-        super("custom_sky", "Custom Sky", "Topographic, gradient, nebula, aurora or lava-cell sky, with shooting stars.", Category.VISUALS, false,
+        super("custom_sky", "Atmosphere", "Topographic, gradient, nebula, aurora or lava-cell sky, with shooting stars.", Category.VISUALS, false,
                 "sky", "skybox", "topographic", "contour", "nebula", "galaxy", "aurora", "northern lights", "space", "celestial",
-                "shooting stars", "lava", "voronoi");
+                "shooting stars", "lava", "voronoi", "custom sky");
     }
 
     private boolean isTopo() {
