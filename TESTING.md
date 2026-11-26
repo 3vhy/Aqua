@@ -24,9 +24,9 @@ API (`src/gametest/java/dev/aqua/gametest/AquaClientGameTest.java`). Each run la
 
 | Mode | What runs | Result |
 |---|---|---|
-| `dev` | Loom development run (Yarn-named) with Aqua and Fabric API | **278 / 278 checks passed** |
-| `production` | **The release jar** `aqua-client-1.0.0+mc1.21.11.jar`, remapped, in the production (intermediary) game with the Fabric API release jar | **278 / 278 checks passed** |
-| `compat` | Same as production, plus the unmodified Modrinth jars of Sodium, Iris and Mod Menu | **278 / 278 checks passed** |
+| `dev` | Loom development run (Yarn-named) with Aqua and Fabric API | **352 / 352 checks passed** |
+| `production` | **The release jar** `aqua-client-1.0.0+mc1.21.11.jar`, remapped, in the production (intermediary) game with the Fabric API release jar | **352 / 352 checks passed** |
+| `compat` | Same as production, plus the unmodified Modrinth jars of Sodium, Iris and Mod Menu | **352 / 352 checks passed** |
 
 Exact versions:
 
@@ -51,10 +51,10 @@ Exact versions:
 | No cheats | Whole-word scan of every module id and name against a list of 60 excluded cheat and service names |
 | Music | Ogg metadata, duration and `.lrc` parsed; the local Ogg file **streams through Minecraft's sound engine**; pause, then resume from the paused position |
 | Event features | Zoom narrows FOV while held and returns; Toggle Sprint sprints; emote wheel opens from its key and plays an emote; F2 screenshot shows the Island notification; card notification style with thumbnail; Hit Particles on hitting an entity; Totem Pop Effect on a real totem use; Death Waypoints records a real death and respawn |
-| Menu | Every page opens (HUD, Visuals, Cosmetics, QoL, Performance, Wardrobe, Music, Themes, Profiles, Keybinds, Settings); type-to-search; Escape clears the search, then closes the menu |
+| Classic menu | Every page opens (HUD, Visuals, Cosmetics, QoL, Performance, Wardrobe, Music, Themes, Profiles, Keybinds, Settings); type-to-search; Escape clears the search, then closes the menu |
 | Airborne menu | While holding W and jumping: player is airborne → Right Shift opens the menu → forward, jump and sprint are released → no drift for 20 ticks → Right Shift closes it |
 | Key binds | Capture records a key; Escape cancels capture without closing the menu; conflict found when binding W ("Walk Forward"); a module bind toggles its module in game |
-| Modules | **All 81 modules** enabled (rendered at least 3 ticks without errors) and disabled cleanly; 106 boolean settings flipped |
+| Modules | **All 105 modules** enabled (rendered at least 3 ticks without errors) and disabled cleanly; 126 boolean settings flipped |
 | HUD editor | Real mouse drag moves a widget; Reset all restores the default layout |
 | Cosmetics | First person, jump, third person (wings and halo), emote, wardrobe preview |
 | 3D skins | A character replaces your player model in third person (character draw calls counted, so the render hook is proven to run in the remapped jar); Robo, Shark and an emote on a character; the held item stays in the character's hand |
@@ -91,10 +91,10 @@ and reduced-motion were all restored. A deliberately malformed profile is rename
 
 ## Final runs
 
-The final `production` and `compat` runs used the delivered jar, SHA-256 `945be3682f9f8091f85a3c6a93d7a88eca197018d90efb9327f05bb570436251`.
-Launch 1 recorded 275 PASS lines and launch 2 recorded 3, with 0 failures and 0 skips in each mode.
-The 275 lines in launch 1 include one PASS per module for enabling it and one for disabling it (162
-lines for 81 modules). In the compat run, the log shows `Loading 58 mods` including `sodium 0.8.14+mc1.21.11`,
+The final `production` and `compat` runs used the delivered jar, SHA-256 `cc017f79a852e4a8aea866d0e839509bc853f069cf9b62b319c2452619713cc4`.
+Launch 1 recorded 349 PASS lines and launch 2 recorded 3, with 0 failures and 0 skips in each mode.
+The 349 lines in launch 1 include one PASS per module for enabling it and one for disabling it (210
+lines for 105 modules). In the compat run, the log shows `Loading 58 mods` including `sodium 0.8.14+mc1.21.11`,
 `iris 1.10.8+mc1.21.11` and `modmenu 17.0.1`. No Aqua errors or mixin failures were logged with them. With Mod Menu loaded, its *Mods* button appears in Aqua's pause menu (Mod Menu puts it where *Give Feedback* was, as it does in the vanilla pause menu).
 The only errors in that log come from the test environment: the offline test account (user
 properties, Realms), an anisotropic-filtering option value, and the virtual display's missing cursor
